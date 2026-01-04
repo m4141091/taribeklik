@@ -2,6 +2,7 @@ import { ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroBackground from "@/assets/hero-background.png";
 import heroSeparator from "@/assets/hero-separator.png";
+import TypewriterText from "@/components/TypewriterText";
 
 const Hero = () => {
   return (
@@ -19,8 +20,12 @@ const Hero = () => {
       <div className="container relative z-10 mx-auto px-[150px] pt-[80px]">
         <div className="max-w-[600px] text-right">
           {/* Premium Produce - Script text */}
-          <p className="font-script text-primary text-[75px] leading-none mb-1 overflow-hidden" dir="ltr">
-            <span className="typewriter inline-block">Premium Produce</span>
+          <p className="font-script text-primary text-[75px] leading-none mb-1" dir="ltr">
+            <TypewriterText 
+              text="Premium Produce" 
+              typingSpeed={100}
+              initialDelay={0.3}
+            />
           </p>
 
           {/* Main Heading */}
