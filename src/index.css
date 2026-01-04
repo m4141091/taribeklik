@@ -149,5 +149,6 @@
     overflow: hidden;
     white-space: nowrap;
     animation: typewriter 2.5s steps(15, end) forwards;
+    direction: ltr;
   }
 }
