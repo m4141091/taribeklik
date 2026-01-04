@@ -20,8 +20,8 @@ const Hero = () => {
       <div className="container relative z-10 mx-auto px-[150px] pt-[80px]">
         <div className="max-w-[600px] text-right">
           {/* Premium Produce - Script text */}
-          <div className="mb-1 ml-auto w-fit">
-            <p className="font-script text-primary text-[75px] leading-none text-left" dir="ltr">
+          <div className="mb-1 ml-auto">
+            <p className="font-script text-primary text-[75px] leading-none text-left min-w-[520px]" dir="ltr">
               <TypewriterText 
                 text="Premium Produce" 
                 typingSpeed={100}
