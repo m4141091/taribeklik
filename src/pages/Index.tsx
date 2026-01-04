@@ -1,13 +1,19 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Header from "@/components/Header";
+import Hero from "@/components/Hero";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <main className="min-h-screen">
+      <Header />
+      <Hero />
+      
+      {/* Placeholder for next sections */}
+      <section className="bg-background py-20">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-muted-foreground">סקשנים נוספים יתווספו בקרוב...</p>
+        </div>
+      </section>
+    </main>
   );
 };
 

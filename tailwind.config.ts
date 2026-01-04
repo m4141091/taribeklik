@@ -13,6 +13,21 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        discovery: ["Discovery", "sans-serif"],
+        cooperative: ["Cooperative", "sans-serif"],
+        script: ["Script", "cursive"],
+      },
+      fontSize: {
+        // Desktop sizes
+        "h1-desktop": ["68px", { lineHeight: "1.1", fontWeight: "700" }],
+        "h2-desktop": ["44px", { lineHeight: "1.2", fontWeight: "700" }],
+        "p-desktop": ["21px", { lineHeight: "1.6", fontWeight: "300" }],
+        // Mobile sizes
+        "h1-mobile": ["36px", { lineHeight: "1.2", fontWeight: "700" }],
+        "h2-mobile": ["28px", { lineHeight: "1.3", fontWeight: "700" }],
+        "p-mobile": ["16px", { lineHeight: "1.6", fontWeight: "300" }],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +61,11 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        brand: {
+          green: "hsl(var(--brand-green))",
+          orange: "hsl(var(--brand-orange))",
+          cream: "hsl(var(--brand-cream))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
