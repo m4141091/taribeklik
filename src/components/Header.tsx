@@ -29,21 +29,20 @@ const Header = () => {
 
         {/* Logo - Center */}
         <div className="flex items-center justify-center">
-          <img src={logo} alt="טרי בקליק" className="h-[4.8vh] md:h-[8vh]" />
+          <img src={logo} alt="טרי בקליק" className="h-[6vh] md:h-[10vh]" />
         </div>
 
         {/* Action Buttons - Left Side */}
         <div className="flex items-center gap-3 justify-end">
           <Button
-            variant="outline"
-            className="hidden sm:flex items-center gap-2 border-foreground text-foreground hover:bg-foreground hover:text-background rounded-full px-6"
+            className="hidden sm:flex items-center gap-2 bg-gradient-to-b from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6"
           >
             <User className="w-4 h-4" />
             <span>התחברות / הרשמה</span>
           </Button>
           
           <Button
-            className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6"
+            className="flex items-center gap-2 bg-gradient-to-b from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6"
           >
             <ShoppingCart className="w-4 h-4" />
             <span className="hidden sm:inline">מעבר לסל</span>

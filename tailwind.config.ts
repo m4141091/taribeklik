@@ -65,6 +65,7 @@ export default {
         brand: {
           green: "hsl(var(--brand-green))",
           orange: "hsl(var(--brand-orange))",
+          "orange-light": "#F5A462",
           cream: "hsl(var(--brand-cream))",
         },
         sidebar: {
