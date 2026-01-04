@@ -19,7 +19,7 @@ const Header = () => {
       <div className="container mx-auto grid grid-cols-3 items-center">
         {/* Navigation - Right Side */}
         <nav className="hidden md:flex items-center gap-8 justify-start">
-          {navItems.map(item => <a key={item.label} href={item.href} className="text-foreground font-discovery font-light text-lg hover:text-primary transition-colors px-0 py-[10px]">
+          {navItems.map(item => <a key={item.label} href={item.href} className="text-foreground font-discovery font-light text-lg hover:text-primary transition-colors px-0 py-[15px]">
               {item.label}
             </a>)}
         </nav>
