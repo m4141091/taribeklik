@@ -12,7 +12,7 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 py-[2vh] px-[15%] bg-background/65 backdrop-blur-sm">
-      <div className="container mx-auto grid grid-cols-3 items-center">
+      <div className="w-full px-[100px] grid grid-cols-3 items-center">
         {/* Navigation - Right Side */}
         <nav className="hidden md:flex items-center gap-8 justify-start">
           {navItems.map((item) => (
