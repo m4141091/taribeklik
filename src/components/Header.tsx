@@ -29,7 +29,7 @@ const Header = () => {
 
         {/* Logo - Center */}
         <div className="flex items-center justify-center">
-          <img src={logo} alt="טרי בקליק" className="h-12 md:h-16" />
+          <img src={logo} alt="טרי בקליק" className="h-[4.8vh] md:h-[8vh]" />
         </div>
 
         {/* Action Buttons - Left Side */}

@@ -16,22 +16,22 @@ const Hero = () => {
       </div>
 
       {/* Content */}
-      <div className="container relative z-10 mx-auto px-6 md:px-12 pt-32 pb-48">
-        <div className="max-w-2xl">
+      <div className="container relative z-10 mx-auto px-[4vw] md:px-[5vw] pt-[15vh] pb-[20vh]">
+        <div className="max-w-[50vw]">
           {/* Premium Produce - Script text */}
-          <p className="font-script text-primary text-2xl md:text-3xl mb-4">
+          <p className="font-script text-primary text-[6vw] md:text-[2vw] mb-[2vh]">
             Premium Produce
           </p>
 
           {/* Main Heading */}
-          <h1 className="font-discovery font-bold text-foreground text-h1-mobile md:text-h1-desktop mb-6 leading-tight">
+          <h1 className="font-discovery font-bold text-foreground text-h1-mobile md:text-h1-desktop mb-[3vh] leading-tight">
             טריות ואיכות
             <br />
             עד הבית
           </h1>
 
           {/* Description */}
-          <p className="font-discovery font-light text-foreground text-p-mobile md:text-p-desktop mb-8 max-w-lg">
+          <p className="font-discovery font-light text-foreground text-p-mobile md:text-p-desktop mb-[4vh] max-w-[40vw]">
             כי איכות אמיתית מתחילה בחירה חכמה! מזמינים בכיף ונהנים עם פירות וירקות טריים, טעמים בריאים הכי הכי ביותר
           </p>
 
@@ -40,16 +40,16 @@ const Hero = () => {
             {/* Products Button */}
             <Button
               size="lg"
-              className="group flex items-center gap-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-6 text-lg"
+              className="group flex items-center gap-[1vw] bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-[3vw] py-[1.5vh] text-p-mobile md:text-p-desktop"
             >
               <span>למוצרים</span>
-              <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+              <ArrowLeft className="w-[1.5vw] h-[1.5vw] min-w-5 min-h-5 transition-transform group-hover:-translate-x-1" />
             </Button>
 
             {/* Search Button */}
-            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-full px-6 py-3 border border-border">
-              <Search className="w-5 h-5 text-muted-foreground" />
-              <span className="text-muted-foreground">חפש מוצר</span>
+            <div className="flex items-center gap-[1vw] bg-background/80 backdrop-blur-sm rounded-full px-[2vw] py-[1vh] border border-border">
+              <Search className="w-[1.5vw] h-[1.5vw] min-w-5 min-h-5 text-muted-foreground" />
+              <span className="text-muted-foreground text-p-mobile md:text-p-desktop">חפש מוצר</span>
             </div>
           </div>
         </div>
