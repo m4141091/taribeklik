@@ -14,17 +14,16 @@ const TypewriterText = ({
   typingSpeed = 100,
   initialDelay = 0.5,
 }: TypewriterTextProps) => {
-  const [displayedText, setDisplayedText] = useState('');
+  const [visibleCount, setVisibleCount] = useState(0);
 
   useEffect(() => {
     const chars = text.split('');
     const delayedCalls: gsap.core.Tween[] = [];
     
-    // Create a delayedCall for each character
     chars.forEach((_, index) => {
       const delay = initialDelay + (index * (typingSpeed / 1000));
       const call = gsap.delayedCall(delay, () => {
-        setDisplayedText(text.substring(0, index + 1));
+        setVisibleCount(index + 1);
       });
       delayedCalls.push(call);
     });
@@ -36,7 +35,8 @@ const TypewriterText = ({
 
   return (
     <span className={className} dir="ltr">
-      {displayedText}
+      <span>{text.substring(0, visibleCount)}</span>
+      <span className="invisible">{text.substring(visibleCount)}</span>
     </span>
   );
 };
