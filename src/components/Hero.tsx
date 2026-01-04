@@ -20,13 +20,15 @@ const Hero = () => {
       <div className="container relative z-10 mx-auto px-[150px] pt-[80px]">
         <div className="max-w-[600px] text-right">
           {/* Premium Produce - Script text */}
-          <p className="font-script text-primary text-[75px] leading-none mb-1 flex justify-end" dir="ltr">
-            <TypewriterText 
-              text="Premium Produce" 
-              typingSpeed={100}
-              initialDelay={0.3}
-            />
-          </p>
+          <div className="flex justify-end mb-1">
+            <p className="font-script text-primary text-[75px] leading-none text-left inline-block" dir="ltr">
+              <TypewriterText 
+                text="Premium Produce" 
+                typingSpeed={100}
+                initialDelay={0.3}
+              />
+            </p>
+          </div>
 
           {/* Main Heading */}
           <h1 className="font-cooperative text-foreground text-[72px] leading-[1.1] mb-3">
