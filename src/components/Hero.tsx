@@ -19,7 +19,7 @@ const Hero = () => {
       <div className="container relative z-10 mx-auto px-[150px] pt-[140px]">
         <div className="max-w-[600px] text-right">
           {/* Premium Produce - Script text */}
-          <p className="font-script text-primary text-[144px] leading-none mb-4 overflow-hidden">
+          <p className="font-script text-primary text-[75px] leading-none mb-4 overflow-hidden" dir="ltr">
             <span className="typewriter inline-block">Premium Produce</span>
           </p>
 
