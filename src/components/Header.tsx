@@ -11,15 +11,10 @@ const Header = () => {
   ];
 
   return (
-    <header className="absolute top-0 right-0 left-0 z-50 py-4 px-6 md:px-12">
-      <div className="container mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center">
-          <img src={logo} alt="טרי בקליק" className="h-12 md:h-16" />
-        </div>
-
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+    <header className="fixed top-0 right-0 left-0 z-50 py-4 px-6 md:px-12 bg-background/65 backdrop-blur-sm">
+      <div className="container mx-auto grid grid-cols-3 items-center">
+        {/* Navigation - Right Side */}
+        <nav className="hidden md:flex items-center gap-8 justify-start">
           {navItems.map((item) => (
             <a
               key={item.label}
@@ -30,9 +25,15 @@ const Header = () => {
             </a>
           ))}
         </nav>
+        <div className="md:hidden" />
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Logo - Center */}
+        <div className="flex items-center justify-center">
+          <img src={logo} alt="טרי בקליק" className="h-12 md:h-16" />
+        </div>
+
+        {/* Action Buttons - Left Side */}
+        <div className="flex items-center gap-3 justify-end">
           <Button
             variant="outline"
             className="hidden sm:flex items-center gap-2 border-foreground text-foreground hover:bg-foreground hover:text-background rounded-full px-6"
