@@ -19,14 +19,14 @@ export default {
         script: ["Script", "cursive"],
       },
       fontSize: {
-        // Desktop sizes
-        "h1-desktop": ["68px", { lineHeight: "1.1", fontWeight: "700" }],
-        "h2-desktop": ["44px", { lineHeight: "1.2", fontWeight: "700" }],
-        "p-desktop": ["21px", { lineHeight: "1.6", fontWeight: "300" }],
-        // Mobile sizes
-        "h1-mobile": ["36px", { lineHeight: "1.2", fontWeight: "700" }],
-        "h2-mobile": ["28px", { lineHeight: "1.3", fontWeight: "700" }],
-        "p-mobile": ["16px", { lineHeight: "1.6", fontWeight: "300" }],
+        // Desktop sizes - using clamp for responsive scaling
+        "h1-desktop": ["9.375vw", { lineHeight: "1.1", fontWeight: "700" }], // 150px at 1600px viewport
+        "h2-desktop": ["2vw", { lineHeight: "1.2", fontWeight: "700" }], // 32px at 1600px viewport
+        "p-desktop": ["1.5vw", { lineHeight: "1.6", fontWeight: "300" }], // 24px at 1600px viewport
+        // Mobile sizes - using vw for consistency
+        "h1-mobile": ["17.07vw", { lineHeight: "1.2", fontWeight: "700" }], // 64px at 375px viewport
+        "h2-mobile": ["5.33vw", { lineHeight: "1.3", fontWeight: "700" }], // 20px at 375px viewport
+        "p-mobile": ["4.27vw", { lineHeight: "1.6", fontWeight: "300" }], // 16px at 375px viewport
       },
       colors: {
         border: "hsl(var(--border))",
