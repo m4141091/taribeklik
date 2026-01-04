@@ -17,27 +17,26 @@ const Hero = () => {
       </div>
 
       {/* Content */}
-      <div className="container relative z-10 mx-auto px-[150px] pt-[120px]">
-        {/* Premium Produce - Script text - Centered */}
-        <p className="font-script text-primary text-[55px] leading-none mb-4 text-center" dir="ltr">
-          <TypewriterText 
-            text="Premium Produce" 
-            typingSpeed={100}
-            initialDelay={0.3}
-          />
-        </p>
+      <div className="container relative z-10 mx-auto px-[150px] pt-[80px]">
+        <div className="max-w-[600px] text-right">
+          {/* Premium Produce - Script text */}
+          <p className="font-script text-primary text-[75px] leading-none mb-1 absolute left-0" dir="ltr">
+            <TypewriterText 
+              text="Premium Produce" 
+              typingSpeed={100}
+              initialDelay={0.3}
+            />
+          </p>
 
-        {/* Main Content - Right aligned */}
-        <div className="flex flex-col items-end text-right">
           {/* Main Heading */}
-          <h1 className="font-cooperative text-foreground text-[72px] leading-[1.1] mb-6">
+          <h1 className="font-cooperative text-foreground text-[72px] leading-[1.1] mb-3">
             טריות ואיכות
             <br />
             עד הבית
           </h1>
 
           {/* Description */}
-          <p className="font-discovery font-light text-foreground text-[16px] leading-[1.8] mb-6 max-w-[320px]">
+          <p className="font-discovery font-light text-foreground text-[16px] leading-relaxed mb-4 max-w-[380px] mr-0 ml-auto">
             כי איכות אמיתית מתחילה בחירה חכמה!
             <br />
             מזמינים בכיף ונהנים עם פירות וירקות טריים,
@@ -48,17 +47,17 @@ const Hero = () => {
           {/* Products Button */}
           <Button
             size="lg"
-            className="group flex items-center gap-3 bg-background text-foreground hover:bg-background/90 rounded-full px-8 py-3 text-[16px] border border-border shadow-sm"
+            className="group flex items-center gap-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-3 text-[16px] mb-3"
           >
             <span>למוצרים</span>
             <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
           </Button>
-        </div>
 
-        {/* Search Input - Centered */}
-        <div className="flex items-center justify-between bg-background rounded-full px-6 py-4 border border-border max-w-[400px] mx-auto mt-8">
-          <Search className="w-5 h-5 text-primary" />
-          <span className="text-muted-foreground text-[14px]">חפש מוצר</span>
+          {/* Search Input */}
+          <div className="flex items-center gap-3 bg-background rounded-full px-6 py-3 border border-border max-w-[280px]">
+            <span className="text-muted-foreground text-[14px]">חפש מוצר</span>
+            <Search className="w-5 h-5 text-primary mr-auto" />
+          </div>
         </div>
       </div>
 
