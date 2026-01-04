@@ -15,7 +15,7 @@ const Header = () => {
     label: "קטגוריות",
     href: "/categories"
   }];
-  return <header dir="rtl" className="fixed top-0 right-0 left-0 z-50 px-6 h-[60px] bg-white/90 backdrop-blur-sm md:px-[100px] border-b border-gray-300 shadow-md relative">
+  return <header dir="rtl" className="fixed top-0 right-0 left-0 z-50 px-6 h-[60px] bg-[#F7F2ED]/70 backdrop-blur-sm md:px-[100px] border-b border-gray-300 shadow-md relative">
       <div className="container mx-auto flex items-center justify-between h-full">
         {/* Navigation - Right Side */}
         <nav className="hidden md:flex items-center gap-8">
