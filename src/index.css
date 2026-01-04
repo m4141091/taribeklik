@@ -139,17 +139,3 @@
   }
 }
 
-@layer utilities {
-  @keyframes typewriter {
-    from { width: 0; }
-    to { width: 15ch; }
-  }
-
-  .typewriter {
-    overflow: hidden;
-    white-space: nowrap;
-    width: 0;
-    animation: typewriter 2s steps(15) forwards;
-    direction: ltr;
-  }
-}
