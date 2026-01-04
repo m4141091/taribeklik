@@ -138,3 +138,16 @@
     @apply bg-background text-foreground font-discovery;
   }
 }
+
+@layer utilities {
+  @keyframes typewriter {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+
+  .typewriter {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typewriter 2.5s steps(15, end) forwards;
+  }
+}
