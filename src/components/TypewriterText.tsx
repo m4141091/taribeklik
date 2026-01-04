@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 
 interface TypewriterTextProps {
@@ -11,24 +11,26 @@ interface TypewriterTextProps {
 const TypewriterText = ({
   text,
   className = '',
-  typingSpeed = 80,
+  typingSpeed = 100,
   initialDelay = 0.5,
 }: TypewriterTextProps) => {
   const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
     const chars = text.split('');
+    const delayedCalls: gsap.core.Tween[] = [];
     
-    const tl = gsap.timeline({ delay: initialDelay });
-    
+    // Create a delayedCall for each character
     chars.forEach((_, index) => {
-      tl.call(() => {
+      const delay = initialDelay + (index * (typingSpeed / 1000));
+      const call = gsap.delayedCall(delay, () => {
         setDisplayedText(text.substring(0, index + 1));
-      }, [], index * (typingSpeed / 1000));
+      });
+      delayedCalls.push(call);
     });
 
     return () => {
-      tl.kill();
+      delayedCalls.forEach(call => call.kill());
     };
   }, [text, typingSpeed, initialDelay]);
 
