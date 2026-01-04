@@ -142,13 +142,14 @@
 @layer utilities {
   @keyframes typewriter {
     from { width: 0; }
-    to { width: 100%; }
+    to { width: 15ch; }
   }
 
   .typewriter {
     overflow: hidden;
     white-space: nowrap;
-    animation: typewriter 2.5s steps(15, end) forwards;
+    width: 0;
+    animation: typewriter 2s steps(15) forwards;
     direction: ltr;
   }
 }
