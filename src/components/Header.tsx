@@ -1,4 +1,4 @@
-import { ShoppingCart, User } from "lucide-react";
+import { ShoppingBag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 
@@ -35,16 +35,16 @@ const Header = () => {
         {/* Action Buttons - Left Side */}
         <div className="flex items-center gap-3 justify-end">
           <Button
-            className="hidden sm:flex items-center gap-2 bg-gradient-to-b from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6"
+            className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6"
           >
             <User className="w-4 h-4" />
-            <span>התחברות / הרשמה</span>
+            <span>התחברות/הרשמה</span>
           </Button>
           
           <Button
-            className="flex items-center gap-2 bg-gradient-to-b from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6"
+            className="flex items-center gap-2 bg-gradient-to-r from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6"
           >
-            <ShoppingCart className="w-4 h-4" />
+            <ShoppingBag className="w-4 h-4" />
             <span className="hidden sm:inline">מעבר לסל</span>
           </Button>
         </div>
