@@ -11,8 +11,8 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 right-0 left-0 z-50 py-[2vh] px-[15%] bg-background/65 backdrop-blur-sm">
-      <div className="w-full px-[100px] grid grid-cols-3 items-center">
+    <header className="fixed top-0 right-0 left-0 z-50 py-4 px-6 md:px-12 bg-background/65 backdrop-blur-sm">
+      <div className="container mx-auto grid grid-cols-3 items-center">
         {/* Navigation - Right Side */}
         <nav className="hidden md:flex items-center gap-8 justify-start">
           {navItems.map((item) => (
@@ -29,7 +29,7 @@ const Header = () => {
 
         {/* Logo - Center */}
         <div className="flex items-center justify-center">
-          <img src={logo} alt="טרי בקליק" className="h-[7.2vh] md:h-[12vh]" />
+          <img src={logo} alt="טרי בקליק" className="h-[4.8vh] md:h-[8vh]" />
         </div>
 
         {/* Action Buttons - Left Side */}
