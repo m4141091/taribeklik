@@ -20,22 +20,32 @@ export const DynamicSection: React.FC<DynamicSectionProps> = ({ section }) => {
         backgroundPosition: 'center',
       }}
     >
-      {section.elements.map((element) => (
-        <div
-          key={element.id}
-          className="absolute"
-          style={{
-            left: `${element.position.x}%`,
-            top: `${element.position.y}%`,
-            transform: 'translate(-50%, -50%)',
-            width: element.size.width,
-            height: element.size.height,
-            zIndex: element.zIndex || 1,
-          }}
-        >
-          <RenderElement element={element} />
-        </div>
-      ))}
+      {section.elements.map((element) => {
+        const isFullWidth = element.size.width === '100%';
+        const widthValue = typeof element.size.width === 'number' 
+          ? `${element.size.width}px` 
+          : element.size.width;
+        const heightValue = typeof element.size.height === 'number' 
+          ? `${element.size.height}px` 
+          : element.size.height;
+
+        return (
+          <div
+            key={element.id}
+            className="absolute"
+            style={{
+              left: isFullWidth ? '0' : `${element.position.x}%`,
+              top: `${element.position.y}%`,
+              transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
+              width: widthValue,
+              height: heightValue,
+              zIndex: element.zIndex || 1,
+            }}
+          >
+            <RenderElement element={element} />
+          </div>
+        );
+      })}
     </section>
   );
 };

@@ -217,13 +217,21 @@ const BuilderContent = () => {
     const element = elements.find(el => el.id === elementId);
     if (!element) return;
     
+    // Convert percentage to pixels for resizing
+    const startWidth = typeof element.size.width === 'string' 
+      ? (canvasRef.current?.getBoundingClientRect().width || 800) 
+      : element.size.width;
+    const startHeight = typeof element.size.height === 'string' 
+      ? (canvasRef.current?.getBoundingClientRect().height || 600) 
+      : element.size.height;
+    
     setResizing({
       elementId,
       handle,
       startX: e.clientX,
       startY: e.clientY,
-      startWidth: element.size.width,
-      startHeight: element.size.height,
+      startWidth,
+      startHeight,
     });
   };
 
@@ -769,26 +777,62 @@ const BuilderContent = () => {
                       )}
 
                       {/* Size */}
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
                         <div>
                           <label className="block text-sm mb-2">רוחב</label>
-                          <Input
-                            type="number"
-                            value={selectedEl.size.width}
-                            onChange={(e) => updateElement(selectedEl.id, {
-                              size: { ...selectedEl.size, width: Number(e.target.value) }
-                            })}
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              type="text"
+                              value={selectedEl.size.width}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const parsed = val.includes('%') ? val : (Number(val) || val);
+                                updateElement(selectedEl.id, {
+                                  size: { ...selectedEl.size, width: parsed }
+                                });
+                              }}
+                              placeholder="200 או 100%"
+                              dir="ltr"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateElement(selectedEl.id, {
+                                size: { ...selectedEl.size, width: '100%' }
+                              })}
+                              className="shrink-0"
+                            >
+                              100%
+                            </Button>
+                          </div>
                         </div>
                         <div>
                           <label className="block text-sm mb-2">גובה</label>
-                          <Input
-                            type="number"
-                            value={selectedEl.size.height}
-                            onChange={(e) => updateElement(selectedEl.id, {
-                              size: { ...selectedEl.size, height: Number(e.target.value) }
-                            })}
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              type="text"
+                              value={selectedEl.size.height}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const parsed = val.includes('%') ? val : (Number(val) || val);
+                                updateElement(selectedEl.id, {
+                                  size: { ...selectedEl.size, height: parsed }
+                                });
+                              }}
+                              placeholder="200 או 100%"
+                              dir="ltr"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateElement(selectedEl.id, {
+                                size: { ...selectedEl.size, height: '100%' }
+                              })}
+                              className="shrink-0"
+                            >
+                              100%
+                            </Button>
+                          </div>
                         </div>
                       </div>
 
