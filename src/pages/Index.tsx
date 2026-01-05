@@ -1,5 +1,4 @@
 import Header from "@/components/Header";
-import Hero from "@/components/Hero";
 import { DynamicSections } from "@/components/sections/DynamicSections";
 
 const Index = () => {
@@ -10,7 +9,6 @@ const Index = () => {
       <div className="fixed top-0 left-[150px] w-[1px] h-full bg-red-500 z-[100] pointer-events-none" />
       
       <Header />
-      <Hero />
       
       {/* Dynamic Sections from Builder */}
       <DynamicSections />

@@ -62,6 +62,7 @@ const BuilderContent = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const [section, setSection] = useState<Section | null>(null);
+  const [sectionName, setSectionName] = useState('');
   const [elements, setElements] = useState<SectionElement[]>([]);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,6 +95,7 @@ const BuilderContent = () => {
         };
 
         setSection(parsedSection);
+        setSectionName(parsedSection.name);
         setElements(parsedSection.elements);
         setCanvasHeight(parsedSection.height);
         setBackgroundColor(parsedSection.background_color || '#ffffff');
@@ -206,6 +208,7 @@ const BuilderContent = () => {
       const { error } = await supabase
         .from('sections')
         .update({
+          name: sectionName,
           height: canvasHeight,
           background_color: backgroundColor,
           background_image_url: backgroundImage,
@@ -311,9 +314,12 @@ const BuilderContent = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
             <ArrowRight className="w-5 h-5" />
           </Button>
-          <h1 className="text-lg font-semibold text-foreground">
-            {section?.name || 'עריכת סקשן'}
-          </h1>
+          <Input
+            value={sectionName}
+            onChange={(e) => setSectionName(e.target.value)}
+            className="text-lg font-semibold bg-transparent border-none focus-visible:ring-1 max-w-xs"
+            placeholder="שם הסקשן"
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => window.open(`/?preview=${id}`, '_blank')}>
