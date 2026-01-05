@@ -12,7 +12,7 @@ const Index = () => {
       
       {/* Placeholder for next sections */}
       <section className="bg-background py-20">
-        <div className="container mx-auto px-6 text-center">
+        <div className="container mx-auto text-center">
           <p className="text-muted-foreground">סקשנים נוספים יתווספו בקרוב...</p>
         </div>
       </section>
