@@ -135,7 +135,8 @@ const BuilderContent = () => {
     };
 
     fetchSection();
-  }, [id, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // Add element
   const addElement = (type: ElementType) => {
