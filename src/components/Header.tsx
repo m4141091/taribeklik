@@ -1,4 +1,5 @@
 import { ShoppingBag, UserRound } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 const Header = () => {
@@ -27,10 +28,12 @@ const Header = () => {
 
         {/* Action Buttons - Left Side */}
         <div className="flex items-center gap-3">
-          <Button className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6">
-            <UserRound className="w-4 h-4" />
-            <span>התחברות / הרשמה</span>
-          </Button>
+          <Link to="/login">
+            <Button className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6">
+              <UserRound className="w-4 h-4" />
+              <span>התחברות / הרשמה</span>
+            </Button>
+          </Link>
           
           <Button className="flex items-center gap-2 bg-gradient-to-r from-brand-orange-light to-brand-orange text-white hover:opacity-90 rounded-full px-6">
             <ShoppingBag className="w-4 h-4" />
