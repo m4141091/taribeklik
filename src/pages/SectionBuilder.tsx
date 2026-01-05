@@ -75,6 +75,7 @@ const BuilderContent = () => {
   const [saving, setSaving] = useState(false);
   const [canvasHeight, setCanvasHeight] = useState(600);
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+  const [activeTab, setActiveTab] = useState<'elements' | 'settings'>('elements');
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   // Drag state
@@ -440,94 +441,476 @@ const BuilderContent = () => {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Toolbox */}
-        <aside className="w-64 bg-card border-l border-border p-4 overflow-y-auto">
-          <h2 className="font-semibold mb-4 text-foreground">הוסף אלמנט</h2>
-          <div className="grid grid-cols-2 gap-2 mb-6">
-            <button
-              onClick={() => addElement('heading')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+        {/* Toolbox with Tabs */}
+        <aside className="w-72 bg-card border-l border-border flex flex-col overflow-hidden">
+          {/* Tabs Header */}
+          <div className="flex border-b border-border shrink-0">
+            <button 
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'elements' 
+                  ? 'border-b-2 border-primary text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setActiveTab('elements')}
             >
-              <Heading1 className="w-6 h-6 text-foreground" />
-              <span className="text-sm">כותרת</span>
+              אלמנטים
             </button>
-            <button
-              onClick={() => addElement('text')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+            <button 
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'settings' 
+                  ? 'border-b-2 border-primary text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setActiveTab('settings')}
             >
-              <Type className="w-6 h-6 text-foreground" />
-              <span className="text-sm">טקסט</span>
-            </button>
-            <button
-              onClick={() => addElement('button')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
-            >
-              <MousePointer className="w-6 h-6 text-foreground" />
-              <span className="text-sm">כפתור</span>
-            </button>
-            <button
-              onClick={() => addElement('image')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
-            >
-              <Image className="w-6 h-6 text-foreground" />
-              <span className="text-sm">תמונה</span>
-            </button>
-            <button
-              onClick={() => addElement('search')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
-            >
-              <Search className="w-6 h-6 text-foreground" />
-              <span className="text-sm">שדה חיפוש</span>
-            </button>
-            <button
-              onClick={() => addElement('separator')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
-            >
-              <SeparatorHorizontal className="w-6 h-6 text-foreground" />
-              <span className="text-sm">מפריד</span>
+              הגדרות
             </button>
           </div>
+          
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Elements Tab */}
+            {activeTab === 'elements' && (
+              <>
+                <h2 className="font-semibold mb-4 text-foreground">הוסף אלמנט</h2>
+                <div className="grid grid-cols-2 gap-2 mb-6">
+                  <button
+                    onClick={() => addElement('heading')}
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                  >
+                    <Heading1 className="w-6 h-6 text-foreground" />
+                    <span className="text-sm">כותרת</span>
+                  </button>
+                  <button
+                    onClick={() => addElement('text')}
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                  >
+                    <Type className="w-6 h-6 text-foreground" />
+                    <span className="text-sm">טקסט</span>
+                  </button>
+                  <button
+                    onClick={() => addElement('button')}
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                  >
+                    <MousePointer className="w-6 h-6 text-foreground" />
+                    <span className="text-sm">כפתור</span>
+                  </button>
+                  <button
+                    onClick={() => addElement('image')}
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                  >
+                    <Image className="w-6 h-6 text-foreground" />
+                    <span className="text-sm">תמונה</span>
+                  </button>
+                  <button
+                    onClick={() => addElement('search')}
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                  >
+                    <Search className="w-6 h-6 text-foreground" />
+                    <span className="text-sm">שדה חיפוש</span>
+                  </button>
+                  <button
+                    onClick={() => addElement('separator')}
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                  >
+                    <SeparatorHorizontal className="w-6 h-6 text-foreground" />
+                    <span className="text-sm">מפריד</span>
+                  </button>
+                </div>
 
-          <h2 className="font-semibold mb-4 text-foreground flex items-center gap-2">
-            <Settings className="w-4 h-4" />
-            הגדרות קנבס
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm mb-2">גובה (פיקסלים)</label>
-              <Input
-                type="number"
-                value={canvasHeight}
-                onChange={(e) => setCanvasHeight(Number(e.target.value))}
-                min={200}
-                max={2000}
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-2">צבע רקע</label>
-              <input
-                type="color"
-                value={backgroundColor}
-                onChange={(e) => setBackgroundColor(e.target.value)}
-                className="w-full h-10 rounded cursor-pointer"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-2">תמונת רקע</label>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleBackgroundUpload}
-              />
-              {backgroundImage && (
-                <button
-                  onClick={() => setBackgroundImage(null)}
-                  className="text-sm text-destructive mt-2 hover:underline"
-                >
-                  הסר רקע
-                </button>
-              )}
-            </div>
+                <h2 className="font-semibold mb-4 text-foreground flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  הגדרות קנבס
+                </h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm mb-2">גובה (פיקסלים)</label>
+                    <Input
+                      type="number"
+                      value={canvasHeight}
+                      onChange={(e) => setCanvasHeight(Number(e.target.value))}
+                      min={200}
+                      max={2000}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-2">צבע רקע</label>
+                    <input
+                      type="color"
+                      value={backgroundColor}
+                      onChange={(e) => setBackgroundColor(e.target.value)}
+                      className="w-full h-10 rounded cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-2">תמונת רקע</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBackgroundUpload}
+                    />
+                    {backgroundImage && (
+                      <button
+                        onClick={() => setBackgroundImage(null)}
+                        className="text-sm text-destructive mt-2 hover:underline"
+                      >
+                        הסר רקע
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+              <>
+                {selectedEl ? (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="font-semibold text-foreground">הגדרות אלמנט</h2>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteElement(selectedEl.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Content */}
+                      {selectedEl.type !== 'image' && selectedEl.type !== 'separator' && (
+                        <div>
+                          <label className="block text-sm mb-2">תוכן</label>
+                          <Input
+                            value={selectedEl.content}
+                            onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })}
+                          />
+                        </div>
+                      )}
+
+                      {/* Image Upload & Settings */}
+                      {(selectedEl.type === 'image' || selectedEl.type === 'separator') && (
+                        <>
+                          {/* Image Preview */}
+                          {selectedEl.content && (
+                            <div className="mb-4">
+                              <label className="block text-sm mb-2">תצוגה מקדימה</label>
+                              <div className="w-full h-24 bg-muted rounded overflow-hidden border border-border">
+                                <img 
+                                  src={selectedEl.content} 
+                                  alt="תצוגה מקדימה" 
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div>
+                            <label className="block text-sm mb-2">
+                              {selectedEl.content ? 'החלף תמונה' : 'העלה תמונה'}
+                            </label>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(e, selectedEl.id)}
+                            />
+                          </div>
+                          
+                          {/* Remove Image Button */}
+                          {selectedEl.content && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={() => updateElement(selectedEl.id, { content: '' })}
+                            >
+                              הסר תמונה
+                            </Button>
+                          )}
+                          
+                          {/* Image URL Input */}
+                          <div>
+                            <label className="block text-sm mb-2">או הזן URL</label>
+                            <Input
+                              value={selectedEl.content || ''}
+                              onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })}
+                              dir="ltr"
+                              placeholder="https://..."
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {/* Image Advanced Settings */}
+                      {selectedEl.type === 'image' && (
+                        <>
+                          <div>
+                            <label className="block text-sm mb-2">התאמת תמונה</label>
+                            <select
+                              value={selectedEl.styles.objectFit || 'contain'}
+                              onChange={(e) => updateElement(selectedEl.id, {
+                                styles: { ...selectedEl.styles, objectFit: e.target.value as 'cover' | 'contain' | 'fill' | 'none' }
+                              })}
+                              className="w-full h-10 rounded-md border border-input bg-background px-3"
+                            >
+                              <option value="contain">התאם (Contain) - שומר פרופורציות</option>
+                              <option value="cover">מילוי (Cover) - חותך במידת הצורך</option>
+                              <option value="fill">מתיחה (Fill) - ממלא הכל</option>
+                              <option value="none">מקורי (None) - גודל מקורי</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm mb-2">מיקום תמונה</label>
+                            <select
+                              value={selectedEl.styles.objectPosition || 'center'}
+                              onChange={(e) => updateElement(selectedEl.id, {
+                                styles: { ...selectedEl.styles, objectPosition: e.target.value }
+                              })}
+                              className="w-full h-10 rounded-md border border-input bg-background px-3"
+                            >
+                              <option value="center">מרכז</option>
+                              <option value="top">למעלה</option>
+                              <option value="bottom">למטה</option>
+                              <option value="left">שמאל</option>
+                              <option value="right">ימין</option>
+                              <option value="top left">למעלה שמאל</option>
+                              <option value="top right">למעלה ימין</option>
+                              <option value="bottom left">למטה שמאל</option>
+                              <option value="bottom right">למטה ימין</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm mb-2">
+                              שקיפות: {selectedEl.styles.opacity ?? 100}%
+                            </label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={selectedEl.styles.opacity ?? 100}
+                              onChange={(e) => updateElement(selectedEl.id, {
+                                styles: { ...selectedEl.styles, opacity: Number(e.target.value) }
+                              })}
+                              className="w-full"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {/* Link for buttons */}
+                      {selectedEl.type === 'button' && (
+                        <div>
+                          <label className="block text-sm mb-2">קישור</label>
+                          <Input
+                            value={selectedEl.link || ''}
+                            onChange={(e) => updateElement(selectedEl.id, { link: e.target.value })}
+                            dir="ltr"
+                            placeholder="https://..."
+                          />
+                        </div>
+                      )}
+
+                      {/* Size */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-sm mb-2">רוחב</label>
+                          <Input
+                            type="number"
+                            value={selectedEl.size.width}
+                            onChange={(e) => updateElement(selectedEl.id, {
+                              size: { ...selectedEl.size, width: Number(e.target.value) }
+                            })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm mb-2">גובה</label>
+                          <Input
+                            type="number"
+                            value={selectedEl.size.height}
+                            onChange={(e) => updateElement(selectedEl.id, {
+                              size: { ...selectedEl.size, height: Number(e.target.value) }
+                            })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Font Size */}
+                      {(selectedEl.type === 'heading' || selectedEl.type === 'text' || selectedEl.type === 'button') && (
+                        <div>
+                          <label className="block text-sm mb-2">גודל גופן</label>
+                          <Input
+                            type="number"
+                            value={selectedEl.styles.fontSize || 16}
+                            onChange={(e) => updateElement(selectedEl.id, {
+                              styles: { ...selectedEl.styles, fontSize: Number(e.target.value) }
+                            })}
+                          />
+                        </div>
+                      )}
+
+                      {/* Font Family */}
+                      {(selectedEl.type === 'heading' || selectedEl.type === 'text') && (
+                        <div>
+                          <label className="block text-sm mb-2">גופן</label>
+                          <select
+                            value={selectedEl.styles.fontFamily || 'discovery'}
+                            onChange={(e) => updateElement(selectedEl.id, {
+                              styles: { ...selectedEl.styles, fontFamily: e.target.value as 'discovery' | 'cooperative' | 'script' }
+                            })}
+                            className="w-full h-10 rounded-md border border-input bg-background px-3"
+                          >
+                            <option value="discovery">Discovery</option>
+                            <option value="cooperative">Cooperative</option>
+                            <option value="script">Script</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Text Color */}
+                      {(selectedEl.type === 'heading' || selectedEl.type === 'text' || selectedEl.type === 'button') && (
+                        <div>
+                          <label className="block text-sm mb-2">צבע טקסט</label>
+                          <input
+                            type="color"
+                            value={selectedEl.styles.color || '#000000'}
+                            onChange={(e) => updateElement(selectedEl.id, {
+                              styles: { ...selectedEl.styles, color: e.target.value }
+                            })}
+                            className="w-full h-10 rounded cursor-pointer"
+                          />
+                        </div>
+                      )}
+
+                      {/* Background Color */}
+                      {(selectedEl.type === 'button' || selectedEl.type === 'search') && (
+                        <div>
+                          <label className="block text-sm mb-2">צבע רקע</label>
+                          <input
+                            type="color"
+                            value={selectedEl.styles.backgroundColor || '#ffffff'}
+                            onChange={(e) => updateElement(selectedEl.id, {
+                              styles: { ...selectedEl.styles, backgroundColor: e.target.value }
+                            })}
+                            className="w-full h-10 rounded cursor-pointer"
+                          />
+                        </div>
+                      )}
+
+                      {/* Text Align */}
+                      {(selectedEl.type === 'heading' || selectedEl.type === 'text') && (
+                        <div>
+                          <label className="block text-sm mb-2">יישור</label>
+                          <select
+                            value={selectedEl.styles.textAlign || 'center'}
+                            onChange={(e) => updateElement(selectedEl.id, {
+                              styles: { ...selectedEl.styles, textAlign: e.target.value as 'right' | 'center' | 'left' }
+                            })}
+                            className="w-full h-10 rounded-md border border-input bg-background px-3"
+                          >
+                            <option value="right">ימין</option>
+                            <option value="center">מרכז</option>
+                            <option value="left">שמאל</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Typewriter Effect */}
+                      {(selectedEl.type === 'heading' || selectedEl.type === 'text') && (
+                        <div className="border-t border-border pt-4 mt-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <label className="text-sm font-medium">אפקט טייפינג</label>
+                            <button
+                              type="button"
+                              onClick={() => updateElement(selectedEl.id, {
+                                effects: { ...selectedEl.effects, typewriter: !selectedEl.effects?.typewriter }
+                              })}
+                              className={`w-10 h-5 rounded-full transition-colors ${
+                                selectedEl.effects?.typewriter ? 'bg-primary' : 'bg-muted'
+                              }`}
+                            >
+                              <div
+                                className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                                  selectedEl.effects?.typewriter ? 'translate-x-5' : 'translate-x-0.5'
+                                }`}
+                              />
+                            </button>
+                          </div>
+                          
+                          {selectedEl.effects?.typewriter && (
+                            <>
+                              <div className="mb-3">
+                                <label className="block text-sm mb-2">
+                                  מהירות כתיבה: {selectedEl.effects?.typewriterSpeed || 100}ms
+                                </label>
+                                <input
+                                  type="range"
+                                  min="30"
+                                  max="300"
+                                  value={selectedEl.effects?.typewriterSpeed || 100}
+                                  onChange={(e) => updateElement(selectedEl.id, {
+                                    effects: { ...selectedEl.effects, typewriterSpeed: Number(e.target.value) }
+                                  })}
+                                  className="w-full"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm mb-2">
+                                  השהיה לפני התחלה: {((selectedEl.effects?.typewriterDelay || 500) / 1000).toFixed(1)} שניות
+                                </label>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="3000"
+                                  step="100"
+                                  value={selectedEl.effects?.typewriterDelay || 500}
+                                  onChange={(e) => updateElement(selectedEl.id, {
+                                    effects: { ...selectedEl.effects, typewriterDelay: Number(e.target.value) }
+                                  })}
+                                  className="w-full"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Border Radius */}
+                      <div>
+                        <label className="block text-sm mb-2">עיגול פינות</label>
+                        <Input
+                          type="number"
+                          value={selectedEl.styles.borderRadius || 0}
+                          onChange={(e) => updateElement(selectedEl.id, {
+                            styles: { ...selectedEl.styles, borderRadius: Number(e.target.value) }
+                          })}
+                          min={0}
+                        />
+                      </div>
+
+                      {/* Z-Index */}
+                      <div>
+                        <label className="block text-sm mb-2">שכבה (Z-Index)</label>
+                        <Input
+                          type="number"
+                          value={selectedEl.zIndex || 1}
+                          onChange={(e) => updateElement(selectedEl.id, { zIndex: Number(e.target.value) })}
+                          min={1}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>בחר אלמנט לעריכה</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </aside>
 
@@ -595,6 +978,7 @@ const BuilderContent = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedElement(el.id);
+                  setActiveTab('settings');
                 }}
               >
                 {/* Element Content */}
@@ -735,346 +1119,6 @@ const BuilderContent = () => {
           </div>
         </main>
 
-        {/* Settings Panel */}
-        {selectedEl && (
-          <aside className="w-72 bg-card border-r border-border p-4 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-foreground">הגדרות אלמנט</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => deleteElement(selectedEl.id)}
-              >
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Content */}
-              {selectedEl.type !== 'image' && selectedEl.type !== 'separator' && (
-                <div>
-                  <label className="block text-sm mb-2">תוכן</label>
-                  <Input
-                    value={selectedEl.content}
-                    onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })}
-                  />
-                </div>
-              )}
-
-              {/* Image Upload & Settings */}
-              {(selectedEl.type === 'image' || selectedEl.type === 'separator') && (
-                <>
-                  {/* Image Preview */}
-                  {selectedEl.content && (
-                    <div className="mb-4">
-                      <label className="block text-sm mb-2">תצוגה מקדימה</label>
-                      <div className="w-full h-24 bg-muted rounded overflow-hidden border border-border">
-                        <img 
-                          src={selectedEl.content} 
-                          alt="תצוגה מקדימה" 
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div>
-                    <label className="block text-sm mb-2">
-                      {selectedEl.content ? 'החלף תמונה' : 'העלה תמונה'}
-                    </label>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, selectedEl.id)}
-                    />
-                  </div>
-                  
-                  {/* Remove Image Button */}
-                  {selectedEl.content && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => updateElement(selectedEl.id, { content: '' })}
-                    >
-                      הסר תמונה
-                    </Button>
-                  )}
-                  
-                  {/* Image URL Input */}
-                  <div>
-                    <label className="block text-sm mb-2">או הזן URL</label>
-                    <Input
-                      value={selectedEl.content || ''}
-                      onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })}
-                      dir="ltr"
-                      placeholder="https://..."
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Image Advanced Settings */}
-              {selectedEl.type === 'image' && (
-                <>
-                  <div>
-                    <label className="block text-sm mb-2">התאמת תמונה</label>
-                    <select
-                      value={selectedEl.styles.objectFit || 'contain'}
-                      onChange={(e) => updateElement(selectedEl.id, {
-                        styles: { ...selectedEl.styles, objectFit: e.target.value as 'cover' | 'contain' | 'fill' | 'none' }
-                      })}
-                      className="w-full h-10 rounded-md border border-input bg-background px-3"
-                    >
-                      <option value="contain">התאם (Contain) - שומר פרופורציות</option>
-                      <option value="cover">מילוי (Cover) - חותך במידת הצורך</option>
-                      <option value="fill">מתיחה (Fill) - ממלא הכל</option>
-                      <option value="none">מקורי (None) - גודל מקורי</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm mb-2">מיקום תמונה</label>
-                    <select
-                      value={selectedEl.styles.objectPosition || 'center'}
-                      onChange={(e) => updateElement(selectedEl.id, {
-                        styles: { ...selectedEl.styles, objectPosition: e.target.value }
-                      })}
-                      className="w-full h-10 rounded-md border border-input bg-background px-3"
-                    >
-                      <option value="center">מרכז</option>
-                      <option value="top">למעלה</option>
-                      <option value="bottom">למטה</option>
-                      <option value="left">שמאל</option>
-                      <option value="right">ימין</option>
-                      <option value="top left">למעלה שמאל</option>
-                      <option value="top right">למעלה ימין</option>
-                      <option value="bottom left">למטה שמאל</option>
-                      <option value="bottom right">למטה ימין</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm mb-2">
-                      שקיפות: {selectedEl.styles.opacity ?? 100}%
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={selectedEl.styles.opacity ?? 100}
-                      onChange={(e) => updateElement(selectedEl.id, {
-                        styles: { ...selectedEl.styles, opacity: Number(e.target.value) }
-                      })}
-                      className="w-full"
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Link for buttons */}
-              {selectedEl.type === 'button' && (
-                <div>
-                  <label className="block text-sm mb-2">קישור</label>
-                  <Input
-                    value={selectedEl.link || ''}
-                    onChange={(e) => updateElement(selectedEl.id, { link: e.target.value })}
-                    dir="ltr"
-                    placeholder="https://..."
-                  />
-                </div>
-              )}
-
-              {/* Size */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-sm mb-2">רוחב</label>
-                  <Input
-                    type="number"
-                    value={selectedEl.size.width}
-                    onChange={(e) => updateElement(selectedEl.id, {
-                      size: { ...selectedEl.size, width: Number(e.target.value) }
-                    })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-2">גובה</label>
-                  <Input
-                    type="number"
-                    value={selectedEl.size.height}
-                    onChange={(e) => updateElement(selectedEl.id, {
-                      size: { ...selectedEl.size, height: Number(e.target.value) }
-                    })}
-                  />
-                </div>
-              </div>
-
-              {/* Font Size */}
-              {(selectedEl.type === 'heading' || selectedEl.type === 'text' || selectedEl.type === 'button') && (
-                <div>
-                  <label className="block text-sm mb-2">גודל גופן</label>
-                  <Input
-                    type="number"
-                    value={selectedEl.styles.fontSize || 16}
-                    onChange={(e) => updateElement(selectedEl.id, {
-                      styles: { ...selectedEl.styles, fontSize: Number(e.target.value) }
-                    })}
-                  />
-                </div>
-              )}
-
-              {/* Font Family */}
-              {(selectedEl.type === 'heading' || selectedEl.type === 'text') && (
-                <div>
-                  <label className="block text-sm mb-2">גופן</label>
-                  <select
-                    value={selectedEl.styles.fontFamily || 'discovery'}
-                    onChange={(e) => updateElement(selectedEl.id, {
-                      styles: { ...selectedEl.styles, fontFamily: e.target.value as 'discovery' | 'cooperative' | 'script' }
-                    })}
-                    className="w-full h-10 rounded-md border border-input bg-background px-3"
-                  >
-                    <option value="discovery">Discovery</option>
-                    <option value="cooperative">Cooperative</option>
-                    <option value="script">Script</option>
-                  </select>
-                </div>
-              )}
-
-              {/* Text Color */}
-              {(selectedEl.type === 'heading' || selectedEl.type === 'text' || selectedEl.type === 'button') && (
-                <div>
-                  <label className="block text-sm mb-2">צבע טקסט</label>
-                  <input
-                    type="color"
-                    value={selectedEl.styles.color || '#000000'}
-                    onChange={(e) => updateElement(selectedEl.id, {
-                      styles: { ...selectedEl.styles, color: e.target.value }
-                    })}
-                    className="w-full h-10 rounded cursor-pointer"
-                  />
-                </div>
-              )}
-
-              {/* Background Color */}
-              {(selectedEl.type === 'button' || selectedEl.type === 'search') && (
-                <div>
-                  <label className="block text-sm mb-2">צבע רקע</label>
-                  <input
-                    type="color"
-                    value={selectedEl.styles.backgroundColor || '#ffffff'}
-                    onChange={(e) => updateElement(selectedEl.id, {
-                      styles: { ...selectedEl.styles, backgroundColor: e.target.value }
-                    })}
-                    className="w-full h-10 rounded cursor-pointer"
-                  />
-                </div>
-              )}
-
-              {/* Text Align */}
-              {(selectedEl.type === 'heading' || selectedEl.type === 'text') && (
-                <div>
-                  <label className="block text-sm mb-2">יישור</label>
-                  <select
-                    value={selectedEl.styles.textAlign || 'center'}
-                    onChange={(e) => updateElement(selectedEl.id, {
-                      styles: { ...selectedEl.styles, textAlign: e.target.value as 'right' | 'center' | 'left' }
-                    })}
-                    className="w-full h-10 rounded-md border border-input bg-background px-3"
-                  >
-                    <option value="right">ימין</option>
-                    <option value="center">מרכז</option>
-                    <option value="left">שמאל</option>
-                  </select>
-                </div>
-              )}
-
-              {/* Typewriter Effect */}
-              {(selectedEl.type === 'heading' || selectedEl.type === 'text') && (
-                <div className="border-t border-border pt-4 mt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="text-sm font-medium">אפקט טייפינג</label>
-                    <button
-                      type="button"
-                      onClick={() => updateElement(selectedEl.id, {
-                        effects: { ...selectedEl.effects, typewriter: !selectedEl.effects?.typewriter }
-                      })}
-                      className={`w-10 h-5 rounded-full transition-colors ${
-                        selectedEl.effects?.typewriter ? 'bg-primary' : 'bg-muted'
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                          selectedEl.effects?.typewriter ? 'translate-x-5' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                  
-                  {selectedEl.effects?.typewriter && (
-                    <>
-                      <div className="mb-3">
-                        <label className="block text-sm mb-2">
-                          מהירות כתיבה: {selectedEl.effects?.typewriterSpeed || 100}ms
-                        </label>
-                        <input
-                          type="range"
-                          min="30"
-                          max="300"
-                          value={selectedEl.effects?.typewriterSpeed || 100}
-                          onChange={(e) => updateElement(selectedEl.id, {
-                            effects: { ...selectedEl.effects, typewriterSpeed: Number(e.target.value) }
-                          })}
-                          className="w-full"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-2">
-                          השהיה לפני התחלה: {((selectedEl.effects?.typewriterDelay || 500) / 1000).toFixed(1)} שניות
-                        </label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="3000"
-                          step="100"
-                          value={selectedEl.effects?.typewriterDelay || 500}
-                          onChange={(e) => updateElement(selectedEl.id, {
-                            effects: { ...selectedEl.effects, typewriterDelay: Number(e.target.value) }
-                          })}
-                          className="w-full"
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Border Radius */}
-              <div>
-                <label className="block text-sm mb-2">עיגול פינות</label>
-                <Input
-                  type="number"
-                  value={selectedEl.styles.borderRadius || 0}
-                  onChange={(e) => updateElement(selectedEl.id, {
-                    styles: { ...selectedEl.styles, borderRadius: Number(e.target.value) }
-                  })}
-                  min={0}
-                />
-              </div>
-
-              {/* Z-Index */}
-              <div>
-                <label className="block text-sm mb-2">שכבה (Z-Index)</label>
-                <Input
-                  type="number"
-                  value={selectedEl.zIndex || 1}
-                  onChange={(e) => updateElement(selectedEl.id, { zIndex: Number(e.target.value) })}
-                  min={1}
-                />
-              </div>
-            </div>
-          </aside>
-        )}
       </div>
     </div>
   );
