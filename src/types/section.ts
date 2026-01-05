@@ -1,4 +1,4 @@
-export type ElementType = 'heading' | 'text' | 'button' | 'image' | 'search';
+export type ElementType = 'heading' | 'text' | 'button' | 'image' | 'search' | 'separator';
 
 export interface SectionElement {
   id: string;

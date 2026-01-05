@@ -17,7 +17,8 @@ import {
   Search,
   Trash2,
   Settings,
-  Move
+  Move,
+  SeparatorHorizontal
 } from 'lucide-react';
 
 const ELEMENT_DEFAULTS: Record<ElementType, Partial<SectionElement>> = {
@@ -46,6 +47,11 @@ const ELEMENT_DEFAULTS: Record<ElementType, Partial<SectionElement>> = {
     content: 'חיפוש...',
     size: { width: 300, height: 50 },
     styles: { fontSize: 16, backgroundColor: '#ffffff', borderRadius: 25 },
+  },
+  separator: {
+    content: '',
+    size: { width: 1200, height: 80 },
+    styles: {},
   },
 };
 
@@ -356,10 +362,17 @@ const BuilderContent = () => {
             </button>
             <button
               onClick={() => addElement('search')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors col-span-2"
+              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
             >
               <Search className="w-6 h-6 text-foreground" />
               <span className="text-sm">שדה חיפוש</span>
+            </button>
+            <button
+              onClick={() => addElement('separator')}
+              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+            >
+              <SeparatorHorizontal className="w-6 h-6 text-foreground" />
+              <span className="text-sm">מפריד</span>
             </button>
           </div>
 
@@ -513,6 +526,19 @@ const BuilderContent = () => {
                     <span className="text-muted-foreground">{el.content}</span>
                   </div>
                 )}
+                {el.type === 'separator' && (
+                  <div className="w-full h-full bg-muted/50 flex items-center justify-center overflow-hidden">
+                    {el.content ? (
+                      <img
+                        src={el.content}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <SeparatorHorizontal className="w-8 h-8 text-muted-foreground" />
+                    )}
+                  </div>
+                )}
 
                 {/* Drag Handle Indicator */}
                 {selectedElement === el.id && (
@@ -541,7 +567,7 @@ const BuilderContent = () => {
 
             <div className="space-y-4">
               {/* Content */}
-              {selectedEl.type !== 'image' && (
+              {selectedEl.type !== 'image' && selectedEl.type !== 'separator' && (
                 <div>
                   <label className="block text-sm mb-2">תוכן</label>
                   <Input
@@ -552,7 +578,7 @@ const BuilderContent = () => {
               )}
 
               {/* Image Upload */}
-              {selectedEl.type === 'image' && (
+              {(selectedEl.type === 'image' || selectedEl.type === 'separator') && (
                 <div>
                   <label className="block text-sm mb-2">תמונה</label>
                   <Input

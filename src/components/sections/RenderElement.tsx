@@ -107,6 +107,20 @@ export const RenderElement: React.FC<RenderElementProps> = ({ element }) => {
         </form>
       );
 
+    case 'separator':
+      return (
+        <div className="w-full h-full">
+          {el.content ? (
+            <img
+              src={el.content}
+              alt=""
+              className="w-full h-full object-cover"
+              aria-hidden="true"
+            />
+          ) : null}
+        </div>
+      );
+
     default:
       return null;
   }
