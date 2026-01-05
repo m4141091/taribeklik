@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Section, SectionElement } from '@/types/section';
 
 export function useSections() {
-  const [sections, setSections] = useState<Section[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sections, setSections] = React.useState<Section[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
   const fetchSections = async () => {
     try {
@@ -29,7 +29,7 @@ export function useSections() {
     }
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchSections();
   }, []);
 
@@ -92,10 +92,10 @@ export function useSections() {
 }
 
 export function useActiveSection(slug: string) {
-  const [section, setSection] = useState<Section | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [section, setSection] = React.useState<Section | null>(null);
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchSection = async () => {
       try {
         const { data, error } = await supabase
@@ -127,10 +127,10 @@ export function useActiveSection(slug: string) {
 }
 
 export function useActiveSections() {
-  const [sections, setSections] = useState<Section[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sections, setSections] = React.useState<Section[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchSections = async () => {
       try {
         const { data, error } = await supabase
