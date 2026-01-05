@@ -19,6 +19,9 @@ export interface SectionElement {
     backgroundColor?: string;
     borderRadius?: number;
     textAlign?: 'right' | 'center' | 'left';
+    objectFit?: 'cover' | 'contain' | 'fill' | 'none';
+    objectPosition?: string;
+    opacity?: number;
   };
   link?: string;
   zIndex?: number;

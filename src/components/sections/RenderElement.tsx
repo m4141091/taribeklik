@@ -80,8 +80,13 @@ export const RenderElement: React.FC<RenderElementProps> = ({ element }) => {
             <img
               src={el.content}
               alt=""
-              className="w-full h-full object-cover"
-              style={{ borderRadius: el.styles.borderRadius }}
+              className="w-full h-full"
+              style={{ 
+                borderRadius: el.styles.borderRadius,
+                objectFit: el.styles.objectFit || 'contain',
+                objectPosition: el.styles.objectPosition || 'center',
+                opacity: el.styles.opacity !== undefined ? el.styles.opacity / 100 : 1,
+              }}
             />
           ) : null}
         </div>
