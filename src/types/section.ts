@@ -23,6 +23,11 @@ export interface SectionElement {
     objectPosition?: string;
     opacity?: number;
   };
+  effects?: {
+    typewriter?: boolean;
+    typewriterSpeed?: number; // ms between characters
+    typewriterDelay?: number; // ms before starting
+  };
   link?: string;
   zIndex?: number;
 }

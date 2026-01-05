@@ -26,11 +26,13 @@ const ELEMENT_DEFAULTS: Record<ElementType, Partial<SectionElement>> = {
     content: 'כותרת חדשה',
     size: { width: 300, height: 60 },
     styles: { fontSize: 48, fontFamily: 'discovery', color: '#193017', textAlign: 'center' },
+    effects: { typewriter: false, typewriterSpeed: 100, typewriterDelay: 500 },
   },
   text: {
     content: 'טקסט חדש',
     size: { width: 300, height: 40 },
     styles: { fontSize: 18, fontFamily: 'discovery', color: '#193017', textAlign: 'right' },
+    effects: { typewriter: false, typewriterSpeed: 100, typewriterDelay: 500 },
   },
   button: {
     content: 'לחץ כאן',
@@ -125,6 +127,7 @@ const BuilderContent = () => {
       size: defaults.size || { width: 200, height: 50 },
       content: defaults.content || '',
       styles: defaults.styles || {},
+      effects: defaults.effects,
       link: defaults.link,
       zIndex: elements.length + 1,
     };
@@ -815,6 +818,66 @@ const BuilderContent = () => {
                     <option value="center">מרכז</option>
                     <option value="left">שמאל</option>
                   </select>
+                </div>
+              )}
+
+              {/* Typewriter Effect */}
+              {(selectedEl.type === 'heading' || selectedEl.type === 'text') && (
+                <div className="border-t border-border pt-4 mt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="text-sm font-medium">אפקט טייפינג</label>
+                    <button
+                      type="button"
+                      onClick={() => updateElement(selectedEl.id, {
+                        effects: { ...selectedEl.effects, typewriter: !selectedEl.effects?.typewriter }
+                      })}
+                      className={`w-10 h-5 rounded-full transition-colors ${
+                        selectedEl.effects?.typewriter ? 'bg-primary' : 'bg-muted'
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                          selectedEl.effects?.typewriter ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  
+                  {selectedEl.effects?.typewriter && (
+                    <>
+                      <div className="mb-3">
+                        <label className="block text-sm mb-2">
+                          מהירות כתיבה: {selectedEl.effects?.typewriterSpeed || 100}ms
+                        </label>
+                        <input
+                          type="range"
+                          min="30"
+                          max="300"
+                          value={selectedEl.effects?.typewriterSpeed || 100}
+                          onChange={(e) => updateElement(selectedEl.id, {
+                            effects: { ...selectedEl.effects, typewriterSpeed: Number(e.target.value) }
+                          })}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-2">
+                          השהיה לפני התחלה: {((selectedEl.effects?.typewriterDelay || 500) / 1000).toFixed(1)} שניות
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="3000"
+                          step="100"
+                          value={selectedEl.effects?.typewriterDelay || 500}
+                          onChange={(e) => updateElement(selectedEl.id, {
+                            effects: { ...selectedEl.effects, typewriterDelay: Number(e.target.value) }
+                          })}
+                          className="w-full"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
