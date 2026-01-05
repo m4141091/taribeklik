@@ -8,8 +8,8 @@ export interface SectionElement {
     y: number; // percentage (0-100)
   };
   size: {
-    width: number;  // pixels
-    height: number; // pixels
+    width: number | string;  // pixels or percentage (e.g., "100%")
+    height: number | string; // pixels or percentage
   };
   content: string;
   styles: {
