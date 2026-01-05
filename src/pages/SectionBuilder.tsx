@@ -41,7 +41,7 @@ const ELEMENT_DEFAULTS: Record<ElementType, Partial<SectionElement>> = {
   image: {
     content: '',
     size: { width: 200, height: 200 },
-    styles: { borderRadius: 0 },
+    styles: { borderRadius: 0, objectFit: 'contain', opacity: 100 },
   },
   search: {
     content: 'חיפוש...',
@@ -507,16 +507,23 @@ const BuilderContent = () => {
                   </button>
                 )}
                 {el.type === 'image' && (
-                  <div className="w-full h-full bg-muted flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full flex items-center justify-center overflow-hidden">
                     {el.content ? (
                       <img
                         src={el.content}
                         alt=""
-                        className="w-full h-full object-cover"
-                        style={{ borderRadius: el.styles.borderRadius }}
+                        className="w-full h-full"
+                        style={{ 
+                          borderRadius: el.styles.borderRadius,
+                          objectFit: el.styles.objectFit || 'contain',
+                          objectPosition: el.styles.objectPosition || 'center',
+                          opacity: el.styles.opacity !== undefined ? el.styles.opacity / 100 : 1,
+                        }}
                       />
                     ) : (
-                      <Image className="w-8 h-8 text-muted-foreground" />
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <Image className="w-8 h-8 text-muted-foreground" />
+                      </div>
                     )}
                   </div>
                 )}
@@ -583,16 +590,115 @@ const BuilderContent = () => {
                 </div>
               )}
 
-              {/* Image Upload */}
+              {/* Image Upload & Settings */}
               {(selectedEl.type === 'image' || selectedEl.type === 'separator') && (
-                <div>
-                  <label className="block text-sm mb-2">תמונה</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, selectedEl.id)}
-                  />
-                </div>
+                <>
+                  {/* Image Preview */}
+                  {selectedEl.content && (
+                    <div className="mb-4">
+                      <label className="block text-sm mb-2">תצוגה מקדימה</label>
+                      <div className="w-full h-24 bg-muted rounded overflow-hidden border border-border">
+                        <img 
+                          src={selectedEl.content} 
+                          alt="תצוגה מקדימה" 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-sm mb-2">
+                      {selectedEl.content ? 'החלף תמונה' : 'העלה תמונה'}
+                    </label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, selectedEl.id)}
+                    />
+                  </div>
+                  
+                  {/* Remove Image Button */}
+                  {selectedEl.content && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => updateElement(selectedEl.id, { content: '' })}
+                    >
+                      הסר תמונה
+                    </Button>
+                  )}
+                  
+                  {/* Image URL Input */}
+                  <div>
+                    <label className="block text-sm mb-2">או הזן URL</label>
+                    <Input
+                      value={selectedEl.content || ''}
+                      onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })}
+                      dir="ltr"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Image Advanced Settings */}
+              {selectedEl.type === 'image' && (
+                <>
+                  <div>
+                    <label className="block text-sm mb-2">התאמת תמונה</label>
+                    <select
+                      value={selectedEl.styles.objectFit || 'contain'}
+                      onChange={(e) => updateElement(selectedEl.id, {
+                        styles: { ...selectedEl.styles, objectFit: e.target.value as 'cover' | 'contain' | 'fill' | 'none' }
+                      })}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3"
+                    >
+                      <option value="contain">התאם (Contain) - שומר פרופורציות</option>
+                      <option value="cover">מילוי (Cover) - חותך במידת הצורך</option>
+                      <option value="fill">מתיחה (Fill) - ממלא הכל</option>
+                      <option value="none">מקורי (None) - גודל מקורי</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm mb-2">מיקום תמונה</label>
+                    <select
+                      value={selectedEl.styles.objectPosition || 'center'}
+                      onChange={(e) => updateElement(selectedEl.id, {
+                        styles: { ...selectedEl.styles, objectPosition: e.target.value }
+                      })}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3"
+                    >
+                      <option value="center">מרכז</option>
+                      <option value="top">למעלה</option>
+                      <option value="bottom">למטה</option>
+                      <option value="left">שמאל</option>
+                      <option value="right">ימין</option>
+                      <option value="top left">למעלה שמאל</option>
+                      <option value="top right">למעלה ימין</option>
+                      <option value="bottom left">למטה שמאל</option>
+                      <option value="bottom right">למטה ימין</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm mb-2">
+                      שקיפות: {selectedEl.styles.opacity ?? 100}%
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={selectedEl.styles.opacity ?? 100}
+                      onChange={(e) => updateElement(selectedEl.id, {
+                        styles: { ...selectedEl.styles, opacity: Number(e.target.value) }
+                      })}
+                      className="w-full"
+                    />
+                  </div>
+                </>
               )}
 
               {/* Link for buttons */}
