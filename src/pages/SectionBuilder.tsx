@@ -335,12 +335,46 @@ const BuilderContent = () => {
         .getPublicUrl(fileName);
 
       setBackgroundImage(publicUrl);
-      toast({ title: 'רקע הועלה בהצלחה!' });
+      
+      // Save directly to database
+      const { error: updateError } = await supabase
+        .from('sections')
+        .update({ background_image_url: publicUrl })
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      toast({ title: 'רקע הועלה ונשמר בהצלחה!' });
     } catch (error) {
       console.error('Error uploading background:', error);
       toast({
         title: 'שגיאה',
         description: 'שגיאה בהעלאת הרקע',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Remove background image
+  const handleRemoveBackground = async () => {
+    if (!id) return;
+    
+    try {
+      setBackgroundImage(null);
+      
+      const { error } = await supabase
+        .from('sections')
+        .update({ background_image_url: null })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast({ title: 'רקע הוסר בהצלחה' });
+    } catch (error) {
+      console.error('Error removing background:', error);
+      toast({
+        title: 'שגיאה',
+        description: 'שגיאה בהסרת הרקע',
         variant: 'destructive',
       });
     }
@@ -551,7 +585,7 @@ const BuilderContent = () => {
                     />
                     {backgroundImage && (
                       <button
-                        onClick={() => setBackgroundImage(null)}
+                        onClick={handleRemoveBackground}
                         className="text-sm text-destructive mt-2 hover:underline"
                       >
                         הסר רקע
