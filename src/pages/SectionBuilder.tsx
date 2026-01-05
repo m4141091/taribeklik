@@ -75,7 +75,7 @@ const BuilderContent = () => {
   const [saving, setSaving] = useState(false);
   const [canvasHeight, setCanvasHeight] = useState(600);
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
-  const [activeTab, setActiveTab] = useState<'elements' | 'settings'>('elements');
+  const [activeTab, setActiveTab] = useState<'elements' | 'settings' | 'layers'>('elements');
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   // Drag state
@@ -254,6 +254,15 @@ const BuilderContent = () => {
   const handleResizeUp = useCallback(() => {
     setResizing(null);
   }, []);
+
+  // Change element zIndex
+  const changeZIndex = (elementId: string, delta: number) => {
+    setElements(prev => prev.map(el => 
+      el.id === elementId 
+        ? { ...el, zIndex: Math.max(1, (el.zIndex || 1) + delta) }
+        : el
+    ));
+  };
 
   // Add global mouse listeners
   useEffect(() => {
@@ -499,6 +508,16 @@ const BuilderContent = () => {
               onClick={() => setActiveTab('settings')}
             >
               הגדרות
+            </button>
+            <button 
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'layers' 
+                  ? 'border-b-2 border-primary text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setActiveTab('layers')}
+            >
+              שכבות
             </button>
           </div>
           
@@ -945,6 +964,89 @@ const BuilderContent = () => {
                   </div>
                 )}
               </>
+            )}
+
+            {/* Layers Tab */}
+            {activeTab === 'layers' && (
+              <div className="space-y-4">
+                <h2 className="font-semibold text-foreground">שכבות ({elements.length})</h2>
+                {elements.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    <p>אין אלמנטים</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {[...elements]
+                      .sort((a, b) => (b.zIndex || 1) - (a.zIndex || 1))
+                      .map((el) => (
+                        <div
+                          key={el.id}
+                          className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+                            selectedElement === el.id 
+                              ? 'bg-primary/20 border border-primary' 
+                              : 'bg-muted hover:bg-muted/80 border border-transparent'
+                          }`}
+                          onClick={() => {
+                            setSelectedElement(el.id);
+                            setActiveTab('settings');
+                          }}
+                        >
+                          {/* Icon by type */}
+                          {el.type === 'heading' && <Heading1 className="w-4 h-4 shrink-0" />}
+                          {el.type === 'text' && <Type className="w-4 h-4 shrink-0" />}
+                          {el.type === 'image' && <Image className="w-4 h-4 shrink-0" />}
+                          {el.type === 'button' && <MousePointer className="w-4 h-4 shrink-0" />}
+                          {el.type === 'search' && <Search className="w-4 h-4 shrink-0" />}
+                          {el.type === 'separator' && <SeparatorHorizontal className="w-4 h-4 shrink-0" />}
+                          
+                          {/* Truncated name */}
+                          <span className="flex-1 truncate text-sm">
+                            {el.content?.slice(0, 20) || el.type}
+                          </span>
+                          
+                          {/* zIndex */}
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            z{el.zIndex || 1}
+                          </span>
+                          
+                          {/* Controls */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                changeZIndex(el.id, 1);
+                              }}
+                              className="p-1 hover:bg-background rounded text-muted-foreground hover:text-foreground"
+                              title="הבא לקדמה"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                changeZIndex(el.id, -1);
+                              }}
+                              className="p-1 hover:bg-background rounded text-muted-foreground hover:text-foreground"
+                              title="שלח לאחור"
+                            >
+                              ▼
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteElement(el.id);
+                              }}
+                              className="p-1 hover:bg-destructive/20 rounded text-muted-foreground hover:text-destructive"
+                              title="מחק"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </aside>
