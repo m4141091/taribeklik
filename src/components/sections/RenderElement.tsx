@@ -1,6 +1,7 @@
 import React from 'react';
 import { SectionElement } from '@/types/section';
 import { Search } from 'lucide-react';
+import TypewriterText from '@/components/TypewriterText';
 
 interface RenderElementProps {
   element: SectionElement;
@@ -8,6 +9,19 @@ interface RenderElementProps {
 
 export const RenderElement: React.FC<RenderElementProps> = ({ element }) => {
   const el = element;
+
+  const renderTextContent = (content: string) => {
+    if (el.effects?.typewriter) {
+      return (
+        <TypewriterText
+          text={content}
+          typingSpeed={el.effects.typewriterSpeed || 100}
+          initialDelay={(el.effects.typewriterDelay || 500) / 1000}
+        />
+      );
+    }
+    return content;
+  };
 
   switch (el.type) {
     case 'heading':
@@ -22,7 +36,7 @@ export const RenderElement: React.FC<RenderElementProps> = ({ element }) => {
             textAlign: el.styles.textAlign,
           }}
         >
-          {el.content}
+          {renderTextContent(el.content)}
         </h2>
       );
 
@@ -38,7 +52,7 @@ export const RenderElement: React.FC<RenderElementProps> = ({ element }) => {
             textAlign: el.styles.textAlign,
           }}
         >
-          {el.content}
+          {renderTextContent(el.content)}
         </p>
       );
 
