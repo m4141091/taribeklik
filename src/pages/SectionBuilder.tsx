@@ -18,7 +18,11 @@ import {
   Trash2,
   Settings,
   Move,
-  SeparatorHorizontal
+  SeparatorHorizontal,
+  Maximize,
+  Minimize,
+  Grid3X3,
+  AlignCenter
 } from 'lucide-react';
 
 const ELEMENT_DEFAULTS: Record<ElementType, Partial<SectionElement>> = {
@@ -76,6 +80,21 @@ const BuilderContent = () => {
   // Drag state
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  // View modes
+  const [fullScreenMode, setFullScreenMode] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
+  const [showMargins, setShowMargins] = useState(false);
+
+  // Resize state
+  const [resizing, setResizing] = useState<{
+    elementId: string;
+    handle: 'se' | 'sw' | 'ne' | 'nw' | 'e' | 'w' | 'n' | 's';
+    startX: number;
+    startY: number;
+    startWidth: number;
+    startHeight: number;
+  } | null>(null);
 
   // Fetch section
   useEffect(() => {
@@ -189,6 +208,51 @@ const BuilderContent = () => {
     setDragging(null);
   }, []);
 
+  // Resize handlers
+  const startResize = (e: React.MouseEvent, elementId: string, handle: 'se' | 'sw' | 'ne' | 'nw' | 'e' | 'w' | 'n' | 's') => {
+    e.stopPropagation();
+    e.preventDefault();
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    setResizing({
+      elementId,
+      handle,
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: element.size.width,
+      startHeight: element.size.height,
+    });
+  };
+
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!resizing) return;
+    
+    const deltaX = e.clientX - resizing.startX;
+    const deltaY = e.clientY - resizing.startY;
+    
+    let newWidth = resizing.startWidth;
+    let newHeight = resizing.startHeight;
+    
+    // Calculate new size based on which handle is being dragged
+    if (resizing.handle.includes('e')) newWidth = resizing.startWidth + deltaX;
+    if (resizing.handle.includes('w')) newWidth = resizing.startWidth - deltaX;
+    if (resizing.handle.includes('s')) newHeight = resizing.startHeight + deltaY;
+    if (resizing.handle.includes('n')) newHeight = resizing.startHeight - deltaY;
+    
+    // Minimum size
+    newWidth = Math.max(50, newWidth);
+    newHeight = Math.max(30, newHeight);
+    
+    updateElement(resizing.elementId, { 
+      size: { width: newWidth, height: newHeight } 
+    });
+  }, [resizing, updateElement]);
+
+  const handleResizeUp = useCallback(() => {
+    setResizing(null);
+  }, []);
+
   // Add global mouse listeners
   useEffect(() => {
     if (dragging) {
@@ -201,6 +265,19 @@ const BuilderContent = () => {
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [dragging, handleMouseMove, handleMouseUp]);
+
+  // Add resize mouse listeners
+  useEffect(() => {
+    if (resizing) {
+      window.addEventListener('mousemove', handleResizeMove);
+      window.addEventListener('mouseup', handleResizeUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleResizeMove);
+      window.removeEventListener('mouseup', handleResizeUp);
+    };
+  }, [resizing, handleResizeMove, handleResizeUp]);
 
   // Save section
   const saveSection = async () => {
@@ -325,6 +402,32 @@ const BuilderContent = () => {
           />
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 border-l border-border pl-2 ml-2">
+            <Button 
+              variant={fullScreenMode ? "default" : "outline"} 
+              size="icon"
+              onClick={() => setFullScreenMode(!fullScreenMode)}
+              title="מסך מלא"
+            >
+              {fullScreenMode ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+            </Button>
+            <Button 
+              variant={showGrid ? "default" : "outline"} 
+              size="icon"
+              onClick={() => setShowGrid(!showGrid)}
+              title="רשת גריד"
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant={showMargins ? "default" : "outline"} 
+              size="icon"
+              onClick={() => setShowMargins(!showMargins)}
+              title="קווי שוליים"
+            >
+              <AlignCenter className="w-4 h-4" />
+            </Button>
+          </div>
           <Button variant="outline" onClick={() => window.open(`/?preview=${id}`, '_blank')}>
             <Eye className="w-4 h-4 ml-2" />
             תצוגה מקדימה
@@ -429,13 +532,13 @@ const BuilderContent = () => {
         </aside>
 
         {/* Canvas */}
-        <main className="flex-1 p-8 overflow-auto flex items-start justify-center">
+        <main className={`flex-1 overflow-auto ${fullScreenMode ? '' : 'p-8 flex items-start justify-center'}`}>
           <div
             ref={canvasRef}
             className="relative border-2 border-dashed border-border bg-white shadow-lg"
             style={{
               width: '100%',
-              maxWidth: '1200px',
+              maxWidth: fullScreenMode ? 'none' : '1200px',
               height: `${canvasHeight}px`,
               backgroundColor,
               backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
@@ -444,6 +547,33 @@ const BuilderContent = () => {
             }}
             onClick={() => setSelectedElement(null)}
           >
+            {/* Grid Overlay */}
+            {showGrid && (
+              <div 
+                className="absolute inset-0 pointer-events-none z-50"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+                  `,
+                  backgroundSize: '50px 50px'
+                }}
+              />
+            )}
+            
+            {/* Margin Lines */}
+            {showMargins && (
+              <>
+                <div 
+                  className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-50"
+                  style={{ left: '150px' }}
+                />
+                <div 
+                  className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-50"
+                  style={{ right: '150px' }}
+                />
+              </>
+            )}
             {elements.map((el) => (
               <div
                 key={el.id}
@@ -556,11 +686,49 @@ const BuilderContent = () => {
                   </div>
                 )}
 
-                {/* Drag Handle Indicator */}
+                {/* Drag Handle Indicator & Resize Handles */}
                 {selectedElement === el.id && (
-                  <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded p-1">
-                    <Move className="w-3 h-3" />
-                  </div>
+                  <>
+                    <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded p-1">
+                      <Move className="w-3 h-3" />
+                    </div>
+                    
+                    {/* Corner Resize Handles */}
+                    <div 
+                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary rounded-sm cursor-se-resize z-50" 
+                      onMouseDown={(e) => startResize(e, el.id, 'se')} 
+                    />
+                    <div 
+                      className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary rounded-sm cursor-sw-resize z-50" 
+                      onMouseDown={(e) => startResize(e, el.id, 'sw')} 
+                    />
+                    <div 
+                      className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-sm cursor-ne-resize z-50" 
+                      onMouseDown={(e) => startResize(e, el.id, 'ne')} 
+                    />
+                    <div 
+                      className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary rounded-sm cursor-nw-resize z-50" 
+                      onMouseDown={(e) => startResize(e, el.id, 'nw')} 
+                    />
+                    
+                    {/* Side Resize Handles */}
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-2 h-4 bg-primary rounded-sm cursor-e-resize z-50" 
+                      onMouseDown={(e) => startResize(e, el.id, 'e')} 
+                    />
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-2 h-4 bg-primary rounded-sm cursor-w-resize z-50" 
+                      onMouseDown={(e) => startResize(e, el.id, 'w')} 
+                    />
+                    <div 
+                      className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-2 bg-primary rounded-sm cursor-n-resize z-50" 
+                      onMouseDown={(e) => startResize(e, el.id, 'n')} 
+                    />
+                    <div 
+                      className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-2 bg-primary rounded-sm cursor-s-resize z-50" 
+                      onMouseDown={(e) => startResize(e, el.id, 's')} 
+                    />
+                  </>
                 )}
               </div>
             ))}
