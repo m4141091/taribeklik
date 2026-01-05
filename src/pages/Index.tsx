@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import { DynamicSections } from "@/components/sections/DynamicSections";
 
 const Index = () => {
   return (
@@ -10,6 +11,9 @@ const Index = () => {
       
       <Header />
       <Hero />
+      
+      {/* Dynamic Sections from Builder */}
+      <DynamicSections />
       
       {/* Placeholder for next sections */}
       <section className="bg-background py-20">
