@@ -36,12 +36,23 @@ export function useSections() {
   const createSection = async (name: string, slug: string) => {
     const { data: userData } = await supabase.auth.getUser();
     
+    // Find the highest display_order
+    const { data: maxOrderData } = await supabase
+      .from('sections')
+      .select('display_order')
+      .order('display_order', { ascending: false })
+      .limit(1)
+      .single();
+    
+    const nextOrder = (maxOrderData?.display_order ?? -1) + 1;
+    
     const { data, error } = await supabase
       .from('sections')
       .insert({
         name,
         slug,
         created_by: userData.user?.id,
+        display_order: nextOrder,
       })
       .select()
       .single();
@@ -50,6 +61,18 @@ export function useSections() {
 
     await fetchSections();
     return data;
+  };
+
+  const reorderSections = async (reorderedSections: Section[]) => {
+    const updates = reorderedSections.map((section, index) =>
+      supabase
+        .from('sections')
+        .update({ display_order: index })
+        .eq('id', section.id)
+    );
+
+    await Promise.all(updates);
+    await fetchSections();
   };
 
   const updateSection = async (id: string, updates: Partial<Section>) => {
@@ -88,6 +111,7 @@ export function useSections() {
     createSection,
     updateSection,
     deleteSection,
+    reorderSections,
   };
 }
 
