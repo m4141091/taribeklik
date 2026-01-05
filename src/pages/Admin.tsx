@@ -6,31 +6,79 @@ import { useSections } from '@/hooks/useSections';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, LogOut, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Eye, EyeOff, GripVertical } from 'lucide-react';
+
+const generateSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[\s]+/g, '-')
+    .replace(/[^\w\-א-ת]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    || `section-${Date.now()}`;
+};
 
 const AdminContent = () => {
   const { signOut } = useAuthContext();
-  const { sections, loading, createSection, updateSection, deleteSection } = useSections();
+  const { sections, loading, createSection, updateSection, deleteSection, reorderSections } = useSections();
   const [newSectionName, setNewSectionName] = useState('');
-  const [newSectionSlug, setNewSectionSlug] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [draggedSection, setDraggedSection] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const handleDragStart = (e: React.DragEvent, sectionId: string) => {
+    setDraggedSection(sectionId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetSectionId: string) => {
+    e.preventDefault();
+    if (!draggedSection || draggedSection === targetSectionId) {
+      setDraggedSection(null);
+      return;
+    }
+
+    const newOrder = [...sections];
+    const draggedIndex = newOrder.findIndex(s => s.id === draggedSection);
+    const targetIndex = newOrder.findIndex(s => s.id === targetSectionId);
+
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+
+    try {
+      await reorderSections(newOrder);
+      toast({ title: 'הסדר עודכן!' });
+    } catch {
+      toast({ title: 'שגיאה', description: 'שגיאה בעדכון הסדר', variant: 'destructive' });
+    }
+    setDraggedSection(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedSection(null);
+  };
+
   const handleCreateSection = async () => {
-    if (!newSectionName || !newSectionSlug) {
+    if (!newSectionName) {
       toast({
         title: 'שגיאה',
-        description: 'יש למלא שם ו-slug',
+        description: 'יש למלא שם לסקשן',
         variant: 'destructive',
       });
       return;
     }
 
+    const slug = generateSlug(newSectionName);
+
     try {
-      const section = await createSection(newSectionName, newSectionSlug);
+      const section = await createSection(newSectionName, slug);
       setNewSectionName('');
-      setNewSectionSlug('');
       setShowCreateForm(false);
       toast({
         title: 'סקשן נוצר!',
@@ -119,24 +167,13 @@ const AdminContent = () => {
         {showCreateForm && (
           <div className="bg-card rounded-lg border border-border p-4 mb-6">
             <h3 className="font-medium mb-4">יצירת סקשן חדש</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">שם הסקשן</label>
-                <Input
-                  value={newSectionName}
-                  onChange={(e) => setNewSectionName(e.target.value)}
-                  placeholder="למשל: הירו ראשי"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Slug (מזהה ייחודי)</label>
-                <Input
-                  value={newSectionSlug}
-                  onChange={(e) => setNewSectionSlug(e.target.value)}
-                  placeholder="למשל: main-hero"
-                  dir="ltr"
-                />
-              </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">שם הסקשן</label>
+              <Input
+                value={newSectionName}
+                onChange={(e) => setNewSectionName(e.target.value)}
+                placeholder="למשל: הירו ראשי"
+              />
             </div>
             <div className="flex gap-2">
               <Button onClick={handleCreateSection}>צור סקשן</Button>
@@ -157,15 +194,25 @@ const AdminContent = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-2">
             {sections.map((section) => (
               <div
                 key={section.id}
-                className="bg-card rounded-lg border border-border p-4 flex items-center justify-between"
+                draggable
+                onDragStart={(e) => handleDragStart(e, section.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, section.id)}
+                onDragEnd={handleDragEnd}
+                className={`bg-card rounded-lg border border-border p-4 flex items-center justify-between cursor-grab active:cursor-grabbing transition-opacity ${
+                  draggedSection === section.id ? 'opacity-50' : ''
+                }`}
               >
-                <div>
-                  <h3 className="font-medium text-foreground">{section.name}</h3>
-                  <p className="text-sm text-muted-foreground">/{section.slug}</p>
+                <div className="flex items-center gap-3">
+                  <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <h3 className="font-medium text-foreground">{section.name}</h3>
+                    <p className="text-sm text-muted-foreground">/{section.slug}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
