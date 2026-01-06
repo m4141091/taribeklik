@@ -77,6 +77,8 @@ const BuilderContent = () => {
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [activeTab, setActiveTab] = useState<'elements' | 'settings' | 'layers'>('elements');
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [backgroundSize, setBackgroundSize] = useState<'cover' | 'contain' | '100%'>('cover');
+  const [backgroundPosition, setBackgroundPosition] = useState('center');
 
   // Drag state
   const [dragging, setDragging] = useState<string | null>(null);
@@ -122,6 +124,8 @@ const BuilderContent = () => {
         setCanvasHeight(parsedSection.height);
         setBackgroundColor(parsedSection.background_color || '#ffffff');
         setBackgroundImage(parsedSection.background_image_url);
+        setBackgroundSize((data as any).background_size || 'cover');
+        setBackgroundPosition((data as any).background_position || 'center');
       } catch (error) {
         console.error('Error fetching section:', error);
         toast({
@@ -311,6 +315,8 @@ const BuilderContent = () => {
           height: canvasHeight,
           background_color: backgroundColor,
           background_image_url: backgroundImage,
+          background_size: backgroundSize,
+          background_position: backgroundPosition,
           elements: JSON.parse(JSON.stringify(elements)),
         })
         .eq('id', id);
@@ -612,12 +618,44 @@ const BuilderContent = () => {
                       onChange={handleBackgroundUpload}
                     />
                     {backgroundImage && (
-                      <button
-                        onClick={handleRemoveBackground}
-                        className="text-sm text-destructive mt-2 hover:underline"
-                      >
-                        הסר רקע
-                      </button>
+                      <>
+                        <button
+                          onClick={handleRemoveBackground}
+                          className="text-sm text-destructive mt-2 hover:underline"
+                        >
+                          הסר רקע
+                        </button>
+                        <div className="mt-4">
+                          <label className="block text-sm mb-2">התאמת רקע</label>
+                          <select
+                            value={backgroundSize}
+                            onChange={(e) => setBackgroundSize(e.target.value as 'cover' | 'contain' | '100%')}
+                            className="w-full h-10 rounded-md border border-input bg-background px-3"
+                          >
+                            <option value="cover">מילוי (Cover) - חותך במידת הצורך</option>
+                            <option value="contain">התאם (Contain) - שומר פרופורציות</option>
+                            <option value="100%">100% - גודל מלא</option>
+                          </select>
+                        </div>
+                        <div className="mt-4">
+                          <label className="block text-sm mb-2">מיקום רקע</label>
+                          <select
+                            value={backgroundPosition}
+                            onChange={(e) => setBackgroundPosition(e.target.value)}
+                            className="w-full h-10 rounded-md border border-input bg-background px-3"
+                          >
+                            <option value="center">מרכז</option>
+                            <option value="top">למעלה</option>
+                            <option value="bottom">למטה</option>
+                            <option value="left">שמאל</option>
+                            <option value="right">ימין</option>
+                            <option value="top left">למעלה שמאל</option>
+                            <option value="top right">למעלה ימין</option>
+                            <option value="bottom left">למטה שמאל</option>
+                            <option value="bottom right">למטה ימין</option>
+                          </select>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1104,8 +1142,9 @@ const BuilderContent = () => {
               height: `${canvasHeight}px`,
               backgroundColor,
               backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              backgroundSize,
+              backgroundPosition,
+              backgroundRepeat: 'no-repeat',
             }}
             onClick={() => setSelectedElement(null)}
           >

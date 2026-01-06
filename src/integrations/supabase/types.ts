@@ -39,6 +39,8 @@ export type Database = {
         Row: {
           background_color: string | null
           background_image_url: string | null
+          background_position: string | null
+          background_size: string | null
           created_at: string | null
           created_by: string | null
           display_order: number | null
@@ -53,6 +55,8 @@ export type Database = {
         Insert: {
           background_color?: string | null
           background_image_url?: string | null
+          background_position?: string | null
+          background_size?: string | null
           created_at?: string | null
           created_by?: string | null
           display_order?: number | null
@@ -67,6 +71,8 @@ export type Database = {
         Update: {
           background_color?: string | null
           background_image_url?: string | null
+          background_position?: string | null
+          background_size?: string | null
           created_at?: string | null
           created_by?: string | null
           display_order?: number | null
