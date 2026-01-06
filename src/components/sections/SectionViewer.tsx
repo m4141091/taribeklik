@@ -95,23 +95,21 @@ const RenderElement = ({ element }: { element: SectionElement }) => {
 
 export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
   return (
-    <section
-      className="w-full relative"
-      dir="rtl"
-      style={{
-        height: `${section.height}px`,
-        backgroundColor: section.background_color || '#ffffff',
-        backgroundImage: section.background_image_url
-          ? `url(${section.background_image_url})`
-          : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      {/* Container פנימי לאלמנטים - ממורכז */}
-      <div 
-        className="relative h-full mx-auto overflow-hidden"
-        style={{ maxWidth: '1200px' }}
+    <div className="w-full flex justify-center" dir="rtl">
+      {/* ✅ Container בגודל מקסימלי קבוע - זהה לעריכה */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          width: '100%',
+          maxWidth: '1200px',
+          height: `${section.height}px`,
+          backgroundColor: section.background_color || '#ffffff',
+          backgroundImage: section.background_image_url
+            ? `url(${section.background_image_url})`
+            : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
         {section.elements
           ?.sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
@@ -143,6 +141,6 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
             );
           })}
       </div>
-    </section>
+    </div>
   );
 };
