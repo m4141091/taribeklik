@@ -39,6 +39,8 @@ export interface Section {
   height: number;
   background_image_url: string | null;
   background_color: string;
+  background_size?: string;
+  background_position?: string;
   elements: SectionElement[];
   is_active: boolean;
   display_order: number;
