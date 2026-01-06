@@ -1,6 +1,6 @@
 import React from 'react';
 import { useActiveSections } from '@/hooks/useSections';
-import { DynamicSection } from './DynamicSection';
+import { SectionViewer } from './SectionViewer';
 
 export const DynamicSections: React.FC = () => {
   const { sections, loading } = useActiveSections();
@@ -16,7 +16,7 @@ export const DynamicSections: React.FC = () => {
   return (
     <>
       {sections.map((section) => (
-        <DynamicSection key={section.id} section={section} />
+        <SectionViewer key={section.id} section={section} />
       ))}
     </>
   );
