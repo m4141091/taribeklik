@@ -19,22 +19,33 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
     >
       {section.elements
         ?.sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
-        .map((el) => (
-          <div
-            key={el.id}
-            className="absolute"
-            style={{
-              left: `${el.position.x}%`,
-              top: `${el.position.y}%`,
-              width: `${el.size.width}%`,
-              height: `${el.size.height}px`,
-              transform: 'translate(-50%, -50%)',
-              zIndex: el.zIndex || 1,
-            }}
-          >
-            <RenderElement element={el} />
-          </div>
-        ))}
+        .map((el) => {
+          // Handle width/height correctly - add px if number, use as-is if string
+          const width = typeof el.size.width === 'string' 
+            ? el.size.width 
+            : `${el.size.width}px`;
+          
+          const height = typeof el.size.height === 'string' 
+            ? el.size.height 
+            : `${el.size.height}px`;
+
+          return (
+            <div
+              key={el.id}
+              className="absolute"
+              style={{
+                left: `${el.position.x}%`,
+                top: `${el.position.y}%`,
+                width,
+                height,
+                transform: 'translate(-50%, -50%)',
+                zIndex: el.zIndex || 1,
+              }}
+            >
+              <RenderElement element={el} />
+            </div>
+          );
+        })}
     </div>
   );
 };
