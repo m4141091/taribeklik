@@ -6,10 +6,12 @@ import { Section, SectionElement, ElementType } from '@/types/section';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { SectionViewer } from '@/components/sections/SectionViewer';
 import { 
   ArrowRight, 
   Save, 
   Eye, 
+  EyeOff,
   Type, 
   Heading1, 
   MousePointer, 
@@ -88,6 +90,7 @@ const BuilderContent = () => {
   const [fullScreenMode, setFullScreenMode] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [showMargins, setShowMargins] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
 
   // Resize state
   const [resizing, setResizing] = useState<{
@@ -487,9 +490,12 @@ const BuilderContent = () => {
               <AlignCenter className="w-4 h-4" />
             </Button>
           </div>
-          <Button variant="outline" onClick={() => window.open(`/?preview=${id}`, '_blank')}>
-            <Eye className="w-4 h-4 ml-2" />
-            תצוגה מקדימה
+          <Button 
+            variant={previewMode ? "default" : "outline"} 
+            onClick={() => setPreviewMode(!previewMode)}
+          >
+            {previewMode ? <EyeOff className="w-4 h-4 ml-2" /> : <Eye className="w-4 h-4 ml-2" />}
+            {previewMode ? 'חזור לעריכה' : 'תצוגה מקדימה'}
           </Button>
           <Button onClick={saveSection} disabled={saving}>
             <Save className="w-4 h-4 ml-2" />
@@ -1133,220 +1139,244 @@ const BuilderContent = () => {
           </div>
         </aside>
 
-        {/* Canvas */}
+        {/* Canvas / Preview */}
         <main className="flex-1 overflow-auto p-20 flex items-start justify-center">
-          <div
-            ref={canvasRef}
-            className="relative border-2 border-dashed border-border bg-white shadow-lg w-full"
-            style={{
-              maxWidth: '1200px',
-              height: `${canvasHeight}px`,
-              backgroundColor,
-              backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-              backgroundSize,
-              backgroundPosition,
-              backgroundRepeat: 'no-repeat',
-            }}
-            onClick={() => setSelectedElement(null)}
-          >
-            {/* Grid Overlay */}
-            {showGrid && (
-              <div 
-                className="absolute inset-0 pointer-events-none z-50"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
-                  `,
-                  backgroundSize: '50px 50px'
+          {previewMode ? (
+            <div className="w-full">
+              <SectionViewer 
+                section={{
+                  id: id || '',
+                  name: sectionName,
+                  slug: section?.slug || '',
+                  height: canvasHeight,
+                  background_color: backgroundColor,
+                  background_image_url: backgroundImage,
+                  background_size: backgroundSize,
+                  background_position: backgroundPosition,
+                  elements: elements,
+                  is_active: section?.is_active ?? true,
+                  display_order: section?.display_order ?? 0,
+                  created_at: section?.created_at ?? '',
+                  updated_at: section?.updated_at ?? '',
+                  created_by: section?.created_by ?? null,
                 }}
               />
-            )}
-            
-            {/* Margin Lines */}
-            {showMargins && (
-              <>
+            </div>
+          ) : (
+            /* Edit Mode - Canvas with drag/drop */
+            <div
+              ref={canvasRef}
+              className="relative border-2 border-dashed border-border bg-white shadow-lg w-full"
+              style={{
+                maxWidth: '1200px',
+                height: `${canvasHeight}px`,
+                backgroundColor,
+                backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+                backgroundSize,
+                backgroundPosition,
+                backgroundRepeat: 'no-repeat',
+              }}
+              onClick={() => setSelectedElement(null)}
+            >
+              {/* Grid Overlay */}
+              {showGrid && (
                 <div 
-                  className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-50"
-                  style={{ left: '150px' }}
+                  className="absolute inset-0 pointer-events-none z-50"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '50px 50px'
+                  }}
                 />
-                <div 
-                  className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-50"
-                  style={{ right: '150px' }}
-                />
-              </>
-            )}
-            {elements.map((el) => {
-              // Normalize width/height - same logic as DynamicSection and SectionViewer
-              const isFullWidth = el.size.width === '100%';
-              const widthValue = typeof el.size.width === 'number' 
-                ? `${el.size.width}px` 
-                : el.size.width;
-              const heightValue = typeof el.size.height === 'number' 
-                ? `${el.size.height}px` 
-                : el.size.height;
+              )}
+              
+              {/* Margin Lines */}
+              {showMargins && (
+                <>
+                  <div 
+                    className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-50"
+                    style={{ left: '150px' }}
+                  />
+                  <div 
+                    className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-50"
+                    style={{ right: '150px' }}
+                  />
+                </>
+              )}
+              {elements.map((el) => {
+                // Normalize width/height - same logic as DynamicSection and SectionViewer
+                const isFullWidth = el.size.width === '100%';
+                const widthValue = typeof el.size.width === 'number' 
+                  ? `${el.size.width}px` 
+                  : el.size.width;
+                const heightValue = typeof el.size.height === 'number' 
+                  ? `${el.size.height}px` 
+                  : el.size.height;
 
-              return (
-              <div
-                key={el.id}
-                className={`absolute cursor-move select-none ${
-                  selectedElement === el.id ? 'ring-2 ring-primary ring-offset-2' : ''
-                }`}
-                style={{
-                  left: isFullWidth ? '0' : `${el.position.x}%`,
-                  top: `${el.position.y}%`,
-                  transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
-                  width: widthValue,
-                  height: heightValue,
-                  zIndex: el.zIndex || 1,
-                }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  handleMouseDown(e, el.id);
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedElement(el.id);
-                  setActiveTab('settings');
-                }}
-              >
-                {/* Element Content */}
-                {el.type === 'heading' && (
-                  <h2
-                    className="w-full h-full flex items-center justify-center"
-                    style={{
-                      fontSize: el.styles.fontSize,
-                      fontFamily: el.styles.fontFamily === 'cooperative' ? 'Cooperative' : 
-                                  el.styles.fontFamily === 'script' ? 'Script' : 'Discovery',
-                      color: el.styles.color,
-                      textAlign: el.styles.textAlign,
-                    }}
-                  >
-                    {el.content}
-                  </h2>
-                )}
-                {el.type === 'text' && (
-                  <p
-                    className="w-full h-full flex items-center"
-                    style={{
-                      fontSize: el.styles.fontSize,
-                      fontFamily: el.styles.fontFamily === 'cooperative' ? 'Cooperative' : 
-                                  el.styles.fontFamily === 'script' ? 'Script' : 'Discovery',
-                      color: el.styles.color,
-                      textAlign: el.styles.textAlign,
-                    }}
-                  >
-                    {el.content}
-                  </p>
-                )}
-                {el.type === 'button' && (
-                  <button
-                    className="w-full h-full flex items-center justify-center transition-opacity hover:opacity-90"
-                    style={{
-                      fontSize: el.styles.fontSize,
-                      backgroundColor: el.styles.backgroundColor,
-                      color: el.styles.color,
-                      borderRadius: el.styles.borderRadius,
-                    }}
-                  >
-                    {el.content}
-                  </button>
-                )}
-                {el.type === 'image' && (
-                  <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                    {el.content ? (
-                      <img
-                        src={el.content}
-                        alt=""
-                        className="w-full h-full"
-                        style={{ 
-                          borderRadius: el.styles.borderRadius,
-                          objectFit: el.styles.objectFit || 'contain',
-                          objectPosition: el.styles.objectPosition || 'center',
-                          opacity: el.styles.opacity !== undefined ? el.styles.opacity / 100 : 1,
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <Image className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                )}
-                {el.type === 'search' && (
-                  <div
-                    className="w-full h-full flex items-center px-4 border border-border"
-                    style={{
-                      backgroundColor: el.styles.backgroundColor,
-                      borderRadius: el.styles.borderRadius,
-                    }}
-                  >
-                    <Search className="w-5 h-5 text-muted-foreground ml-2" />
-                    <span className="text-muted-foreground">{el.content}</span>
-                  </div>
-                )}
-                {el.type === 'separator' && (
-                  <div className="w-full h-full bg-muted/50 flex items-center justify-center overflow-hidden">
-                    {el.content ? (
-                      <img
-                        src={el.content}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <SeparatorHorizontal className="w-8 h-8 text-muted-foreground" />
-                    )}
-                  </div>
-                )}
-
-                {/* Drag Handle Indicator & Resize Handles */}
-                {selectedElement === el.id && (
-                  <>
-                    <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded p-1">
-                      <Move className="w-3 h-3" />
+                return (
+                <div
+                  key={el.id}
+                  className={`absolute cursor-move select-none ${
+                    selectedElement === el.id ? 'ring-2 ring-primary ring-offset-2' : ''
+                  }`}
+                  style={{
+                    left: isFullWidth ? '0' : `${el.position.x}%`,
+                    top: `${el.position.y}%`,
+                    transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
+                    width: widthValue,
+                    height: heightValue,
+                    zIndex: el.zIndex || 1,
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    handleMouseDown(e, el.id);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedElement(el.id);
+                    setActiveTab('settings');
+                  }}
+                >
+                  {/* Element Content */}
+                  {el.type === 'heading' && (
+                    <h2
+                      className="w-full h-full flex items-center justify-center"
+                      style={{
+                        fontSize: el.styles.fontSize,
+                        fontFamily: el.styles.fontFamily === 'cooperative' ? 'Cooperative' : 
+                                    el.styles.fontFamily === 'script' ? 'Script' : 'Discovery',
+                        color: el.styles.color,
+                        textAlign: el.styles.textAlign,
+                      }}
+                    >
+                      {el.content}
+                    </h2>
+                  )}
+                  {el.type === 'text' && (
+                    <p
+                      className="w-full h-full flex items-center"
+                      style={{
+                        fontSize: el.styles.fontSize,
+                        fontFamily: el.styles.fontFamily === 'cooperative' ? 'Cooperative' : 
+                                    el.styles.fontFamily === 'script' ? 'Script' : 'Discovery',
+                        color: el.styles.color,
+                        textAlign: el.styles.textAlign,
+                      }}
+                    >
+                      {el.content}
+                    </p>
+                  )}
+                  {el.type === 'button' && (
+                    <button
+                      className="w-full h-full flex items-center justify-center transition-opacity hover:opacity-90"
+                      style={{
+                        fontSize: el.styles.fontSize,
+                        backgroundColor: el.styles.backgroundColor,
+                        color: el.styles.color,
+                        borderRadius: el.styles.borderRadius,
+                      }}
+                    >
+                      {el.content}
+                    </button>
+                  )}
+                  {el.type === 'image' && (
+                    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                      {el.content ? (
+                        <img
+                          src={el.content}
+                          alt=""
+                          className="w-full h-full"
+                          style={{ 
+                            borderRadius: el.styles.borderRadius,
+                            objectFit: el.styles.objectFit || 'contain',
+                            objectPosition: el.styles.objectPosition || 'center',
+                            opacity: el.styles.opacity !== undefined ? el.styles.opacity / 100 : 1,
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <Image className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
-                    
-                    {/* Corner Resize Handles */}
-                    <div 
-                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary rounded-sm cursor-se-resize z-50" 
-                      onMouseDown={(e) => startResize(e, el.id, 'se')} 
-                    />
-                    <div 
-                      className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary rounded-sm cursor-sw-resize z-50" 
-                      onMouseDown={(e) => startResize(e, el.id, 'sw')} 
-                    />
-                    <div 
-                      className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-sm cursor-ne-resize z-50" 
-                      onMouseDown={(e) => startResize(e, el.id, 'ne')} 
-                    />
-                    <div 
-                      className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary rounded-sm cursor-nw-resize z-50" 
-                      onMouseDown={(e) => startResize(e, el.id, 'nw')} 
-                    />
-                    
-                    {/* Side Resize Handles */}
-                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-2 h-4 bg-primary rounded-sm cursor-e-resize z-50" 
-                      onMouseDown={(e) => startResize(e, el.id, 'e')} 
-                    />
-                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-2 h-4 bg-primary rounded-sm cursor-w-resize z-50" 
-                      onMouseDown={(e) => startResize(e, el.id, 'w')} 
-                    />
-                    <div 
-                      className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-2 bg-primary rounded-sm cursor-n-resize z-50" 
-                      onMouseDown={(e) => startResize(e, el.id, 'n')} 
-                    />
-                    <div 
-                      className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-2 bg-primary rounded-sm cursor-s-resize z-50" 
-                      onMouseDown={(e) => startResize(e, el.id, 's')} 
-                    />
-                  </>
-                )}
-              </div>
-              );
-            })}
-          </div>
+                  )}
+                  {el.type === 'search' && (
+                    <div
+                      className="w-full h-full flex items-center px-4 border border-border"
+                      style={{
+                        backgroundColor: el.styles.backgroundColor,
+                        borderRadius: el.styles.borderRadius,
+                      }}
+                    >
+                      <Search className="w-5 h-5 text-muted-foreground ml-2" />
+                      <span className="text-muted-foreground">{el.content}</span>
+                    </div>
+                  )}
+                  {el.type === 'separator' && (
+                    <div className="w-full h-full bg-muted/50 flex items-center justify-center overflow-hidden">
+                      {el.content ? (
+                        <img
+                          src={el.content}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <SeparatorHorizontal className="w-8 h-8 text-muted-foreground" />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Drag Handle Indicator & Resize Handles */}
+                  {selectedElement === el.id && (
+                    <>
+                      <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded p-1">
+                        <Move className="w-3 h-3" />
+                      </div>
+                      
+                      {/* Corner Resize Handles */}
+                      <div 
+                        className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary rounded-sm cursor-se-resize z-50" 
+                        onMouseDown={(e) => startResize(e, el.id, 'se')} 
+                      />
+                      <div 
+                        className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary rounded-sm cursor-sw-resize z-50" 
+                        onMouseDown={(e) => startResize(e, el.id, 'sw')} 
+                      />
+                      <div 
+                        className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-sm cursor-ne-resize z-50" 
+                        onMouseDown={(e) => startResize(e, el.id, 'ne')} 
+                      />
+                      <div 
+                        className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary rounded-sm cursor-nw-resize z-50" 
+                        onMouseDown={(e) => startResize(e, el.id, 'nw')} 
+                      />
+                      
+                      {/* Side Resize Handles */}
+                      <div 
+                        className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-2 h-4 bg-primary rounded-sm cursor-e-resize z-50" 
+                        onMouseDown={(e) => startResize(e, el.id, 'e')} 
+                      />
+                      <div 
+                        className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-2 h-4 bg-primary rounded-sm cursor-w-resize z-50" 
+                        onMouseDown={(e) => startResize(e, el.id, 'w')} 
+                      />
+                      <div 
+                        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-2 bg-primary rounded-sm cursor-n-resize z-50" 
+                        onMouseDown={(e) => startResize(e, el.id, 'n')} 
+                      />
+                      <div 
+                        className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-2 bg-primary rounded-sm cursor-s-resize z-50" 
+                        onMouseDown={(e) => startResize(e, el.id, 's')} 
+                      />
+                    </>
+                  )}
+                </div>
+                );
+              })}
+            </div>
+          )}
         </main>
 
       </div>
