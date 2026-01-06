@@ -1134,11 +1134,12 @@ const BuilderContent = () => {
         </aside>
 
         {/* Canvas */}
-        <main className={`flex-1 overflow-auto ${fullScreenMode ? '' : 'p-20 flex items-start justify-center'}`}>
+        <main className="flex-1 overflow-auto p-20 flex items-start justify-center">
           <div
             ref={canvasRef}
             className="relative border-2 border-dashed border-border bg-white shadow-lg w-full"
             style={{
+              maxWidth: '1200px',
               height: `${canvasHeight}px`,
               backgroundColor,
               backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,

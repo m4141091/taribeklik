@@ -8,18 +8,20 @@ interface DynamicSectionProps {
 
 export const DynamicSection: React.FC<DynamicSectionProps> = ({ section }) => {
   return (
-    <section
-      className="relative w-full"
-      style={{
-        height: `${section.height}px`,
-        backgroundColor: section.background_color || undefined,
-        backgroundImage: section.background_image_url 
-          ? `url(${section.background_image_url})` 
-          : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
+    <div className="w-full flex justify-center">
+      <section
+        className="relative w-full"
+        style={{
+          maxWidth: '1200px',
+          height: `${section.height}px`,
+          backgroundColor: section.background_color || undefined,
+          backgroundImage: section.background_image_url 
+            ? `url(${section.background_image_url})` 
+            : undefined,
+          backgroundSize: section.background_size || 'cover',
+          backgroundPosition: section.background_position || 'center',
+        }}
+      >
       {section.elements.map((element) => {
         const isFullWidth = element.size.width === '100%';
         const widthValue = typeof element.size.width === 'number' 
@@ -46,6 +48,7 @@ export const DynamicSection: React.FC<DynamicSectionProps> = ({ section }) => {
           </div>
         );
       })}
-    </section>
+      </section>
+    </div>
   );
 };
