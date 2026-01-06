@@ -95,25 +95,30 @@ const RenderElement = ({ element }: { element: SectionElement }) => {
 
 export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
   return (
-    <div className="w-full flex justify-center" dir="rtl">
-      {/* ✅ Container בגודל מקסימלי קבוע - זהה לעריכה */}
+    <section
+      className="w-full relative"
+      style={{
+        height: `${section.height}px`,
+        backgroundColor: section.background_color || undefined,
+        backgroundImage: section.background_image_url
+          ? `url(${section.background_image_url})`
+          : undefined,
+        backgroundSize: section.background_size || 'cover',
+        backgroundPosition: section.background_position || 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+      dir="rtl"
+    >
+      {/* Container בגודל מקסימלי קבוע - זהה לעריכה */}
       <div
-        className="relative overflow-hidden"
-        style={{
-          width: '100%',
-          maxWidth: '1200px',
-          height: `${section.height}px`,
-          backgroundColor: section.background_color || '#ffffff',
-          backgroundImage: section.background_image_url
-            ? `url(${section.background_image_url})`
-            : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="relative h-full mx-auto"
+        style={{ maxWidth: '1200px' }}
       >
         {section.elements
           ?.sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
           .map((el) => {
+            const isFullWidth = el.size.width === '100%';
+            
             const width =
               typeof el.size.width === 'string'
                 ? el.size.width
@@ -128,11 +133,11 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
                 key={el.id}
                 className="absolute"
                 style={{
-                  left: `${el.position.x}%`,
+                  left: isFullWidth ? '0' : `${el.position.x}%`,
                   top: `${el.position.y}%`,
+                  transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
                   width,
                   height,
-                  transform: 'translate(-50%, -50%)',
                   zIndex: el.zIndex || 1,
                 }}
               >
@@ -141,6 +146,6 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
             );
           })}
       </div>
-    </div>
+    </section>
   );
 };
