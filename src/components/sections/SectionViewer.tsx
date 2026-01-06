@@ -96,6 +96,7 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
         {section.elements
           ?.sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
           .map((el) => {
+            const isFullWidth = el.size.width === '100%';
             const width =
               typeof el.size.width === 'string'
                 ? el.size.width
@@ -110,9 +111,9 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
                 key={el.id}
                 className="absolute"
                 style={{
-                  left: `${el.position.x}%`,
+                  left: isFullWidth ? '0' : `${el.position.x}%`,
                   top: `${el.position.y}%`,
-                  transform: 'translate(-50%, -50%)',
+                  transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
                   width,
                   height,
                   zIndex: el.zIndex || 1,
