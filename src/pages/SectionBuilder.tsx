@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { SectionViewer } from '@/components/sections/SectionViewer';
+import { Switch } from '@/components/ui/switch';
 import { 
   ArrowRight, 
   Save, 
@@ -81,6 +82,7 @@ const BuilderContent = () => {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [backgroundSize, setBackgroundSize] = useState<'cover' | 'contain' | '100%'>('cover');
   const [backgroundPosition, setBackgroundPosition] = useState('center');
+  const [isActive, setIsActive] = useState(false);
 
   // Drag state
   const [dragging, setDragging] = useState<string | null>(null);
@@ -129,6 +131,7 @@ const BuilderContent = () => {
         setBackgroundImage(parsedSection.background_image_url);
         setBackgroundSize((data as any).background_size || 'cover');
         setBackgroundPosition((data as any).background_position || 'center');
+        setIsActive(parsedSection.is_active || false);
       } catch (error) {
         console.error('Error fetching section:', error);
         toast({
@@ -321,6 +324,7 @@ const BuilderContent = () => {
           background_size: backgroundSize,
           background_position: backgroundPosition,
           elements: JSON.parse(JSON.stringify(elements)),
+          is_active: isActive,
         })
         .eq('id', id);
 
@@ -597,6 +601,13 @@ const BuilderContent = () => {
                   הגדרות קנבס
                 </h2>
                 <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/50">
+                    <label className="text-sm font-medium">סקשן פעיל באתר</label>
+                    <Switch 
+                      checked={isActive} 
+                      onCheckedChange={setIsActive}
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm mb-2">גובה (פיקסלים)</label>
                     <Input
