@@ -1099,10 +1099,8 @@ const BuilderContent = () => {
         <main className={`flex-1 overflow-auto ${fullScreenMode ? '' : 'p-8 flex items-start justify-center'}`}>
           <div
             ref={canvasRef}
-            className="relative border-2 border-dashed border-border bg-white shadow-lg"
+            className="relative border-2 border-dashed border-border bg-white shadow-lg w-full"
             style={{
-              width: '100%',
-              maxWidth: fullScreenMode ? 'none' : '1200px',
               height: `${canvasHeight}px`,
               backgroundColor,
               backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
