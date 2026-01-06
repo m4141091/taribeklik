@@ -1,6 +1,7 @@
 import React from 'react';
 import { Section, SectionElement } from '@/types/section';
 import { isSafeUrl } from '@/lib/urlValidation';
+import TypewriterText from '@/components/TypewriterText';
 
 interface SectionViewerProps {
   section: Section;
@@ -23,17 +24,30 @@ const RenderElement = ({ element }: { element: SectionElement }) => {
     boxSizing: 'border-box',
   };
 
+  const renderTextContent = (content: string) => {
+    if (element.effects?.typewriter) {
+      return (
+        <TypewriterText
+          text={content}
+          typingSpeed={element.effects.typewriterSpeed || 100}
+          initialDelay={(element.effects.typewriterDelay || 500) / 1000}
+        />
+      );
+    }
+    return content;
+  };
+
   switch (element.type) {
     case 'heading':
       return (
         <h2 style={{ ...baseStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {element.content}
+          {renderTextContent(element.content)}
         </h2>
       );
     case 'text':
       return (
         <p style={{ ...baseStyle, display: 'flex', alignItems: 'center' }}>
-          {element.content}
+          {renderTextContent(element.content)}
         </p>
       );
     case 'button': {
