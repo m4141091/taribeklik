@@ -1,11 +1,11 @@
-import Header from "@/components/Header";
+import HeroSection from "@/components/HeroSection";
 import { DynamicSections } from "@/components/sections/DynamicSections";
 
 const Index = () => {
   return (
     <main className="min-h-screen">
       
-      <Header />
+      <HeroSection />
       
       {/* Dynamic Sections from Builder */}
       <DynamicSections />
