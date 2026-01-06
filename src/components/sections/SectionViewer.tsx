@@ -20,25 +20,25 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
       {section.elements
         ?.sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
         .map((el) => {
-          // Handle width/height correctly - add px if number, use as-is if string
-          const width = typeof el.size.width === 'string' 
-            ? el.size.width 
-            : `${el.size.width}px`;
-          
-          const height = typeof el.size.height === 'string' 
-            ? el.size.height 
-            : `${el.size.height}px`;
+          // Normalize width/height - same logic as DynamicSection and Builder
+          const isFullWidth = el.size.width === '100%';
+          const width = typeof el.size.width === 'number' 
+            ? `${el.size.width}px` 
+            : el.size.width;
+          const height = typeof el.size.height === 'number' 
+            ? `${el.size.height}px` 
+            : el.size.height;
 
           return (
             <div
               key={el.id}
               className="absolute"
               style={{
-                left: `${el.position.x}%`,
+                left: isFullWidth ? '0' : `${el.position.x}%`,
                 top: `${el.position.y}%`,
+                transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
                 width,
                 height,
-                transform: 'translate(-50%, -50%)',
                 zIndex: el.zIndex || 1,
               }}
             >

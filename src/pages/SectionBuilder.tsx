@@ -1175,18 +1175,28 @@ const BuilderContent = () => {
                 />
               </>
             )}
-            {elements.map((el) => (
+            {elements.map((el) => {
+              // Normalize width/height - same logic as DynamicSection and SectionViewer
+              const isFullWidth = el.size.width === '100%';
+              const widthValue = typeof el.size.width === 'number' 
+                ? `${el.size.width}px` 
+                : el.size.width;
+              const heightValue = typeof el.size.height === 'number' 
+                ? `${el.size.height}px` 
+                : el.size.height;
+
+              return (
               <div
                 key={el.id}
                 className={`absolute cursor-move select-none ${
                   selectedElement === el.id ? 'ring-2 ring-primary ring-offset-2' : ''
                 }`}
                 style={{
-                  left: `${el.position.x}%`,
+                  left: isFullWidth ? '0' : `${el.position.x}%`,
                   top: `${el.position.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                  width: el.size.width,
-                  height: el.size.height,
+                  transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
+                  width: widthValue,
+                  height: heightValue,
                   zIndex: el.zIndex || 1,
                 }}
                 onMouseDown={(e) => {
@@ -1333,7 +1343,8 @@ const BuilderContent = () => {
                   </>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </main>
 
