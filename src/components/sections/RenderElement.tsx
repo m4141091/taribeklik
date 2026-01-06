@@ -2,6 +2,7 @@ import React from 'react';
 import { SectionElement } from '@/types/section';
 import { Search } from 'lucide-react';
 import TypewriterText from '@/components/TypewriterText';
+import { isSafeUrl } from '@/lib/urlValidation';
 
 interface RenderElementProps {
   element: SectionElement;
@@ -57,7 +58,7 @@ export const RenderElement: React.FC<RenderElementProps> = ({ element }) => {
       );
 
     case 'button':
-      if (el.link) {
+      if (el.link && isSafeUrl(el.link)) {
         return (
           <a
             href={el.link}

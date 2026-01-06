@@ -1,5 +1,6 @@
 import React from 'react';
 import { Section, SectionElement } from '@/types/section';
+import { isSafeUrl } from '@/lib/urlValidation';
 
 interface SectionViewerProps {
   section: Section;
@@ -35,10 +36,11 @@ const RenderElement = ({ element }: { element: SectionElement }) => {
           {element.content}
         </p>
       );
-    case 'button':
+    case 'button': {
+      const safeHref = isSafeUrl(element.link) ? element.link : undefined;
       return (
         <a
-          href={element.link || '#'}
+          href={safeHref || '#'}
           style={{
             ...baseStyle,
             display: 'flex',
@@ -46,12 +48,14 @@ const RenderElement = ({ element }: { element: SectionElement }) => {
             justifyContent: 'center',
             backgroundColor: element.styles.backgroundColor,
             textDecoration: 'none',
-            cursor: 'pointer',
+            cursor: safeHref ? 'pointer' : 'default',
           }}
+          onClick={safeHref ? undefined : (e) => e.preventDefault()}
         >
           {element.content}
         </a>
       );
+    }
     case 'image':
       return (
         <img
