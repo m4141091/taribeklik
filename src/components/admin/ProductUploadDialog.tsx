@@ -9,10 +9,12 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { parseFile } from '@/lib/productParsers';
 import { generateBatchImages, uploadBase64Image } from '@/lib/productImageAI';
 import { ParsedProduct, ProductFormData } from '@/types/product';
+import { Category } from '@/types/category';
 import {
   Table,
   TableBody,
@@ -21,24 +23,42 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ProductUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (products: ProductFormData[]) => Promise<void>;
+  onSubmit: (products: ProductFormData[], categoryId?: string) => Promise<void>;
+  categories: Category[];
+  defaultCategoryId?: string | null;
 }
 
 const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
   open,
   onOpenChange,
   onSubmit,
+  categories,
+  defaultCategoryId,
 }) => {
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 0, name: '' });
   const [productImages, setProductImages] = useState<Map<string, string>>(new Map());
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(defaultCategoryId || '');
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (defaultCategoryId) {
+      setSelectedCategoryId(defaultCategoryId);
+    }
+  }, [defaultCategoryId]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -91,7 +111,6 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
         }
       );
 
-      // Upload all images to storage
       const uploadedImages = new Map<string, string>();
       for (const [name, base64] of images) {
         try {
@@ -120,7 +139,7 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
     const productsToCreate: ProductFormData[] = parsedProducts.map(p => ({
       name: p.name,
       category: p.category,
-      pricing_type: p.pricing_type,
+      pricing_type: 'kg' as const,
       price_per_kg: p.price_per_kg,
       price_per_unit: p.price_per_unit,
       average_weight_kg: p.average_weight_kg,
@@ -129,15 +148,14 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
       in_stock_this_week: true,
     }));
 
-    await onSubmit(productsToCreate);
-    setParsedProducts([]);
-    setProductImages(new Map());
-    onOpenChange(false);
+    await onSubmit(productsToCreate, selectedCategoryId || undefined);
+    handleClose();
   };
 
   const handleClose = () => {
     setParsedProducts([]);
     setProductImages(new Map());
+    setSelectedCategoryId(defaultCategoryId || '');
     onOpenChange(false);
   };
 
@@ -150,7 +168,23 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
 
         {parsedProducts.length === 0 ? (
           <div className="space-y-4">
-            {/* File Drop Zone */}
+            <div className="space-y-2">
+              <Label>קטגוריה (אופציונלי)</Label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="בחר קטגוריה למוצרים" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">ללא קטגוריה</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div
               onDragOver={handleDragOver}
               onDrop={handleDrop}
@@ -169,106 +203,61 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
               </p>
             </div>
 
-            {/* File Type Buttons */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="excel-upload"
-                />
+                <input type="file" accept=".xlsx,.xls" onChange={handleFileSelect} className="hidden" id="excel-upload" />
                 <label htmlFor="excel-upload">
                   <Button variant="outline" className="w-full" asChild>
-                    <span>
-                      <FileSpreadsheet className="w-4 h-4 ml-2" />
-                      Excel
-                    </span>
+                    <span><FileSpreadsheet className="w-4 h-4 ml-2" />Excel</span>
                   </Button>
                 </label>
               </div>
               <div>
-                <input
-                  type="file"
-                  accept=".docx,.doc,.txt"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="word-upload"
-                />
+                <input type="file" accept=".docx,.doc,.txt" onChange={handleFileSelect} className="hidden" id="word-upload" />
                 <label htmlFor="word-upload">
                   <Button variant="outline" className="w-full" asChild>
-                    <span>
-                      <FileText className="w-4 h-4 ml-2" />
-                      Word
-                    </span>
+                    <span><FileText className="w-4 h-4 ml-2" />Word</span>
                   </Button>
                 </label>
               </div>
               <div>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="pdf-upload"
-                />
+                <input type="file" accept=".pdf" onChange={handleFileSelect} className="hidden" id="pdf-upload" />
                 <label htmlFor="pdf-upload">
                   <Button variant="outline" className="w-full" asChild>
-                    <span>
-                      <FileText className="w-4 h-4 ml-2" />
-                      PDF
-                    </span>
+                    <span><FileText className="w-4 h-4 ml-2" />PDF</span>
                   </Button>
                 </label>
               </div>
-            </div>
-
-            <div className="text-sm text-muted-foreground">
-              <p className="font-medium mb-2">פורמט הקובץ:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>שורה ראשונה: כותרות (אופציונלי)</li>
-                <li>עמודות: שם מוצר, מחיר, סוג תמחור (ק"ג/יחידה), קטגוריה</li>
-                <li>או רשימה פשוטה: שם מוצר בכל שורה</li>
-              </ul>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Generate Images Section */}
+            {selectedCategoryId && (
+              <div className="text-sm text-muted-foreground">
+                קטגוריה: <strong>{categories.find(c => c.id === selectedCategoryId)?.name}</strong>
+              </div>
+            )}
+
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div>
-                <p className="font-medium">יצירת תמונות AI לכל המוצרים</p>
+                <p className="font-medium">יצירת תמונות AI</p>
                 <p className="text-sm text-muted-foreground">
-                  {productImages.size > 0
-                    ? `נוצרו ${productImages.size} מתוך ${parsedProducts.length} תמונות`
-                    : 'לחץ ליצירת תמונות מקצועיות לכל המוצרים'}
+                  {productImages.size > 0 ? `נוצרו ${productImages.size} תמונות` : 'לחץ ליצירת תמונות'}
                 </p>
               </div>
-              <Button
-                onClick={handleGenerateAllImages}
-                disabled={isGeneratingImages}
-              >
-                {isGeneratingImages ? (
-                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                ) : (
-                  <Wand2 className="w-4 h-4 ml-2" />
-                )}
+              <Button onClick={handleGenerateAllImages} disabled={isGeneratingImages}>
+                {isGeneratingImages ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Wand2 className="w-4 h-4 ml-2" />}
                 {isGeneratingImages ? 'יוצר...' : 'צור תמונות'}
               </Button>
             </div>
 
-            {/* Progress Bar */}
             {isGeneratingImages && (
               <div className="space-y-2">
                 <Progress value={(imageProgress.current / imageProgress.total) * 100} />
-                <p className="text-sm text-center text-muted-foreground">
-                  יוצר תמונה עבור: {imageProgress.name} ({imageProgress.current}/{imageProgress.total})
-                </p>
+                <p className="text-sm text-center text-muted-foreground">יוצר: {imageProgress.name}</p>
               </div>
             )}
 
-            {/* Products Table */}
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
@@ -276,7 +265,6 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
                     <TableHead className="text-right">תמונה</TableHead>
                     <TableHead className="text-right">שם</TableHead>
                     <TableHead className="text-right">מחיר</TableHead>
-                    <TableHead className="text-right">סוג</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -284,28 +272,13 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
                     <TableRow key={index}>
                       <TableCell>
                         {productImages.get(product.name) ? (
-                          <img
-                            src={productImages.get(product.name)}
-                            alt={product.name}
-                            className="w-10 h-10 rounded object-cover"
-                          />
+                          <img src={productImages.get(product.name)} alt={product.name} className="w-10 h-10 rounded object-cover" />
                         ) : (
-                          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground">—</span>
-                          </div>
+                          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground">—</div>
                         )}
                       </TableCell>
                       <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>
-                        {product.pricing_type === 'kg'
-                          ? `₪${product.price_per_kg}/ק"ג`
-                          : product.price_per_unit
-                          ? `₪${product.price_per_unit}`
-                          : '—'}
-                      </TableCell>
-                      <TableCell>
-                        {product.pricing_type === 'kg' ? 'ק"ג' : 'יחידה'}
-                      </TableCell>
+                      <TableCell>{product.price_per_kg ? `₪${product.price_per_kg}/ק"ג` : '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -315,13 +288,9 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
         )}
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleClose}>
-            ביטול
-          </Button>
+          <Button variant="outline" onClick={handleClose}>ביטול</Button>
           {parsedProducts.length > 0 && (
-            <Button onClick={handleSubmit} disabled={isGeneratingImages}>
-              הוסף {parsedProducts.length} מוצרים
-            </Button>
+            <Button onClick={handleSubmit} disabled={isGeneratingImages}>הוסף {parsedProducts.length} מוצרים</Button>
           )}
         </DialogFooter>
       </DialogContent>

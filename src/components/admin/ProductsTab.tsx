@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, ImageIcon, List } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, ImageIcon, List, Folder, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
+import { useProductCategories } from '@/hooks/useProductCategories';
 import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
 import ProductFormDialog from './ProductFormDialog';
@@ -28,7 +30,7 @@ import {
 const ProductsTab: React.FC = () => {
   const {
     products,
-    loading,
+    loading: productsLoading,
     createProduct,
     createProducts,
     updateProduct,
@@ -36,6 +38,14 @@ const ProductsTab: React.FC = () => {
     toggleInStock,
     toggleActive,
   } = useProducts();
+  const { categories, loading: categoriesLoading } = useCategories();
+  const { 
+    productCategories, 
+    loading: productCategoriesLoading,
+    getProductCategoryIds,
+    setProductCategoryIds,
+    addProductToCategories,
+  } = useProductCategories();
   const { toast } = useToast();
 
   const [showFormDialog, setShowFormDialog] = useState(false);
@@ -43,14 +53,62 @@ const ProductsTab: React.FC = () => {
   const [showListInputDialog, setShowListInputDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [defaultCategoryId, setDefaultCategoryId] = useState<string | null>(null);
+
+  const loading = productsLoading || categoriesLoading || productCategoriesLoading;
+
+  // Get products for selected category
+  const filteredProducts = useMemo(() => {
+    if (selectedCategoryId === null) {
+      // Show all products
+      return products;
+    }
+    
+    if (selectedCategoryId === 'uncategorized') {
+      // Show products without any category
+      return products.filter(product => {
+        const categoryIds = getProductCategoryIds(product.id);
+        return categoryIds.length === 0;
+      });
+    }
+
+    // Show products in selected category
+    return products.filter(product => {
+      const categoryIds = getProductCategoryIds(product.id);
+      return categoryIds.includes(selectedCategoryId);
+    });
+  }, [products, selectedCategoryId, productCategories, getProductCategoryIds]);
+
+  // Count products per category
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    let uncategorized = 0;
+
+    products.forEach(product => {
+      const categoryIds = getProductCategoryIds(product.id);
+      if (categoryIds.length === 0) {
+        uncategorized++;
+      } else {
+        categoryIds.forEach(catId => {
+          counts[catId] = (counts[catId] || 0) + 1;
+        });
+      }
+    });
+
+    return { ...counts, uncategorized };
+  }, [products, productCategories, getProductCategoryIds]);
 
   const handleImageUpdate = async (productId: string, newImageUrl: string) => {
     await updateProduct(productId, { image_url: newImageUrl });
   };
 
-  const handleCreateProduct = async (data: ProductFormData) => {
+  const handleCreateProduct = async (data: ProductFormData, categoryIds?: string[]) => {
     try {
-      await createProduct(data);
+      const product = await createProduct(data);
+      if (categoryIds && categoryIds.length > 0) {
+        await addProductToCategories(product.id, categoryIds);
+      }
       toast({ title: 'המוצר נוצר בהצלחה!' });
     } catch (error) {
       toast({
@@ -62,10 +120,13 @@ const ProductsTab: React.FC = () => {
     }
   };
 
-  const handleUpdateProduct = async (data: ProductFormData) => {
+  const handleUpdateProduct = async (data: ProductFormData, categoryIds?: string[]) => {
     if (!editingProduct) return;
     try {
       await updateProduct(editingProduct.id, data);
+      if (categoryIds !== undefined) {
+        await setProductCategoryIds(editingProduct.id, categoryIds);
+      }
       setEditingProduct(null);
       toast({ title: 'המוצר עודכן בהצלחה!' });
     } catch (error) {
@@ -78,9 +139,14 @@ const ProductsTab: React.FC = () => {
     }
   };
 
-  const handleBulkCreate = async (productsData: ProductFormData[]) => {
+  const handleBulkCreate = async (productsData: ProductFormData[], categoryId?: string) => {
     try {
-      await createProducts(productsData);
+      const createdProducts = await createProducts(productsData);
+      if (categoryId) {
+        for (const product of createdProducts) {
+          await addProductToCategories(product.id, [categoryId]);
+        }
+      }
       toast({ title: `נוספו ${productsData.length} מוצרים בהצלחה!` });
     } catch (error) {
       toast({
@@ -160,6 +226,16 @@ const ProductsTab: React.FC = () => {
     }
   };
 
+  const handleOpenListInput = (categoryId?: string) => {
+    setDefaultCategoryId(categoryId || null);
+    setShowListInputDialog(true);
+  };
+
+  const handleOpenUpload = (categoryId?: string) => {
+    setDefaultCategoryId(categoryId || null);
+    setShowUploadDialog(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -180,7 +256,7 @@ const ProductsTab: React.FC = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => setShowUploadDialog(true)}>
+            <DropdownMenuItem onClick={() => handleOpenUpload(selectedCategoryId || undefined)}>
               Excel / Word / PDF
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -191,7 +267,7 @@ const ProductsTab: React.FC = () => {
           הוספה ידנית
         </Button>
 
-        <Button variant="outline" onClick={() => setShowListInputDialog(true)}>
+        <Button variant="outline" onClick={() => handleOpenListInput(selectedCategoryId || undefined)}>
           <List className="w-4 h-4 ml-2" />
           הוספת רשימה
         </Button>
@@ -202,11 +278,53 @@ const ProductsTab: React.FC = () => {
         </Button>
       </div>
 
+      {/* Category Folders */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant={selectedCategoryId === null ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedCategoryId(null)}
+          className="gap-2"
+        >
+          {selectedCategoryId === null ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
+          כל המוצרים ({products.length})
+        </Button>
+
+        {categories.map((category) => (
+          <Button
+            key={category.id}
+            variant={selectedCategoryId === category.id ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategoryId(category.id)}
+            className="gap-2"
+          >
+            {selectedCategoryId === category.id ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
+            {category.name} ({categoryCounts[category.id] || 0})
+          </Button>
+        ))}
+
+        <Button
+          variant={selectedCategoryId === 'uncategorized' ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedCategoryId('uncategorized')}
+          className="gap-2"
+        >
+          {selectedCategoryId === 'uncategorized' ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
+          ללא קטגוריה ({categoryCounts.uncategorized || 0})
+        </Button>
+      </div>
+
       {/* Products Table */}
-      {products.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="bg-card rounded-lg border border-border p-8 text-center">
           <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground mb-4">אין מוצרים עדיין</p>
+          <p className="text-muted-foreground mb-4">
+            {selectedCategoryId === null 
+              ? 'אין מוצרים עדיין' 
+              : selectedCategoryId === 'uncategorized'
+              ? 'אין מוצרים ללא קטגוריה'
+              : 'אין מוצרים בקטגוריה זו'}
+          </p>
           <Button onClick={() => setShowFormDialog(true)}>
             <Plus className="w-4 h-4 ml-2" />
             הוסף מוצר ראשון
@@ -219,7 +337,7 @@ const ProductsTab: React.FC = () => {
               <TableRow>
                 <TableHead className="text-right w-16">תמונה</TableHead>
                 <TableHead className="text-right">שם מוצר</TableHead>
-                <TableHead className="text-right">קטגוריה</TableHead>
+                <TableHead className="text-right">קטגוריות</TableHead>
                 <TableHead className="text-right">מחיר/ק"ג</TableHead>
                 <TableHead className="text-right">מחיר/יח'</TableHead>
                 <TableHead className="text-right w-24">במלאי</TableHead>
@@ -227,74 +345,85 @@ const ProductsTab: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id} className={!product.is_active ? 'opacity-50' : ''}>
-                  <TableCell>
-                    <div 
-                      className="cursor-pointer hover:ring-2 hover:ring-primary rounded-lg transition-all"
-                      onClick={() => setLightboxProduct(product)}
-                    >
-                      {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-12 h-12 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                          <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.category || '—'}</TableCell>
-                  <TableCell>
-                    {product.price_per_kg ? `₪${product.price_per_kg}` : '—'}
-                  </TableCell>
-                  <TableCell>
-                    {product.price_per_unit ? `₪${product.price_per_unit.toFixed(2)}` : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={product.in_stock_this_week}
-                      onCheckedChange={() => handleToggleStock(product)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleToggleActive(product)}
-                        title={product.is_active ? 'הסתר' : 'פרסם'}
+              {filteredProducts.map((product) => {
+                const productCategoryIds = getProductCategoryIds(product.id);
+                const productCategoryNames = categories
+                  .filter(c => productCategoryIds.includes(c.id))
+                  .map(c => c.name);
+
+                return (
+                  <TableRow key={product.id} className={!product.is_active ? 'opacity-50' : ''}>
+                    <TableCell>
+                      <div 
+                        className="cursor-pointer hover:ring-2 hover:ring-primary rounded-lg transition-all"
+                        onClick={() => setLightboxProduct(product)}
                       >
-                        {product.is_active ? (
-                          <Eye className="w-4 h-4 text-green-600" />
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
                         ) : (
-                          <EyeOff className="w-4 h-4" />
+                          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                            <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                          </div>
                         )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(product)}
-                        title="ערוך"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(product)}
-                        title="מחק"
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>
+                      {productCategoryNames.length > 0 
+                        ? productCategoryNames.join(', ') 
+                        : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell>
+                      {product.price_per_kg ? `₪${product.price_per_kg}` : '—'}
+                    </TableCell>
+                    <TableCell>
+                      {product.price_per_unit ? `₪${product.price_per_unit.toFixed(2)}` : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={product.in_stock_this_week}
+                        onCheckedChange={() => handleToggleStock(product)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleToggleActive(product)}
+                          title={product.is_active ? 'הסתר' : 'פרסם'}
+                        >
+                          {product.is_active ? (
+                            <Eye className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <EyeOff className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(product)}
+                          title="ערוך"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(product)}
+                          title="מחק"
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -306,18 +435,24 @@ const ProductsTab: React.FC = () => {
         onOpenChange={handleFormClose}
         onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
         product={editingProduct}
+        categories={categories}
+        getProductCategoryIds={getProductCategoryIds}
       />
 
       <ProductUploadDialog
         open={showUploadDialog}
         onOpenChange={setShowUploadDialog}
         onSubmit={handleBulkCreate}
+        categories={categories}
+        defaultCategoryId={defaultCategoryId}
       />
 
       <ProductListInputDialog
         open={showListInputDialog}
         onOpenChange={setShowListInputDialog}
         onSubmit={handleBulkCreate}
+        categories={categories}
+        defaultCategoryId={defaultCategoryId}
       />
 
       <ImageLightbox
