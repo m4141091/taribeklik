@@ -15,10 +15,10 @@ serve(async (req) => {
   }
 
   try {
-    const { action, productName, imageUrl, instruction, backgroundImageUrl } = await req.json();
+    const { action, productName, imageUrl, instruction, backgroundImageBase64 } = await req.json();
     
     console.log(`Processing ${action} request for: ${productName || 'image edit'}`);
-    console.log(`Background image provided: ${!!backgroundImageUrl}`);
+    console.log(`Background image provided: ${!!backgroundImageBase64}`);
 
     const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
@@ -39,21 +39,35 @@ serve(async (req) => {
         );
       }
 
-      // Always generate product on clean white background - we'll remove it later
-      const prompt = `Generate a professional product photo of "${productName}" (Israeli produce).
+      if (!backgroundImageBase64) {
+        return new Response(
+          JSON.stringify({ error: 'Background image is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Generate product directly on the provided background
+      const prompt = `Place "${productName}" (Israeli fresh produce) on this pink dotted background.
 
 CRITICAL Requirements:
-- PURE WHITE BACKGROUND (#FFFFFF) - completely clean, no patterns, no shadows
-- Multiple units of the product arranged attractively in the center
-- Product should be LARGE and fill 70% of the frame
-- Professional studio lighting
-- High quality, sharp, detailed photography
-- Vivid, natural colors
-- Photorealistic style
+- The product should be CENTERED and fill approximately 70% of the image
+- Arrange multiple units of the product attractively
+- Professional studio lighting on the product
+- Photorealistic, high quality, sharp and detailed
+- Vivid, natural colors for the produce
+- KEEP THE EXACT SAME BACKGROUND PATTERN - do not change the pink dotted background at all
 - No text or logos
-- The background must be completely white with no gradients or variations`;
+- The product should look like it's photographed on this exact background`;
 
-      messages = [{ role: 'user', content: prompt }];
+      messages = [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: backgroundImageBase64 } }
+          ]
+        }
+      ];
     } else if (action === 'edit') {
       if (!imageUrl || !instruction) {
         return new Response(

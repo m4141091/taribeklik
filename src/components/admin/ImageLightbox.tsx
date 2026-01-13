@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Loader2, Wand2, Eraser } from 'lucide-react';
+import { Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { generateProductImage, editProductImage, uploadBase64Image } from '@/lib/productImageAI';
-import { removeBackgroundFromUrl } from '@/lib/removeBackground';
 import productCardBg from '@/assets/product-card-bg.png';
 import {
   Dialog,
@@ -33,7 +32,6 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isRemovingBg, setIsRemovingBg] = useState(false);
   const [editInstruction, setEditInstruction] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -62,8 +60,7 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
 
     setIsGenerating(true);
     try {
-      const base64Image = await generateProductImage(productName);
-      const uploadedUrl = await uploadBase64Image(base64Image);
+      const uploadedUrl = await generateProductImage(productName);
       setPreviewUrl(uploadedUrl);
       setHasChanges(true);
       toast({ title: 'התמונה נוצרה בהצלחה!' });
@@ -118,38 +115,6 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
     }
   };
 
-  const handleRemoveBackground = async () => {
-    if (!currentImageUrl) {
-      toast({
-        title: 'שגיאה',
-        description: 'אין תמונה להסרת רקע',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsRemovingBg(true);
-    try {
-      toast({ 
-        title: 'מסיר רקע...', 
-        description: 'פעם ראשונה לוקח כ-30 שניות להורדת המודל' 
-      });
-      const newImageUrl = await removeBackgroundFromUrl(currentImageUrl);
-      setPreviewUrl(newImageUrl);
-      setHasChanges(true);
-      toast({ title: 'הרקע הוסר בהצלחה!' });
-    } catch (error) {
-      console.error('Error removing background:', error);
-      toast({
-        title: 'שגיאה בהסרת הרקע',
-        description: error instanceof Error ? error.message : 'נסי שוב',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsRemovingBg(false);
-    }
-  };
-
   const handleSave = async () => {
     if (!previewUrl) return;
 
@@ -170,7 +135,7 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
     }
   };
 
-  const isLoading = isGenerating || isEditing || isSaving || isRemovingBg;
+  const isLoading = isGenerating || isEditing || isSaving;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -227,19 +192,6 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
                 <Wand2 className="w-4 h-4 me-2" />
               )}
               ערוך ב-AI
-            </Button>
-
-            <Button
-              onClick={handleRemoveBackground}
-              disabled={isLoading || !currentImageUrl}
-              variant="outline"
-            >
-              {isRemovingBg ? (
-                <Loader2 className="w-4 h-4 me-2 animate-spin" />
-              ) : (
-                <Eraser className="w-4 h-4 me-2" />
-              )}
-              הסר רקע
             </Button>
           </div>
 
