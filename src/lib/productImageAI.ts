@@ -1,29 +1,17 @@
 import { supabase } from '@/integrations/supabase/client';
-import productCardBg from '@/assets/product-card-bg.png';
+import { removeBackground, uploadBackgroundRemovedImage } from './removeBackground';
+import { compositeProductOnBackground, dataUrlToBlob } from './compositeImage';
 
-// Get background image as base64 data URL
-const getBackgroundImageUrl = async (): Promise<string> => {
-  try {
-    const response = await fetch(productCardBg);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error('Error loading background image:', error);
-    throw error;
-  }
-};
-
+/**
+ * Generate a product image with AI, remove background, and composite on pink dotted background
+ */
 export const generateProductImage = async (productName: string): Promise<string> => {
-  // Get background image as base64
-  const backgroundImageUrl = await getBackgroundImageUrl();
+  console.log(`Generating product image for: ${productName}`);
   
+  // Step 1: Call AI to generate product on white background
+  console.log('Step 1: Calling AI to generate product on white background...');
   const { data, error } = await supabase.functions.invoke('generate-product-image', {
-    body: { action: 'generate', productName, backgroundImageUrl },
+    body: { action: 'generate', productName },
   });
 
   if (error) {
@@ -39,7 +27,23 @@ export const generateProductImage = async (productName: string): Promise<string>
     throw new Error('No image generated');
   }
 
-  return data.imageUrl;
+  const aiGeneratedImageUrl = data.imageUrl;
+  console.log('AI generated image URL:', aiGeneratedImageUrl);
+  
+  // Step 2: Remove background from AI-generated image
+  console.log('Step 2: Removing background...');
+  const transparentBlob = await removeBackground(aiGeneratedImageUrl);
+  
+  // Step 3: Composite transparent product on pink dotted background
+  console.log('Step 3: Compositing on background...');
+  const compositeBlob = await compositeProductOnBackground(transparentBlob);
+  
+  // Step 4: Upload the final composite image
+  console.log('Step 4: Uploading final image...');
+  const finalUrl = await uploadBackgroundRemovedImage(compositeBlob);
+  
+  console.log('Final image URL:', finalUrl);
+  return finalUrl;
 };
 
 export const editProductImage = async (imageUrl: string, instruction: string): Promise<string> => {
