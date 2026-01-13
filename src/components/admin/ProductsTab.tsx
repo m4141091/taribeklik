@@ -9,6 +9,7 @@ import { exportProductsToExcel } from '@/lib/exportToExcel';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
 import ProductListInputDialog from './ProductListInputDialog';
+import ImageLightbox from './ImageLightbox';
 import {
   Table,
   TableBody,
@@ -41,6 +42,11 @@ const ProductsTab: React.FC = () => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showListInputDialog, setShowListInputDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
+
+  const handleImageUpdate = async (productId: string, newImageUrl: string) => {
+    await updateProduct(productId, { image_url: newImageUrl });
+  };
 
   const handleCreateProduct = async (data: ProductFormData) => {
     try {
@@ -224,17 +230,22 @@ const ProductsTab: React.FC = () => {
               {products.map((product) => (
                 <TableRow key={product.id} className={!product.is_active ? 'opacity-50' : ''}>
                   <TableCell>
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                        <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                      </div>
-                    )}
+                    <div 
+                      className="cursor-pointer hover:ring-2 hover:ring-primary rounded-lg transition-all"
+                      onClick={() => setLightboxProduct(product)}
+                    >
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                          <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.category || '—'}</TableCell>
@@ -307,6 +318,15 @@ const ProductsTab: React.FC = () => {
         open={showListInputDialog}
         onOpenChange={setShowListInputDialog}
         onSubmit={handleBulkCreate}
+      />
+
+      <ImageLightbox
+        open={!!lightboxProduct}
+        onOpenChange={(open) => !open && setLightboxProduct(null)}
+        imageUrl={lightboxProduct?.image_url}
+        productName={lightboxProduct?.name || ''}
+        productId={lightboxProduct?.id || ''}
+        onImageUpdate={handleImageUpdate}
       />
     </div>
   );
