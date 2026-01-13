@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, ImageIcon } from 'lucide-react';
+import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, ImageIcon, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +8,7 @@ import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
+import ProductListInputDialog from './ProductListInputDialog';
 import {
   Table,
   TableBody,
@@ -38,6 +39,7 @@ const ProductsTab: React.FC = () => {
 
   const [showFormDialog, setShowFormDialog] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showListInputDialog, setShowListInputDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const handleCreateProduct = async (data: ProductFormData) => {
@@ -183,6 +185,11 @@ const ProductsTab: React.FC = () => {
           הוספה ידנית
         </Button>
 
+        <Button variant="outline" onClick={() => setShowListInputDialog(true)}>
+          <List className="w-4 h-4 ml-2" />
+          הוספת רשימה
+        </Button>
+
         <Button variant="outline" onClick={handleExport}>
           <Download className="w-4 h-4 ml-2" />
           ייצוא ל-Excel
@@ -293,6 +300,12 @@ const ProductsTab: React.FC = () => {
       <ProductUploadDialog
         open={showUploadDialog}
         onOpenChange={setShowUploadDialog}
+        onSubmit={handleBulkCreate}
+      />
+
+      <ProductListInputDialog
+        open={showListInputDialog}
+        onOpenChange={setShowListInputDialog}
         onSubmit={handleBulkCreate}
       />
     </div>
