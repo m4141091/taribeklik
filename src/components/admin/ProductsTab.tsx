@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, ImageIcon, List, Folder, FolderOpen } from 'lucide-react';
+import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, ImageIcon, List, Folder, FolderOpen, Images } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +8,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProductCategories } from '@/hooks/useProductCategories';
 import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
+import { downloadProductImages } from '@/lib/downloadProductImages';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
 import ProductListInputDialog from './ProductListInputDialog';
@@ -55,6 +56,7 @@ const ProductsTab: React.FC = () => {
   const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [defaultCategoryId, setDefaultCategoryId] = useState<string | null>(null);
+  const [isDownloadingImages, setIsDownloadingImages] = useState(false);
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
@@ -214,6 +216,43 @@ const ProductsTab: React.FC = () => {
     toast({ title: 'הקובץ הורד בהצלחה!' });
   };
 
+  const handleDownloadImages = async () => {
+    const productsToDownload = selectedCategoryId === null ? products : filteredProducts;
+    
+    if (productsToDownload.length === 0) {
+      toast({
+        title: 'אין מוצרים להורדה',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const productsWithImages = productsToDownload.filter(p => p.image_url);
+    if (productsWithImages.length === 0) {
+      toast({
+        title: 'אין מוצרים עם תמונות להורדה',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDownloadingImages(true);
+    try {
+      await downloadProductImages(productsToDownload, (current, total) => {
+        // Could add progress UI here in the future
+      });
+      toast({ title: `הורדו ${productsWithImages.length} תמונות בהצלחה!` });
+    } catch (error) {
+      toast({
+        title: 'שגיאה',
+        description: error instanceof Error ? error.message : 'שגיאה בהורדת התמונות',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloadingImages(false);
+    }
+  };
+
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setShowFormDialog(true);
@@ -275,6 +314,15 @@ const ProductsTab: React.FC = () => {
         <Button variant="outline" onClick={handleExport}>
           <Download className="w-4 h-4 ml-2" />
           ייצוא ל-Excel
+        </Button>
+
+        <Button 
+          variant="outline" 
+          onClick={handleDownloadImages}
+          disabled={isDownloadingImages}
+        >
+          <Images className="w-4 h-4 ml-2" />
+          {isDownloadingImages ? 'מוריד...' : 'הורד תמונות'}
         </Button>
       </div>
 
