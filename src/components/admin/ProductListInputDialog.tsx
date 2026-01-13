@@ -60,13 +60,15 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 0, name: '' });
   const [productImages, setProductImages] = useState<Map<string, string>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(defaultCategoryId || '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(defaultCategoryId || '__none__');
   const { toast } = useToast();
 
   // Reset selected category when defaultCategoryId changes
   React.useEffect(() => {
     if (defaultCategoryId) {
       setSelectedCategoryId(defaultCategoryId);
+    } else {
+      setSelectedCategoryId('__none__');
     }
   }, [defaultCategoryId]);
 
@@ -168,7 +170,7 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
         in_stock_this_week: true,
       }));
 
-      await onSubmit(productsData, selectedCategoryId || undefined);
+      await onSubmit(productsData, selectedCategoryId === '__none__' ? undefined : selectedCategoryId);
       handleClose();
     } catch (error) {
       console.error('Submit error:', error);
@@ -182,7 +184,7 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
     setParsedProducts([]);
     setProductImages(new Map());
     setImageProgress({ current: 0, total: 0, name: '' });
-    setSelectedCategoryId(defaultCategoryId || '');
+    setSelectedCategoryId(defaultCategoryId || '__none__');
     onOpenChange(false);
   };
 
@@ -208,7 +210,7 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
                   <SelectValue placeholder="בחר קטגוריה למוצרים" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">ללא קטגוריה</SelectItem>
+                  <SelectItem value="__none__">ללא קטגוריה</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}

@@ -51,12 +51,14 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 0, name: '' });
   const [productImages, setProductImages] = useState<Map<string, string>>(new Map());
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(defaultCategoryId || '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(defaultCategoryId || '__none__');
   const { toast } = useToast();
 
   React.useEffect(() => {
     if (defaultCategoryId) {
       setSelectedCategoryId(defaultCategoryId);
+    } else {
+      setSelectedCategoryId('__none__');
     }
   }, [defaultCategoryId]);
 
@@ -148,14 +150,14 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
       in_stock_this_week: true,
     }));
 
-    await onSubmit(productsToCreate, selectedCategoryId || undefined);
+    await onSubmit(productsToCreate, selectedCategoryId === '__none__' ? undefined : selectedCategoryId);
     handleClose();
   };
 
   const handleClose = () => {
     setParsedProducts([]);
     setProductImages(new Map());
-    setSelectedCategoryId(defaultCategoryId || '');
+    setSelectedCategoryId(defaultCategoryId || '__none__');
     onOpenChange(false);
   };
 
@@ -175,7 +177,7 @@ const ProductUploadDialog: React.FC<ProductUploadDialogProps> = ({
                   <SelectValue placeholder="בחר קטגוריה למוצרים" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">ללא קטגוריה</SelectItem>
+                  <SelectItem value="__none__">ללא קטגוריה</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
