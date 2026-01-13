@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      products: {
+        Row: {
+          average_weight_kg: number | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string | null
+          in_stock_this_week: boolean
+          is_active: boolean
+          name: string
+          price_per_kg: number | null
+          price_per_unit: number | null
+          pricing_type: string
+          updated_at: string
+        }
+        Insert: {
+          average_weight_kg?: number | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock_this_week?: boolean
+          is_active?: boolean
+          name: string
+          price_per_kg?: number | null
+          price_per_unit?: number | null
+          pricing_type?: string
+          updated_at?: string
+        }
+        Update: {
+          average_weight_kg?: number | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock_this_week?: boolean
+          is_active?: boolean
+          name?: string
+          price_per_kg?: number | null
+          price_per_unit?: number | null
+          pricing_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

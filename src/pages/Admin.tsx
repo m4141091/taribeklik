@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, LogOut, Eye, EyeOff, GripVertical } from 'lucide-react';
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProductsTab from '@/components/admin/ProductsTab';
 const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
@@ -155,13 +156,20 @@ const AdminContent = () => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-foreground">סקשנים</h2>
-          <Button onClick={() => setShowCreateForm(!showCreateForm)}>
-            <Plus className="w-4 h-4 ml-2" />
-            סקשן חדש
-          </Button>
-        </div>
+        <Tabs defaultValue="sections" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="sections">סקשנים</TabsTrigger>
+            <TabsTrigger value="products">מוצרים</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="sections">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-foreground">סקשנים</h2>
+              <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+                <Plus className="w-4 h-4 ml-2" />
+                סקשן חדש
+              </Button>
+            </div>
 
         {/* Create Form */}
         {showCreateForm && (
@@ -248,6 +256,12 @@ const AdminContent = () => {
             ))}
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent value="products">
+            <ProductsTab />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
