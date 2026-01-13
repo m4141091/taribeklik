@@ -166,12 +166,11 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
             <Button
               onClick={handleGenerateAI}
               disabled={isLoading}
-              variant="outline"
             >
               {isGenerating ? (
-                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
               ) : (
-                <Sparkles className="w-4 h-4 ml-2" />
+                <Sparkles className="w-4 h-4 me-2" />
               )}
               צור ב-AI
             </Button>
@@ -179,12 +178,11 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
             <Button
               onClick={handleEditAI}
               disabled={isLoading || !currentImageUrl}
-              variant="outline"
             >
               {isEditing ? (
-                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
               ) : (
-                <Wand2 className="w-4 h-4 ml-2" />
+                <Wand2 className="w-4 h-4 me-2" />
               )}
               ערוך ב-AI
             </Button>
