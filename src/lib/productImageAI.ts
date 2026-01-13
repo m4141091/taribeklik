@@ -1,17 +1,50 @@
 import { supabase } from '@/integrations/supabase/client';
-import { removeBackground, uploadBackgroundRemovedImage } from './removeBackground';
-import { compositeProductOnBackground, dataUrlToBlob } from './compositeImage';
+import productBackground from '@/assets/product-background.png';
 
 /**
- * Generate a product image with AI, remove background, and composite on pink dotted background
+ * Convert an image URL to base64
+ */
+const imageToBase64 = async (imageUrl: string): Promise<string> => {
+  const response = await fetch(imageUrl);
+  const blob = await response.blob();
+  
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+// Cache the background image base64 to avoid re-fetching
+let cachedBackgroundBase64: string | null = null;
+
+const getBackgroundBase64 = async (): Promise<string> => {
+  if (cachedBackgroundBase64) {
+    return cachedBackgroundBase64;
+  }
+  
+  cachedBackgroundBase64 = await imageToBase64(productBackground);
+  return cachedBackgroundBase64;
+};
+
+/**
+ * Generate a product image with AI directly on the pink dotted background
  */
 export const generateProductImage = async (productName: string): Promise<string> => {
   console.log(`Generating product image for: ${productName}`);
   
-  // Step 1: Call AI to generate product on white background
-  console.log('Step 1: Calling AI to generate product on white background...');
+  // Get background image as base64
+  const backgroundImageBase64 = await getBackgroundBase64();
+  console.log('Background image loaded, calling AI...');
+  
+  // Call AI to generate product directly on the background
   const { data, error } = await supabase.functions.invoke('generate-product-image', {
-    body: { action: 'generate', productName },
+    body: { 
+      action: 'generate', 
+      productName,
+      backgroundImageBase64 
+    },
   });
 
   if (error) {
@@ -27,22 +60,13 @@ export const generateProductImage = async (productName: string): Promise<string>
     throw new Error('No image generated');
   }
 
-  const aiGeneratedImageUrl = data.imageUrl;
-  console.log('AI generated image URL:', aiGeneratedImageUrl);
+  // Upload the generated image to storage
+  const generatedImageUrl = data.imageUrl;
+  console.log('AI generated image, uploading to storage...');
   
-  // Step 2: Remove background from AI-generated image
-  console.log('Step 2: Removing background...');
-  const transparentBlob = await removeBackground(aiGeneratedImageUrl);
-  
-  // Step 3: Composite transparent product on pink dotted background
-  console.log('Step 3: Compositing on background...');
-  const compositeBlob = await compositeProductOnBackground(transparentBlob);
-  
-  // Step 4: Upload the final composite image
-  console.log('Step 4: Uploading final image...');
-  const finalUrl = await uploadBackgroundRemovedImage(compositeBlob);
-  
+  const finalUrl = await uploadBase64Image(generatedImageUrl);
   console.log('Final image URL:', finalUrl);
+  
   return finalUrl;
 };
 
