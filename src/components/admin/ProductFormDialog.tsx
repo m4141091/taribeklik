@@ -29,11 +29,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ProductImageUploader from './ProductImageUploader';
+import CategoryMultiSelect from './CategoryMultiSelect';
 import { Product, ProductFormData, getDefaultWeight } from '@/types/product';
+import { Category } from '@/types/category';
 
 const formSchema = z.object({
   name: z.string().min(1, 'שם המוצר הוא שדה חובה'),
-  category: z.string().optional(),
   pricing_type: z.enum(['kg', 'unit']),
   price_per_kg: z.number().optional(),
   price_per_unit: z.number().optional(),
@@ -46,33 +47,28 @@ const formSchema = z.object({
 interface ProductFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: ProductFormData) => Promise<void>;
+  onSubmit: (data: ProductFormData, categoryIds?: string[]) => Promise<void>;
   product?: Product | null;
+  categories: Category[];
+  getProductCategoryIds: (productId: string) => string[];
 }
-
-const categories = [
-  'ירקות',
-  'פירות',
-  'עלים ירוקים',
-  'תבלינים',
-  'קטניות',
-  'אחר',
-];
 
 const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   open,
   onOpenChange,
   onSubmit,
   product,
+  categories,
+  getProductCategoryIds,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      category: '',
-      pricing_type: 'unit',
+      pricing_type: 'kg',
       price_per_kg: undefined,
       price_per_unit: undefined,
       average_weight_kg: undefined,
@@ -107,7 +103,6 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     if (product) {
       form.reset({
         name: product.name,
-        category: product.category || '',
         pricing_type: product.pricing_type,
         price_per_kg: product.price_per_kg || undefined,
         price_per_unit: product.price_per_unit || undefined,
@@ -116,11 +111,11 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         is_active: product.is_active,
         in_stock_this_week: product.in_stock_this_week,
       });
+      setSelectedCategoryIds(getProductCategoryIds(product.id));
     } else {
       form.reset({
         name: '',
-        category: '',
-        pricing_type: 'unit',
+        pricing_type: 'kg',
         price_per_kg: undefined,
         price_per_unit: undefined,
         average_weight_kg: undefined,
@@ -128,13 +123,14 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         is_active: true,
         in_stock_this_week: true,
       });
+      setSelectedCategoryIds([]);
     }
-  }, [product, form, open]);
+  }, [product, form, open, getProductCategoryIds]);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(values as ProductFormData);
+      await onSubmit(values as ProductFormData, selectedCategoryIds);
       onOpenChange(false);
     } finally {
       setIsSubmitting(false);
@@ -164,30 +160,15 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>קטגוריה</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="בחר קטגוריה" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label>קטגוריות</Label>
+              <CategoryMultiSelect
+                categories={categories}
+                selectedIds={selectedCategoryIds}
+                onChange={setSelectedCategoryIds}
+                placeholder="בחר קטגוריות"
+              />
+            </div>
 
             <FormField
               control={form.control}

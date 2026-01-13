@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Wand2, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ParsedProduct, getDefaultWeight } from '@/types/product';
 import { ProductFormData } from '@/types/product';
+import { Category } from '@/types/category';
 import { generateBatchImages, uploadBase64Image } from '@/lib/productImageAI';
 import {
   Dialog,
@@ -22,11 +24,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ProductListInputDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (products: ProductFormData[]) => Promise<void>;
+  onSubmit: (products: ProductFormData[], categoryId?: string) => Promise<void>;
+  categories: Category[];
+  defaultCategoryId?: string | null;
 }
 
 interface AIProduct {
@@ -39,6 +50,8 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
   open,
   onOpenChange,
   onSubmit,
+  categories,
+  defaultCategoryId,
 }) => {
   const [inputText, setInputText] = useState('');
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
@@ -47,7 +60,15 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 0, name: '' });
   const [productImages, setProductImages] = useState<Map<string, string>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(defaultCategoryId || '');
   const { toast } = useToast();
+
+  // Reset selected category when defaultCategoryId changes
+  React.useEffect(() => {
+    if (defaultCategoryId) {
+      setSelectedCategoryId(defaultCategoryId);
+    }
+  }, [defaultCategoryId]);
 
   const handleParseWithAI = async () => {
     if (!inputText.trim()) {
@@ -66,15 +87,13 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
       const products: ParsedProduct[] = (data.products as AIProduct[]).map((p: AIProduct) => {
         const product: ParsedProduct = {
           name: p.name,
-          pricing_type: p.pricing_type,
+          pricing_type: 'kg', // Default to kg as requested
         };
 
-        if (p.pricing_type === 'kg' && p.price) {
+        if (p.price) {
           product.price_per_kg = p.price;
           product.average_weight_kg = getDefaultWeight(p.name);
           product.price_per_unit = p.price * product.average_weight_kg;
-        } else if (p.price) {
-          product.price_per_unit = p.price;
         }
 
         return product;
@@ -140,7 +159,7 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
       const productsData: ProductFormData[] = parsedProducts.map((p) => ({
         name: p.name,
         category: p.category,
-        pricing_type: p.pricing_type,
+        pricing_type: 'kg' as const, // Default to kg
         price_per_kg: p.price_per_kg,
         price_per_unit: p.price_per_unit,
         average_weight_kg: p.average_weight_kg,
@@ -149,7 +168,7 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
         in_stock_this_week: true,
       }));
 
-      await onSubmit(productsData);
+      await onSubmit(productsData, selectedCategoryId || undefined);
       handleClose();
     } catch (error) {
       console.error('Submit error:', error);
@@ -163,6 +182,7 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
     setParsedProducts([]);
     setProductImages(new Map());
     setImageProgress({ current: 0, total: 0, name: '' });
+    setSelectedCategoryId(defaultCategoryId || '');
     onOpenChange(false);
   };
 
@@ -182,6 +202,23 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
           // Input mode
           <div className="space-y-4 py-4">
             <div className="space-y-2">
+              <Label>קטגוריה (אופציונלי)</Label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="בחר קטגוריה למוצרים" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">ללא קטגוריה</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-sm text-muted-foreground">
                 הזיני רשימת מוצרים (בכל פורמט שנוח לך):
               </label>
@@ -199,7 +236,7 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
               פשוט כתבי את המוצרים - המערכת תזהה אותם אוטומטית!
               <br />
               <span className="text-xs">
-                דוגמה: "עגבניות מלפפונים בננות 12 שקל לקילו תפוחים"
+                כל המוצרים יוגדרו כברירת מחדל לפי ק"ג
               </span>
             </div>
 
@@ -226,6 +263,12 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
         ) : (
           // Preview mode
           <div className="space-y-4 py-4">
+            {selectedCategoryId && (
+              <div className="text-sm text-muted-foreground">
+                קטגוריה: <strong>{categories.find(c => c.id === selectedCategoryId)?.name}</strong>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"
@@ -287,9 +330,7 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
                           ? `₪${product.price_per_unit}`
                           : '—'}
                       </TableCell>
-                      <TableCell>
-                        {product.pricing_type === 'kg' ? 'ק"ג' : 'יחידה'}
-                      </TableCell>
+                      <TableCell>ק"ג</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

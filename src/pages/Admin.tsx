@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, LogOut, Eye, EyeOff, GripVertical } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProductsTab from '@/components/admin/ProductsTab';
+import CategoriesManager from '@/components/admin/CategoriesManager';
 const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
@@ -160,6 +161,7 @@ const AdminContent = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="sections">סקשנים</TabsTrigger>
             <TabsTrigger value="products">מוצרים</TabsTrigger>
+            <TabsTrigger value="categories">קטגוריות</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sections">
@@ -260,6 +262,13 @@ const AdminContent = () => {
 
           <TabsContent value="products">
             <ProductsTab />
+          </TabsContent>
+
+          <TabsContent value="categories">
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-foreground">ניהול קטגוריות</h2>
+              <CategoriesManager />
+            </div>
           </TabsContent>
         </Tabs>
       </main>
