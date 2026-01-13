@@ -15,9 +15,10 @@ serve(async (req) => {
   }
 
   try {
-    const { action, productName, imageUrl, instruction } = await req.json();
+    const { action, productName, imageUrl, instruction, backgroundImageUrl } = await req.json();
     
     console.log(`Processing ${action} request for: ${productName || 'image edit'}`);
+    console.log(`Background image provided: ${!!backgroundImageUrl}`);
 
     const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
@@ -29,7 +30,6 @@ serve(async (req) => {
     }
 
     let messages;
-    const { backgroundImageUrl } = await req.json().catch(() => ({}));
 
     if (action === 'generate') {
       if (!productName) {
