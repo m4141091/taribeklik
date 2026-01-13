@@ -1,8 +1,29 @@
 import { supabase } from '@/integrations/supabase/client';
+import productCardBg from '@/assets/product-card-bg.png';
+
+// Get background image as base64 data URL
+const getBackgroundImageUrl = async (): Promise<string> => {
+  try {
+    const response = await fetch(productCardBg);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error loading background image:', error);
+    throw error;
+  }
+};
 
 export const generateProductImage = async (productName: string): Promise<string> => {
+  // Get background image as base64
+  const backgroundImageUrl = await getBackgroundImageUrl();
+  
   const { data, error } = await supabase.functions.invoke('generate-product-image', {
-    body: { action: 'generate', productName },
+    body: { action: 'generate', productName, backgroundImageUrl },
   });
 
   if (error) {
