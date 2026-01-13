@@ -38,16 +38,20 @@ serve(async (req) => {
         );
       }
 
-      const prompt = `צור תמונת מוצר מקצועית עבור "${productName}".
-הדרישות:
-- יחס 1:1 (ריבועי)
-- רקע לבן נקי לחלוטין
-- כמה יחידות מהמוצר ביחד (לא יחידה בודדת)
-- תאורה מקצועית של סטודיו
-- איכות גבוהה כמו צילום לקטלוג
-- ללא טקסט או לוגו
-- המוצר במרכז התמונה
-- צבעים חיים וטבעיים`;
+      const prompt = `Generate a professional product photo of "${productName}" (Israeli produce).
+
+Requirements:
+- Square 1:1 aspect ratio
+- Pure white background
+- Multiple units of the product together (not a single item)
+- Professional studio lighting
+- High quality catalog-style photography
+- No text or logos
+- Product centered in frame
+- Vivid, natural colors
+- Photorealistic style
+
+IMPORTANT: You must generate an image, not just describe it.`;
 
       messages = [{ role: 'user', content: prompt }];
     } else if (action === 'edit') {
@@ -74,62 +78,74 @@ serve(async (req) => {
       );
     }
 
-    console.log('Calling AI Gateway...');
+    // Try up to 3 times to generate an image
+    const maxRetries = 3;
+    let lastError = '';
     
-    const response = await fetch(AI_GATEWAY_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages,
-        modalities: ['image', 'text'],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`AI Gateway error: ${response.status} - ${errorText}`);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      console.log(`Calling AI Gateway... (attempt ${attempt}/${maxRetries})`);
       
-      if (response.status === 429) {
+      const response = await fetch(AI_GATEWAY_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash-image-preview',
+          messages,
+          modalities: ['image', 'text'],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`AI Gateway error: ${response.status} - ${errorText}`);
+        
+        if (response.status === 429) {
+          return new Response(
+            JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        if (response.status === 402) {
+          return new Response(
+            JSON.stringify({ error: 'Insufficient credits. Please check your account.' }),
+            { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        lastError = 'Failed to generate image';
+        continue;
+      }
+
+      const data = await response.json();
+      const generatedImageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+      if (generatedImageUrl) {
+        console.log('Image generated successfully');
         return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ imageUrl: generatedImageUrl }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Insufficient credits. Please check your account.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      console.log(`Attempt ${attempt}: No image in response, retrying...`);
+      lastError = 'Model did not generate an image';
       
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate image' }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Small delay before retry
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
-
-    const data = await response.json();
-    const generatedImageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-    if (!generatedImageUrl) {
-      console.error('No image in response:', JSON.stringify(data));
-      return new Response(
-        JSON.stringify({ error: 'No image generated' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('Image generated successfully');
-
+    
+    console.error(`Failed after ${maxRetries} attempts`);
     return new Response(
-      JSON.stringify({ imageUrl: generatedImageUrl }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: lastError || 'No image generated after multiple attempts' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
