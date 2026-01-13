@@ -41,17 +41,18 @@ serve(async (req) => {
 
       // If background image is provided, generate product ON the background
       if (backgroundImageUrl) {
-        const prompt = `Add a professional product photo of "${productName}" (Israeli produce) to this background image.
+        const prompt = `Add a LARGE, prominent product photo of "${productName}" (Israeli produce) to this background.
 
-Requirements:
-- Keep the exact same background pattern/design
-- Place multiple units of the product in the center
-- Professional studio lighting on the product
-- High quality catalog-style photography
-- No text or logos
+CRITICAL Requirements:
+- The product must be LARGE and fill most of the center area
+- Keep the EXACT same background pattern with pink dots
+- Multiple units of the product arranged attractively
+- Professional studio lighting
+- High quality, sharp, detailed photography
 - Vivid, natural colors
 - Photorealistic product
-- Product should look naturally placed on the background`;
+- The product should be the main focus - big and clear
+- No text or logos`;
 
         messages = [
           {
