@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ParsedProduct, getDefaultWeight } from '@/types/product';
 import { ProductFormData } from '@/types/product';
 import { Category } from '@/types/category';
-import { generateBatchImages, uploadBase64Image } from '@/lib/productImageAI';
+import { generateBatchImages } from '@/lib/productImageAI';
 import {
   Dialog,
   DialogContent,
@@ -123,24 +123,14 @@ const ProductListInputDialog: React.FC<ProductListInputDialogProps> = ({
 
     try {
       const productNames = parsedProducts.map(p => p.name);
+      // generateBatchImages now returns ready-to-use URLs (already uploaded)
       const images = await generateBatchImages(
         productNames,
         (current, total, name) => setImageProgress({ current, total, name })
       );
 
-      // Upload all images to Supabase storage
-      const uploadedImages = new Map<string, string>();
-      for (const [name, base64] of images) {
-        try {
-          const url = await uploadBase64Image(base64);
-          uploadedImages.set(name, url);
-        } catch (e) {
-          console.error(`Failed to upload image for ${name}:`, e);
-        }
-      }
-
-      setProductImages(uploadedImages);
-      toast({ title: `נוצרו ${uploadedImages.size} תמונות` });
+      setProductImages(images);
+      toast({ title: `נוצרו ${images.size} תמונות` });
     } catch (error) {
       console.error('Image generation error:', error);
       toast({
