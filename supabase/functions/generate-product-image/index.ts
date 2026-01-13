@@ -42,16 +42,17 @@ serve(async (req) => {
 
 Requirements:
 - Square 1:1 aspect ratio
-- Pure white background
+- TRANSPARENT BACKGROUND (PNG with alpha channel) - this is critical
 - Multiple units of the product together (not a single item)
 - Professional studio lighting
 - High quality catalog-style photography
 - No text or logos
-- Product centered in frame
+- Product centered in frame with no background elements
 - Vivid, natural colors
 - Photorealistic style
+- The product should float on transparency, no shadows on background
 
-IMPORTANT: You must generate an image, not just describe it.`;
+IMPORTANT: You must generate an image with transparent background, not white background.`;
 
       messages = [{ role: 'user', content: prompt }];
     } else if (action === 'edit') {

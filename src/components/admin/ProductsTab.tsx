@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, ImageIcon, List, Folder, FolderOpen, Images } from 'lucide-react';
+import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
 import ProductListInputDialog from './ProductListInputDialog';
 import ImageLightbox from './ImageLightbox';
+import ProductImage from './ProductImage';
 import {
   Table,
   TableBody,
@@ -406,17 +407,7 @@ const ProductsTab: React.FC = () => {
                         className="cursor-pointer hover:ring-2 hover:ring-primary rounded-lg transition-all"
                         onClick={() => setLightboxProduct(product)}
                       >
-                        {product.image_url ? (
-                          <img
-                            src={product.image_url}
-                            alt={product.name}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                            <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                          </div>
-                        )}
+                        <ProductImage src={product.image_url} alt={product.name} size="sm" />
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>

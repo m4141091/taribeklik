@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Sparkles, Loader2, Wand2, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { generateProductImage, editProductImage, uploadBase64Image } from '@/lib/productImageAI';
+import productCardBg from '@/assets/product-card-bg.png';
 import {
   Dialog,
   DialogContent,
@@ -146,7 +147,14 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
 
         <div className="space-y-4">
           {/* Image Display */}
-          <div className="flex justify-center bg-muted/30 rounded-lg p-4 min-h-[300px] items-center">
+          <div 
+            className="flex justify-center rounded-lg p-4 min-h-[300px] items-center"
+            style={{
+              backgroundImage: `url(${productCardBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
             {currentImageUrl ? (
               <img
                 src={currentImageUrl}
@@ -154,7 +162,7 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
                 className="max-h-[400px] max-w-full rounded-lg object-contain"
               />
             ) : (
-              <div className="text-muted-foreground text-center">
+              <div className="text-muted-foreground text-center bg-background/80 rounded-lg p-4">
                 <Sparkles className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>אין תמונה - צרי תמונה חדשה עם AI</p>
               </div>
