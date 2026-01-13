@@ -8,7 +8,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProductCategories } from '@/hooks/useProductCategories';
 import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
-import { downloadProductImages } from '@/lib/downloadProductImages';
+import { downloadProductImages, downloadSingleImage } from '@/lib/downloadProductImages';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
 import ProductListInputDialog from './ProductListInputDialog';
@@ -403,11 +403,24 @@ const ProductsTab: React.FC = () => {
                 return (
                   <TableRow key={product.id} className={!product.is_active ? 'opacity-50' : ''}>
                     <TableCell>
-                      <div 
-                        className="cursor-pointer hover:ring-2 hover:ring-primary rounded-lg transition-all"
-                        onClick={() => setLightboxProduct(product)}
-                      >
-                        <ProductImage src={product.image_url} alt={product.name} size="sm" />
+                      <div className="flex items-center gap-1">
+                        <div 
+                          className="cursor-pointer hover:ring-2 hover:ring-primary rounded-lg transition-all"
+                          onClick={() => setLightboxProduct(product)}
+                        >
+                          <ProductImage src={product.image_url} alt={product.name} size="sm" />
+                        </div>
+                        {product.image_url && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => downloadSingleImage(product.image_url!, product.name)}
+                            title="הורד תמונה"
+                          >
+                            <Download className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
