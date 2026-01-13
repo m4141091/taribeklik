@@ -29,6 +29,7 @@ serve(async (req) => {
     }
 
     let messages;
+    const { backgroundImageUrl } = await req.json().catch(() => ({}));
 
     if (action === 'generate') {
       if (!productName) {
@@ -38,7 +39,31 @@ serve(async (req) => {
         );
       }
 
-      const prompt = `Generate a professional product photo of "${productName}" (Israeli produce).
+      // If background image is provided, generate product ON the background
+      if (backgroundImageUrl) {
+        const prompt = `Add a professional product photo of "${productName}" (Israeli produce) to this background image.
+
+Requirements:
+- Keep the exact same background pattern/design
+- Place multiple units of the product in the center
+- Professional studio lighting on the product
+- High quality catalog-style photography
+- No text or logos
+- Vivid, natural colors
+- Photorealistic product
+- Product should look naturally placed on the background`;
+
+        messages = [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: backgroundImageUrl } },
+            ],
+          },
+        ];
+      } else {
+        const prompt = `Generate a professional product photo of "${productName}" (Israeli produce).
 
 Requirements:
 - Square 1:1 aspect ratio
@@ -54,7 +79,8 @@ Requirements:
 
 IMPORTANT: You must generate an image with transparent background, not white background.`;
 
-      messages = [{ role: 'user', content: prompt }];
+        messages = [{ role: 'user', content: prompt }];
+      }
     } else if (action === 'edit') {
       if (!imageUrl || !instruction) {
         return new Response(
