@@ -39,49 +39,21 @@ serve(async (req) => {
         );
       }
 
-      // If background image is provided, generate product ON the background
-      if (backgroundImageUrl) {
-        const prompt = `Add a LARGE, prominent product photo of "${productName}" (Israeli produce) to this background.
+      // Always generate product on clean white background - we'll remove it later
+      const prompt = `Generate a professional product photo of "${productName}" (Israeli produce).
 
 CRITICAL Requirements:
-- The product must be LARGE and fill most of the center area
-- Keep the EXACT same background pattern with pink dots
-- Multiple units of the product arranged attractively
+- PURE WHITE BACKGROUND (#FFFFFF) - completely clean, no patterns, no shadows
+- Multiple units of the product arranged attractively in the center
+- Product should be LARGE and fill 70% of the frame
 - Professional studio lighting
 - High quality, sharp, detailed photography
 - Vivid, natural colors
-- Photorealistic product
-- The product should be the main focus - big and clear
-- No text or logos`;
-
-        messages = [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: backgroundImageUrl } },
-            ],
-          },
-        ];
-      } else {
-        const prompt = `Generate a professional product photo of "${productName}" (Israeli produce).
-
-Requirements:
-- Square 1:1 aspect ratio
-- TRANSPARENT BACKGROUND (PNG with alpha channel) - this is critical
-- Multiple units of the product together (not a single item)
-- Professional studio lighting
-- High quality catalog-style photography
-- No text or logos
-- Product centered in frame with no background elements
-- Vivid, natural colors
 - Photorealistic style
-- The product should float on transparency, no shadows on background
+- No text or logos
+- The background must be completely white with no gradients or variations`;
 
-IMPORTANT: You must generate an image with transparent background, not white background.`;
-
-        messages = [{ role: 'user', content: prompt }];
-      }
+      messages = [{ role: 'user', content: prompt }];
     } else if (action === 'edit') {
       if (!imageUrl || !instruction) {
         return new Response(

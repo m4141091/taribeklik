@@ -1,112 +1,71 @@
-import { pipeline, env } from '@huggingface/transformers';
+import { removeBackground as imglyRemoveBackground, preload, Config } from '@imgly/background-removal';
 import { supabase } from '@/integrations/supabase/client';
 
-// Configure transformers.js to always download models
-env.allowLocalModels = false;
-env.useBrowserCache = true; // Cache the model for faster subsequent uses
+let isModelLoading = false;
+let modelLoadPromise: Promise<void> | null = null;
 
-const MAX_IMAGE_DIMENSION = 1024;
-
-function resizeImageIfNeeded(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, image: HTMLImageElement) {
-  let width = image.naturalWidth;
-  let height = image.naturalHeight;
-
-  if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
-    if (width > height) {
-      height = Math.round((height * MAX_IMAGE_DIMENSION) / width);
-      width = MAX_IMAGE_DIMENSION;
-    } else {
-      width = Math.round((width * MAX_IMAGE_DIMENSION) / height);
-      height = MAX_IMAGE_DIMENSION;
+// Pre-load the model to speed up subsequent uses
+export const preloadBackgroundRemovalModel = async (): Promise<void> => {
+  if (modelLoadPromise) return modelLoadPromise;
+  
+  isModelLoading = true;
+  modelLoadPromise = (async () => {
+    try {
+      console.log('Pre-loading background removal model...');
+      await preload();
+      console.log('Background removal model loaded successfully');
+    } catch (error) {
+      console.error('Failed to pre-load model:', error);
+      modelLoadPromise = null;
+    } finally {
+      isModelLoading = false;
     }
+  })();
+  
+  return modelLoadPromise;
+};
 
-    canvas.width = width;
-    canvas.height = height;
-    ctx.drawImage(image, 0, 0, width, height);
-    return true;
-  }
-
-  canvas.width = width;
-  canvas.height = height;
-  ctx.drawImage(image, 0, 0);
-  return false;
-}
-
-export const removeBackground = async (imageElement: HTMLImageElement): Promise<Blob> => {
+export const removeBackground = async (
+  imageSource: HTMLImageElement | Blob | string
+): Promise<Blob> => {
   try {
-    console.log('Starting background removal process...');
-    const segmenter = await pipeline('image-segmentation', 'Xenova/segformer-b0-finetuned-ade-512-512', {
-      device: 'webgpu',
-    });
+    console.log('Starting background removal with @imgly/background-removal...');
     
-    // Convert HTMLImageElement to canvas
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    let inputBlob: Blob;
     
-    if (!ctx) throw new Error('Could not get canvas context');
-    
-    // Resize image if needed and draw it to canvas
-    const wasResized = resizeImageIfNeeded(canvas, ctx, imageElement);
-    console.log(`Image ${wasResized ? 'was' : 'was not'} resized. Final dimensions: ${canvas.width}x${canvas.height}`);
-    
-    // Get image data as base64
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    console.log('Image converted to base64');
-    
-    // Process the image with the segmentation model
-    console.log('Processing with segmentation model...');
-    const result = await segmenter(imageData);
-    
-    console.log('Segmentation result:', result);
-    
-    if (!result || !Array.isArray(result) || result.length === 0 || !result[0].mask) {
-      throw new Error('Invalid segmentation result');
+    if (imageSource instanceof Blob) {
+      inputBlob = imageSource;
+    } else if (imageSource instanceof HTMLImageElement) {
+      // Convert HTMLImageElement to Blob
+      const canvas = document.createElement('canvas');
+      canvas.width = imageSource.naturalWidth;
+      canvas.height = imageSource.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+      ctx.drawImage(imageSource, 0, 0);
+      inputBlob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to convert image to blob'));
+        }, 'image/png');
+      });
+    } else {
+      // It's a URL string - fetch it
+      const response = await fetch(imageSource);
+      inputBlob = await response.blob();
     }
     
-    // Create a new canvas for the masked image
-    const outputCanvas = document.createElement('canvas');
-    outputCanvas.width = canvas.width;
-    outputCanvas.height = canvas.height;
-    const outputCtx = outputCanvas.getContext('2d');
+    console.log('Processing image for background removal...');
     
-    if (!outputCtx) throw new Error('Could not get output canvas context');
-    
-    // Draw original image
-    outputCtx.drawImage(canvas, 0, 0);
-    
-    // Apply the mask
-    const outputImageData = outputCtx.getImageData(
-      0, 0,
-      outputCanvas.width,
-      outputCanvas.height
-    );
-    const data = outputImageData.data;
-    
-    // Apply inverted mask to alpha channel
-    for (let i = 0; i < result[0].mask.data.length; i++) {
-      // Invert the mask value (1 - value) to keep the subject instead of the background
-      const alpha = Math.round((1 - result[0].mask.data[i]) * 255);
-      data[i * 4 + 3] = alpha;
-    }
-    
-    outputCtx.putImageData(outputImageData, 0, 0);
-    console.log('Mask applied successfully');
-    
-    // Convert canvas to blob
-    return new Promise((resolve, reject) => {
-      outputCanvas.toBlob(
-        (blob) => {
-          if (blob) {
-            console.log('Successfully created final blob');
-            resolve(blob);
-          } else {
-            reject(new Error('Failed to create blob'));
-          }
-        },
-        'image/png',
-        1.0
-      );
+    const resultBlob = await imglyRemoveBackground(inputBlob, {
+      progress: (key, current, total) => {
+        const percent = Math.round((current / total) * 100);
+        console.log(`Background removal: ${key} - ${percent}%`);
+      },
     });
+    
+    console.log('Background removal completed successfully');
+    return resultBlob;
   } catch (error) {
     console.error('Error removing background:', error);
     throw error;
@@ -140,8 +99,7 @@ export const uploadBackgroundRemovedImage = async (blob: Blob): Promise<string> 
 };
 
 export const removeBackgroundFromUrl = async (imageUrl: string): Promise<string> => {
-  const img = await loadImageFromUrl(imageUrl);
-  const blob = await removeBackground(img);
+  const blob = await removeBackground(imageUrl);
   const newUrl = await uploadBackgroundRemovedImage(blob);
   return newUrl;
 };
