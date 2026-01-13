@@ -188,10 +188,10 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
           disabled={isGenerating || !productName}
           className="flex-1"
         >
-          {isGenerating ? (
-            <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+        {isGenerating ? (
+            <Loader2 className="w-4 h-4 me-2 animate-spin" />
           ) : (
-            <Wand2 className="w-4 h-4 ml-2" />
+            <Wand2 className="w-4 h-4 me-2" />
           )}
           צור ב-AI
         </Button>
@@ -204,7 +204,7 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
             onClick={() => setShowEditDialog(true)}
             className="flex-1"
           >
-            <ImageIcon className="w-4 h-4 ml-2" />
+            <ImageIcon className="w-4 h-4 me-2" />
             ערוך ב-AI
           </Button>
         )}
@@ -242,7 +242,7 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
             </Button>
             <Button onClick={handleEditAI} disabled={isEditing || !editInstruction}>
               {isEditing ? (
-                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
               ) : null}
               ערוך
             </Button>
