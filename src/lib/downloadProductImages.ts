@@ -1,5 +1,6 @@
 import { Product } from '@/types/product';
 import JSZip from 'jszip';
+import { toast } from '@/hooks/use-toast';
 
 // Sanitize filename to be safe for file systems
 const sanitizeFilename = (name: string): string => {
@@ -78,4 +79,37 @@ export const downloadProductImages = async (
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+};
+
+// Download a single product image
+export const downloadSingleImage = async (
+  imageUrl: string,
+  productName: string
+): Promise<void> => {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error('Failed to fetch image');
+    }
+    
+    const blob = await response.blob();
+    const ext = getFileExtension(imageUrl);
+    const filename = `${sanitizeFilename(productName)}.${ext}`;
+    
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(`Failed to download image for ${productName}:`, error);
+    toast({
+      title: 'שגיאה',
+      description: 'לא הצלחנו להוריד את התמונה',
+      variant: 'destructive',
+    });
+  }
 };
