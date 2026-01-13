@@ -1,102 +1,45 @@
 import { supabase } from '@/integrations/supabase/client';
 
-const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
-
-const getApiKey = async (): Promise<string> => {
-  const { data } = await supabase.functions.invoke('get-ai-key');
-  return data?.key || '';
-};
-
 export const generateProductImage = async (productName: string): Promise<string> => {
-  const apiKey = await getApiKey();
-  
-  const prompt = `צור תמונת מוצר מקצועית עבור "${productName}".
-הדרישות:
-- יחס 1:1 (ריבועי)
-- רקע לבן נקי לחלוטין
-- כמה יחידות מהמוצר ביחד (לא יחידה בודדת)
-- תאורה מקצועית של סטודיו
-- איכות גבוהה כמו צילום לקטלוג
-- ללא טקסט או לוגו
-- המוצר במרכז התמונה
-- צבעים חיים וטבעיים`;
-
-  const response = await fetch(AI_GATEWAY_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash-image-preview',
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      modalities: ['image', 'text'],
-    }),
+  const { data, error } = await supabase.functions.invoke('generate-product-image', {
+    body: { action: 'generate', productName },
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to generate image');
+  if (error) {
+    console.error('Error generating image:', error);
+    throw new Error(error.message || 'Failed to generate image');
   }
 
-  const data = await response.json();
-  const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-  
-  if (!imageUrl) {
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  if (!data?.imageUrl) {
     throw new Error('No image generated');
   }
 
-  return imageUrl;
+  return data.imageUrl;
 };
 
 export const editProductImage = async (imageUrl: string, instruction: string): Promise<string> => {
-  const apiKey = await getApiKey();
-  
-  const response = await fetch(AI_GATEWAY_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash-image-preview',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: instruction,
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageUrl,
-              },
-            },
-          ],
-        },
-      ],
-      modalities: ['image', 'text'],
-    }),
+  const { data, error } = await supabase.functions.invoke('generate-product-image', {
+    body: { action: 'edit', imageUrl, instruction },
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to edit image');
+  if (error) {
+    console.error('Error editing image:', error);
+    throw new Error(error.message || 'Failed to edit image');
   }
 
-  const data = await response.json();
-  const editedImageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-  
-  if (!editedImageUrl) {
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  if (!data?.imageUrl) {
     throw new Error('No edited image generated');
   }
 
-  return editedImageUrl;
+  return data.imageUrl;
 };
 
 export const generateBatchImages = async (
