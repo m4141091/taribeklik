@@ -77,6 +77,7 @@ export type Database = {
           category: string | null
           created_at: string
           created_by: string | null
+          has_unit_variation: boolean | null
           id: string
           image_url: string | null
           in_stock_this_week: boolean
@@ -92,6 +93,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by?: string | null
+          has_unit_variation?: boolean | null
           id?: string
           image_url?: string | null
           in_stock_this_week?: boolean
@@ -107,6 +109,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by?: string | null
+          has_unit_variation?: boolean | null
           id?: string
           image_url?: string | null
           in_stock_this_week?: boolean
