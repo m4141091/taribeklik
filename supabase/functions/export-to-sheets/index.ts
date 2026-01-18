@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SPREADSHEET_ID = '1WR5slcHA28deRWHpyUtcjs05JiNwZoVaxWW2eowjaYs';
+const SPREADSHEET_ID = '1st4p9w_1YANGXTeE0JcZhhaK99uvwZzEXntldhmpof0';
 
 async function getAccessToken(credentials: any): Promise<string> {
   const header = {
