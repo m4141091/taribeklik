@@ -108,6 +108,42 @@ async function readSheet(accessToken: string): Promise<string[][]> {
   return data.values || [];
 }
 
+// Clear all data except header row
+async function clearSheetData(accessToken: string, sheetId: number): Promise<void> {
+  // Delete all rows except the first (header)
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      requests: [{
+        deleteDimension: {
+          range: {
+            sheetId: sheetId,
+            dimension: 'ROWS',
+            startIndex: 1, // Keep row 0 (header)
+            endIndex: 10000 // Delete up to 10000 rows
+          }
+        }
+      }]
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    // Ignore error if there are no rows to delete
+    if (!error.includes('does not contain any data')) {
+      console.error('Clear sheet error:', error);
+    }
+  }
+  
+  console.log('Cleared sheet data (kept header row)');
+}
+
 // Get the name of the first sheet and its sheetId
 async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sheetId: number}> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties`;
@@ -336,302 +372,115 @@ serve(async (req) => {
     console.log('Getting first sheet info...');
     const { name: sheetName, sheetId } = await getFirstSheetInfo(accessToken);
 
-    // Read existing sheet data
-    console.log('Reading existing sheet data...');
-    const existingData = await readSheet(accessToken);
-    console.log(`Found ${existingData.length} existing rows`);
+    // Clear all existing data (except header)
+    console.log('Clearing existing sheet data...');
+    await clearSheetData(accessToken, sheetId);
 
-    // Helper function to find variation rows with flexible matching
-    function findVariationRows(
-      existingRows: Map<string, number[]>, 
-      baseName: string, 
-      type: 'kg' | 'unit'
-    ): number[] | undefined {
-      const kgSuffixes = ['ק"ג', "ק''ג", ' ק"ג', 'ק״ג', 'ק"ג'];
-      const unitSuffixes = ["יח'", "יח''", ' יח\'', 'יח׳', "יח'"];
-      const suffixes = type === 'kg' ? kgSuffixes : unitSuffixes;
-      
-      for (const [name, rows] of existingRows) {
-        if (name.startsWith(baseName)) {
-          for (const suffix of suffixes) {
-            if (name.includes(suffix) || name.endsWith(suffix)) {
-              console.log(`Found match for "${baseName}" (${type}): "${name}"`);
-              return rows;
-            }
-          }
-        }
-      }
-      return undefined;
-    }
-
-    // Create map of existing products by name (column B - index 1)
-    // Map: productName -> array of row numbers (1-indexed for Google Sheets)
-    const existingProductRows = new Map<string, number[]>();
-    let maxExistingId = 0;
-    
-    existingData.forEach((row, index) => {
-      const productName = row[1]?.trim(); // Column B (index 1)
-      if (productName && index > 0) { // Skip header row
-        const rows = existingProductRows.get(productName) || [];
-        rows.push(index + 1); // 1-indexed for Google Sheets
-        existingProductRows.set(productName, rows);
-        
-        // Track max ID from column A
-        const idValue = parseInt(row[0], 10);
-        if (!isNaN(idValue) && idValue > maxExistingId) {
-          maxExistingId = idValue;
-        }
-      }
-    });
-
-    console.log(`Mapped ${existingProductRows.size} unique product names in sheet, max ID: ${maxExistingId}`);
-
-    // Prepare updates and new rows
-    const cellUpdates: Array<{range: string, value: string}> = [];
-    const newProductGroups: Array<{mainRow: string[], kgRow: string[], unitRow: string[]}> = [];
-    
-    // Track insertions for existing products - {parentRowNum, variations: string[][]}
-    const insertions: Array<{parentRowNum: number, variations: string[][]}> = [];
-    
-    let nextId = maxExistingId + 1;
-
-    // Create a set to track products we've processed from the database
-    const processedProducts = new Set<string>();
+    // Build all rows in correct order: main product followed by its variations
+    const allRows: string[][] = [];
+    let nextId = 1;
 
     products?.forEach(product => {
       const productName = product.name.trim();
       const kgVariationName = `${productName} ק"ג`;
       const unitVariationName = `${productName} יח'`;
-      
-      processedProducts.add(productName);
-      processedProducts.add(kgVariationName);
-      processedProducts.add(unitVariationName);
 
       const categoryNames = productCategoriesMap.get(product.id) || [];
       const categoryString = categoryNames.join(', ');
 
-      // Save parent ID for linking variations
-      let parentId: number;
+      const parentId = nextId++;
 
-      // Check if main product exists in sheet
-      const mainProductRows = existingProductRows.get(productName);
-      if (mainProductRows && mainProductRows.length > 0) {
-        // Update existing row - only columns E (status) and J (type)
-        const rowNum = mainProductRows[0];
-        // Get existing ID from column A
-        const existingRow = existingData[rowNum - 1];
-        parentId = parseInt(existingRow?.[0], 10) || nextId++;
-        cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
-        cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'מוצר עם וריאציות' });
-        cellUpdates.push({ range: `'${sheetName}'!V${rowNum}`, value: '' }); // Parent empty for main product
-        console.log(`Updating main product "${productName}" at row ${rowNum}, parentId: ${parentId}`);
-        
-        // Check if variations need to be inserted
-        const variationsToInsert: string[][] = [];
-        
-        // Check if kg variation exists
-        const kgRows = findVariationRows(existingProductRows, productName, 'kg');
-        if (kgRows && kgRows.length > 0) {
-          const kgRowNum = kgRows[0];
-          cellUpdates.push({ range: `'${sheetName}'!C${kgRowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
-          cellUpdates.push({ range: `'${sheetName}'!E${kgRowNum}`, value: 'פרסם' });
-          cellUpdates.push({ range: `'${sheetName}'!J${kgRowNum}`, value: 'וריאציה' });
-          cellUpdates.push({ range: `'${sheetName}'!V${kgRowNum}`, value: `id:${parentId}` });
-          console.log(`Updating kg variation at row ${kgRowNum}, parent: ${parentId}`);
-        } else {
-          // Add kg variation to insert list
-          variationsToInsert.push([
-            String(nextId++),           // A - מזהה
-            kgVariationName,            // B - שם
-            product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר רגיל
-            '',                         // D - מחיר מבצע
-            'פרסם',                     // E - פורסם
-            product.image_url || '',    // F - תמונות
-            '',                         // G
-            '',                         // H
-            '',                         // I
-            'וריאציה',                  // J - סוג
-            'לא',                       // K
-            '',                         // L
-            '',                         // M - ברקוד
-            kgVariationName.replace(/\s+/g, '-'),  // N - slug
-            categoryString,             // O - קטגוריות
-            '',                         // P
-            '100',                      // Q - משקל
-            'ק"ג',                      // R - שם תכונה
-            '',                         // S
-            '',                         // T
-            '',                         // U
-            `id:${parentId}`            // V - Parent
-          ]);
-          console.log(`Will insert kg variation for "${productName}" below row ${rowNum}`);
-        }
+      // Main product row
+      allRows.push([
+        String(parentId),           // A - מזהה
+        productName,                // B - שם
+        '',                         // C - מחיר רגיל
+        '',                         // D - מחיר מבצע
+        'פרסם',                     // E - פורסם
+        product.image_url || '',    // F - תמונות
+        '',                         // G
+        '',                         // H
+        '',                         // I
+        'מוצר עם וריאציות',          // J - סוג
+        'לא',                       // K
+        '',                         // L
+        '',                         // M - ברקוד
+        productName.replace(/\s+/g, '-'),  // N - slug
+        categoryString,             // O - קטגוריות
+        '',                         // P
+        '',                         // Q
+        '',                         // R
+        '',                         // S
+        '',                         // T
+        '',                         // U
+        ''                          // V - Parent (ריק למוצר ראשי)
+      ]);
 
-        // Check if unit variation exists
-        const unitRows = findVariationRows(existingProductRows, productName, 'unit');
-        if (unitRows && unitRows.length > 0) {
-          const unitRowNum = unitRows[0];
-          cellUpdates.push({ range: `'${sheetName}'!C${unitRowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
-          cellUpdates.push({ range: `'${sheetName}'!E${unitRowNum}`, value: 'פרסם' });
-          cellUpdates.push({ range: `'${sheetName}'!J${unitRowNum}`, value: 'וריאציה' });
-          cellUpdates.push({ range: `'${sheetName}'!V${unitRowNum}`, value: `id:${parentId}` });
-          console.log(`Updating unit variation at row ${unitRowNum}, parent: ${parentId}`);
-        } else {
-          // Add unit variation to insert list
-          variationsToInsert.push([
-            String(nextId++),           // A - מזהה
-            unitVariationName,          // B - שם
-            product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר רגיל
-            '',                         // D - מחיר מבצע
-            'פרסם',                     // E - פורסם
-            product.image_url || '',    // F - תמונות
-            '',                         // G
-            '',                         // H
-            '',                         // I
-            'וריאציה',                  // J - סוג
-            'לא',                       // K
-            '',                         // L
-            '',                         // M - ברקוד
-            unitVariationName.replace(/\s+/g, '-'),  // N - slug
-            categoryString,             // O - קטגוריות
-            '',                         // P
-            '100',                      // Q - משקל
-            'יח\'',                     // R - שם תכונה
-            '',                         // S
-            '',                         // T
-            '',                         // U
-            `id:${parentId}`            // V - Parent
-          ]);
-          console.log(`Will insert unit variation for "${productName}" below row ${rowNum}`);
-        }
+      // Kg variation row - immediately after main product
+      allRows.push([
+        String(nextId++),           // A - מזהה
+        kgVariationName,            // B - שם
+        product.price_per_kg ? String(product.price_per_kg) : '',  // C
+        '',                         // D
+        'פרסם',                     // E
+        product.image_url || '',    // F
+        '',                         // G
+        '',                         // H
+        '',                         // I
+        'וריאציה',                  // J
+        'לא',                       // K
+        '',                         // L
+        '',                         // M
+        kgVariationName.replace(/\s+/g, '-'),  // N
+        categoryString,             // O
+        '',                         // P
+        '100',                      // Q
+        'ק"ג',                      // R
+        '',                         // S
+        '',                         // T
+        '',                         // U
+        `id:${parentId}`            // V - Parent
+      ]);
 
-        // If we have variations to insert, add to insertions list
-        if (variationsToInsert.length > 0) {
-          insertions.push({ parentRowNum: rowNum, variations: variationsToInsert });
-        }
-      } else {
-        // Add new main product row with sequential ID (and variations together)
-        parentId = nextId++;
-        
-        const mainRow = [
-          String(parentId),           // A - מזהה
-          productName,                // B - שם
-          '',                         // C - מחיר רגיל
-          '',                         // D - מחיר מבצע
-          'פרסם',                     // E - פורסם
-          product.image_url || '',    // F - תמונות
-          '',                         // G
-          '',                         // H
-          '',                         // I
-          'מוצר עם וריאציות',          // J - סוג
-          'לא',                       // K
-          '',                         // L
-          '',                         // M - ברקוד
-          productName.replace(/\s+/g, '-'),  // N - slug
-          categoryString,             // O - קטגוריות
-          '',                         // P
-          '',                         // Q
-          '',                         // R
-          '',                         // S
-          '',                         // T
-          '',                         // U
-          ''                          // V - Parent (ריק למוצר ראשי)
-        ];
+      // Unit variation row - immediately after kg variation
+      allRows.push([
+        String(nextId++),           // A - מזהה
+        unitVariationName,          // B - שם
+        product.price_per_unit ? String(product.price_per_unit) : '',  // C
+        '',                         // D
+        'פרסם',                     // E
+        product.image_url || '',    // F
+        '',                         // G
+        '',                         // H
+        '',                         // I
+        'וריאציה',                  // J
+        'לא',                       // K
+        '',                         // L
+        '',                         // M
+        unitVariationName.replace(/\s+/g, '-'),  // N
+        categoryString,             // O
+        '',                         // P
+        '100',                      // Q
+        'יח\'',                     // R
+        '',                         // S
+        '',                         // T
+        '',                         // U
+        `id:${parentId}`            // V - Parent
+      ]);
 
-        const kgRow = [
-          String(nextId++),           // A - מזהה
-          kgVariationName,            // B - שם
-          product.price_per_kg ? String(product.price_per_kg) : '',  // C
-          '',                         // D
-          'פרסם',                     // E
-          product.image_url || '',    // F
-          '',                         // G
-          '',                         // H
-          '',                         // I
-          'וריאציה',                  // J
-          'לא',                       // K
-          '',                         // L
-          '',                         // M
-          kgVariationName.replace(/\s+/g, '-'),  // N
-          categoryString,             // O
-          '',                         // P
-          '100',                      // Q
-          'ק"ג',                      // R
-          '',                         // S
-          '',                         // T
-          '',                         // U
-          `id:${parentId}`            // V - Parent
-        ];
-
-        const unitRow = [
-          String(nextId++),           // A - מזהה
-          unitVariationName,          // B - שם
-          product.price_per_unit ? String(product.price_per_unit) : '',  // C
-          '',                         // D
-          'פרסם',                     // E
-          product.image_url || '',    // F
-          '',                         // G
-          '',                         // H
-          '',                         // I
-          'וריאציה',                  // J
-          'לא',                       // K
-          '',                         // L
-          '',                         // M
-          unitVariationName.replace(/\s+/g, '-'),  // N
-          categoryString,             // O
-          '',                         // P
-          '100',                      // Q
-          'יח\'',                     // R
-          '',                         // S
-          '',                         // T
-          '',                         // U
-          `id:${parentId}`            // V - Parent
-        ];
-
-        newProductGroups.push({ mainRow, kgRow, unitRow });
-        console.log(`Adding new product group: "${productName}" with ID ${parentId}`);
-      }
+      console.log(`Added product group: "${productName}" (ID: ${parentId}) with variations`);
     });
 
-    // Execute batch updates for existing products
-    if (cellUpdates.length > 0) {
-      console.log(`Executing ${cellUpdates.length} cell updates...`);
-      await batchUpdateCells(accessToken, cellUpdates);
-    }
-
-    // Insert variations for existing products (in reverse order to maintain correct positions)
-    // Sort by row number descending to avoid shifting issues
-    insertions.sort((a, b) => b.parentRowNum - a.parentRowNum);
-    
-    let insertedRows = 0;
-    for (const insertion of insertions) {
-      // Insert variations in reverse order so they end up in correct order below parent
-      for (let i = insertion.variations.length - 1; i >= 0; i--) {
-        const variation = insertion.variations[i];
-        await insertRowAt(accessToken, sheetId, sheetName, insertion.parentRowNum + 1, variation);
-        insertedRows++;
-      }
-    }
-    console.log(`Inserted ${insertedRows} variation rows for existing products`);
-
-    // Append new product groups (main + variations together)
-    if (newProductGroups.length > 0) {
-      const newRows: string[][] = [];
-      for (const group of newProductGroups) {
-        newRows.push(group.mainRow);
-        newRows.push(group.kgRow);
-        newRows.push(group.unitRow);
-      }
-      console.log(`Appending ${newRows.length} new rows (${newProductGroups.length} product groups)...`);
-      await appendRows(accessToken, newRows);
+    // Write all rows at once
+    if (allRows.length > 0) {
+      console.log(`Writing ${allRows.length} rows to sheet...`);
+      await appendRows(accessToken, allRows);
     }
 
     const result = {
       success: true,
       totalProducts: products?.length || 0,
-      updatedCells: cellUpdates.length,
-      newProductGroups: newProductGroups.length,
-      insertedVariations: insertedRows,
+      totalRows: allRows.length,
       spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}`,
     };
 
