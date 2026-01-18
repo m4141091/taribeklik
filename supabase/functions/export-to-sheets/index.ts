@@ -108,9 +108,9 @@ async function readSheet(accessToken: string): Promise<string[][]> {
   return data.values || [];
 }
 
-// Get the name of the first sheet in the spreadsheet
-async function getFirstSheetName(accessToken: string): Promise<string> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties.title`;
+// Get the name of the first sheet and its sheetId
+async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sheetId: number}> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties`;
   
   const response = await fetch(url, {
     method: 'GET',
@@ -121,14 +121,16 @@ async function getFirstSheetName(accessToken: string): Promise<string> {
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Get sheet name error:', error);
-    throw new Error(`Failed to get sheet name: ${error}`);
+    console.error('Get sheet info error:', error);
+    throw new Error(`Failed to get sheet info: ${error}`);
   }
   
   const data = await response.json();
-  const sheetName = data.sheets?.[0]?.properties?.title || 'Sheet1';
-  console.log(`First sheet name: "${sheetName}"`);
-  return sheetName;
+  const sheetProps = data.sheets?.[0]?.properties;
+  const sheetName = sheetProps?.title || 'Sheet1';
+  const sheetId = sheetProps?.sheetId || 0;
+  console.log(`First sheet: "${sheetName}" (id: ${sheetId})`);
+  return { name: sheetName, sheetId };
 }
 
 // Update specific cells in batch
@@ -164,6 +166,67 @@ async function batchUpdateCells(accessToken: string, updates: Array<{range: stri
   }
   
   console.log(`Updated ${updates.length} cells`);
+}
+
+// Insert a new row at a specific index and write data to it
+async function insertRowAt(
+  accessToken: string, 
+  sheetId: number,
+  sheetName: string,
+  rowIndex: number, 
+  rowData: string[]
+): Promise<void> {
+  // Step 1: Insert an empty row at the specified index
+  const insertUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+  
+  const insertResponse = await fetch(insertUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      requests: [{
+        insertDimension: {
+          range: {
+            sheetId: sheetId,
+            dimension: 'ROWS',
+            startIndex: rowIndex - 1, // 0-indexed
+            endIndex: rowIndex        // 0-indexed, exclusive
+          },
+          inheritFromBefore: false
+        }
+      }]
+    }),
+  });
+
+  if (!insertResponse.ok) {
+    const error = await insertResponse.text();
+    console.error('Insert row error:', error);
+    throw new Error(`Failed to insert row: ${error}`);
+  }
+
+  // Step 2: Write data to the new row
+  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/'${sheetName}'!A${rowIndex}:V${rowIndex}?valueInputOption=USER_ENTERED`;
+  
+  const writeResponse = await fetch(writeUrl, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      values: [rowData]
+    }),
+  });
+
+  if (!writeResponse.ok) {
+    const error = await writeResponse.text();
+    console.error('Write row error:', error);
+    throw new Error(`Failed to write row data: ${error}`);
+  }
+
+  console.log(`Inserted row at position ${rowIndex}`);
 }
 
 // Append new rows at the end of the sheet
@@ -269,9 +332,9 @@ serve(async (req) => {
     const accessToken = await getAccessToken(credentials);
     console.log('Access token obtained');
 
-    // Get first sheet name dynamically
-    console.log('Getting first sheet name...');
-    const sheetName = await getFirstSheetName(accessToken);
+    // Get first sheet info (name and sheetId)
+    console.log('Getting first sheet info...');
+    const { name: sheetName, sheetId } = await getFirstSheetInfo(accessToken);
 
     // Read existing sheet data
     console.log('Reading existing sheet data...');
@@ -325,7 +388,11 @@ serve(async (req) => {
 
     // Prepare updates and new rows
     const cellUpdates: Array<{range: string, value: string}> = [];
-    const newRows: string[][] = [];
+    const newProductGroups: Array<{mainRow: string[], kgRow: string[], unitRow: string[]}> = [];
+    
+    // Track insertions for existing products - {parentRowNum, variations: string[][]}
+    const insertions: Array<{parentRowNum: number, variations: string[][]}> = [];
+    
     let nextId = maxExistingId + 1;
 
     // Create a set to track products we've processed from the database
@@ -358,10 +425,95 @@ serve(async (req) => {
         cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'מוצר עם וריאציות' });
         cellUpdates.push({ range: `'${sheetName}'!V${rowNum}`, value: '' }); // Parent empty for main product
         console.log(`Updating main product "${productName}" at row ${rowNum}, parentId: ${parentId}`);
+        
+        // Check if variations need to be inserted
+        const variationsToInsert: string[][] = [];
+        
+        // Check if kg variation exists
+        const kgRows = findVariationRows(existingProductRows, productName, 'kg');
+        if (kgRows && kgRows.length > 0) {
+          const kgRowNum = kgRows[0];
+          cellUpdates.push({ range: `'${sheetName}'!C${kgRowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
+          cellUpdates.push({ range: `'${sheetName}'!E${kgRowNum}`, value: 'פרסם' });
+          cellUpdates.push({ range: `'${sheetName}'!J${kgRowNum}`, value: 'וריאציה' });
+          cellUpdates.push({ range: `'${sheetName}'!V${kgRowNum}`, value: `id:${parentId}` });
+          console.log(`Updating kg variation at row ${kgRowNum}, parent: ${parentId}`);
+        } else {
+          // Add kg variation to insert list
+          variationsToInsert.push([
+            String(nextId++),           // A - מזהה
+            kgVariationName,            // B - שם
+            product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר רגיל
+            '',                         // D - מחיר מבצע
+            'פרסם',                     // E - פורסם
+            product.image_url || '',    // F - תמונות
+            '',                         // G
+            '',                         // H
+            '',                         // I
+            'וריאציה',                  // J - סוג
+            'לא',                       // K
+            '',                         // L
+            '',                         // M - ברקוד
+            kgVariationName.replace(/\s+/g, '-'),  // N - slug
+            categoryString,             // O - קטגוריות
+            '',                         // P
+            '100',                      // Q - משקל
+            'ק"ג',                      // R - שם תכונה
+            '',                         // S
+            '',                         // T
+            '',                         // U
+            `id:${parentId}`            // V - Parent
+          ]);
+          console.log(`Will insert kg variation for "${productName}" below row ${rowNum}`);
+        }
+
+        // Check if unit variation exists
+        const unitRows = findVariationRows(existingProductRows, productName, 'unit');
+        if (unitRows && unitRows.length > 0) {
+          const unitRowNum = unitRows[0];
+          cellUpdates.push({ range: `'${sheetName}'!C${unitRowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
+          cellUpdates.push({ range: `'${sheetName}'!E${unitRowNum}`, value: 'פרסם' });
+          cellUpdates.push({ range: `'${sheetName}'!J${unitRowNum}`, value: 'וריאציה' });
+          cellUpdates.push({ range: `'${sheetName}'!V${unitRowNum}`, value: `id:${parentId}` });
+          console.log(`Updating unit variation at row ${unitRowNum}, parent: ${parentId}`);
+        } else {
+          // Add unit variation to insert list
+          variationsToInsert.push([
+            String(nextId++),           // A - מזהה
+            unitVariationName,          // B - שם
+            product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר רגיל
+            '',                         // D - מחיר מבצע
+            'פרסם',                     // E - פורסם
+            product.image_url || '',    // F - תמונות
+            '',                         // G
+            '',                         // H
+            '',                         // I
+            'וריאציה',                  // J - סוג
+            'לא',                       // K
+            '',                         // L
+            '',                         // M - ברקוד
+            unitVariationName.replace(/\s+/g, '-'),  // N - slug
+            categoryString,             // O - קטגוריות
+            '',                         // P
+            '100',                      // Q - משקל
+            'יח\'',                     // R - שם תכונה
+            '',                         // S
+            '',                         // T
+            '',                         // U
+            `id:${parentId}`            // V - Parent
+          ]);
+          console.log(`Will insert unit variation for "${productName}" below row ${rowNum}`);
+        }
+
+        // If we have variations to insert, add to insertions list
+        if (variationsToInsert.length > 0) {
+          insertions.push({ parentRowNum: rowNum, variations: variationsToInsert });
+        }
       } else {
-        // Add new main product row with sequential ID
+        // Add new main product row with sequential ID (and variations together)
         parentId = nextId++;
-        newRows.push([
+        
+        const mainRow = [
           String(parentId),           // A - מזהה
           productName,                // B - שם
           '',                         // C - מחיר רגיל
@@ -374,7 +526,7 @@ serve(async (req) => {
           'מוצר עם וריאציות',          // J - סוג
           'לא',                       // K
           '',                         // L
-          '',                         // M - ברקוד (ריק)
+          '',                         // M - ברקוד
           productName.replace(/\s+/g, '-'),  // N - slug
           categoryString,             // O - קטגוריות
           '',                         // P
@@ -384,84 +536,60 @@ serve(async (req) => {
           '',                         // T
           '',                         // U
           ''                          // V - Parent (ריק למוצר ראשי)
-        ]);
-        console.log(`Adding new main product: "${productName}" with ID ${parentId}`);
-      }
+        ];
 
-      // Check if kg variation exists (flexible matching)
-      const kgRows = findVariationRows(existingProductRows, productName, 'kg');
-      if (kgRows && kgRows.length > 0) {
-        const rowNum = kgRows[0];
-        cellUpdates.push({ range: `'${sheetName}'!C${rowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
-        cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
-        cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'וריאציה' });
-        cellUpdates.push({ range: `'${sheetName}'!V${rowNum}`, value: `id:${parentId}` }); // Link to parent
-        console.log(`Updating kg variation "${kgVariationName}" at row ${rowNum} with price ${product.price_per_kg}, parent: ${parentId}`);
-      } else {
-        // Add new kg variation row with sequential ID
-        newRows.push([
+        const kgRow = [
           String(nextId++),           // A - מזהה
           kgVariationName,            // B - שם
-          product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר רגיל
-          '',                         // D - מחיר מבצע
-          'פרסם',                     // E - פורסם
-          product.image_url || '',    // F - תמונות
+          product.price_per_kg ? String(product.price_per_kg) : '',  // C
+          '',                         // D
+          'פרסם',                     // E
+          product.image_url || '',    // F
           '',                         // G
           '',                         // H
           '',                         // I
-          'וריאציה',                  // J - סוג
+          'וריאציה',                  // J
           'לא',                       // K
           '',                         // L
-          '',                         // M - ברקוד (ריק)
-          kgVariationName.replace(/\s+/g, '-'),  // N - slug
-          categoryString,             // O - קטגוריות
+          '',                         // M
+          kgVariationName.replace(/\s+/g, '-'),  // N
+          categoryString,             // O
           '',                         // P
-          '100',                      // Q - משקל
-          'ק"ג',                      // R - שם תכונה
+          '100',                      // Q
+          'ק"ג',                      // R
           '',                         // S
           '',                         // T
           '',                         // U
-          `id:${parentId}`            // V - Parent (מקשר לאב)
-        ]);
-        console.log(`Adding new kg variation: "${kgVariationName}" with ID ${nextId - 1}, parent: ${parentId}`);
-      }
+          `id:${parentId}`            // V - Parent
+        ];
 
-      // Check if unit variation exists (flexible matching)
-      const unitRows = findVariationRows(existingProductRows, productName, 'unit');
-      if (unitRows && unitRows.length > 0) {
-        const rowNum = unitRows[0];
-        cellUpdates.push({ range: `'${sheetName}'!C${rowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
-        cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
-        cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'וריאציה' });
-        cellUpdates.push({ range: `'${sheetName}'!V${rowNum}`, value: `id:${parentId}` }); // Link to parent
-        console.log(`Updating unit variation "${unitVariationName}" at row ${rowNum} with price ${product.price_per_unit}, parent: ${parentId}`);
-      } else {
-        // Add new unit variation row with sequential ID
-        newRows.push([
+        const unitRow = [
           String(nextId++),           // A - מזהה
           unitVariationName,          // B - שם
-          product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר רגיל
-          '',                         // D - מחיר מבצע
-          'פרסם',                     // E - פורסם
-          product.image_url || '',    // F - תמונות
+          product.price_per_unit ? String(product.price_per_unit) : '',  // C
+          '',                         // D
+          'פרסם',                     // E
+          product.image_url || '',    // F
           '',                         // G
           '',                         // H
           '',                         // I
-          'וריאציה',                  // J - סוג
+          'וריאציה',                  // J
           'לא',                       // K
           '',                         // L
-          '',                         // M - ברקוד (ריק)
-          unitVariationName.replace(/\s+/g, '-'),  // N - slug
-          categoryString,             // O - קטגוריות
+          '',                         // M
+          unitVariationName.replace(/\s+/g, '-'),  // N
+          categoryString,             // O
           '',                         // P
-          '100',                      // Q - משקל
-          'יח\'',                     // R - שם תכונה
+          '100',                      // Q
+          'יח\'',                     // R
           '',                         // S
           '',                         // T
           '',                         // U
-          `id:${parentId}`            // V - Parent (מקשר לאב)
-        ]);
-        console.log(`Adding new unit variation: "${unitVariationName}" with ID ${nextId - 1}, parent: ${parentId}`);
+          `id:${parentId}`            // V - Parent
+        ];
+
+        newProductGroups.push({ mainRow, kgRow, unitRow });
+        console.log(`Adding new product group: "${productName}" with ID ${parentId}`);
       }
     });
 
@@ -471,14 +599,30 @@ serve(async (req) => {
       await batchUpdateCells(accessToken, cellUpdates);
     }
 
-    // Append new rows
-    if (newRows.length > 0) {
-      console.log(`Appending ${newRows.length} new rows...`);
-      // Log first row structure to verify columns
-      console.log('First new row structure:', JSON.stringify(newRows[0]));
-      console.log('First row column A (ID):', newRows[0][0]);
-      console.log('First row column B (Name):', newRows[0][1]);
-      console.log('First row column O (Categories):', newRows[0][14]);
+    // Insert variations for existing products (in reverse order to maintain correct positions)
+    // Sort by row number descending to avoid shifting issues
+    insertions.sort((a, b) => b.parentRowNum - a.parentRowNum);
+    
+    let insertedRows = 0;
+    for (const insertion of insertions) {
+      // Insert variations in reverse order so they end up in correct order below parent
+      for (let i = insertion.variations.length - 1; i >= 0; i--) {
+        const variation = insertion.variations[i];
+        await insertRowAt(accessToken, sheetId, sheetName, insertion.parentRowNum + 1, variation);
+        insertedRows++;
+      }
+    }
+    console.log(`Inserted ${insertedRows} variation rows for existing products`);
+
+    // Append new product groups (main + variations together)
+    if (newProductGroups.length > 0) {
+      const newRows: string[][] = [];
+      for (const group of newProductGroups) {
+        newRows.push(group.mainRow);
+        newRows.push(group.kgRow);
+        newRows.push(group.unitRow);
+      }
+      console.log(`Appending ${newRows.length} new rows (${newProductGroups.length} product groups)...`);
       await appendRows(accessToken, newRows);
     }
 
@@ -486,7 +630,8 @@ serve(async (req) => {
       success: true,
       totalProducts: products?.length || 0,
       updatedCells: cellUpdates.length,
-      newRowsAdded: newRows.length,
+      newProductGroups: newProductGroups.length,
+      insertedVariations: insertedRows,
       spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}`,
     };
 
