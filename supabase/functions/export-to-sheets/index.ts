@@ -304,27 +304,27 @@ serve(async (req) => {
       } else {
         // Add new main product row with sequential ID
         newRows.push([
-          String(nextId++),
-          productName,
-          '',
-          '',
-          'פרסם',
-          product.image_url || '',
-          '',
-          '',
-          '',
-          'מוצר עם וריאציות',
-          'לא',
-          '',
-          categoryString,
-          '',
-          '',
-          '',
-          '',
-          '',
-          '',
-          '',
-          ''
+          String(nextId++),           // A - מזהה
+          productName,                // B - שם
+          '',                         // C - מחיר רגיל
+          '',                         // D - מחיר מבצע
+          'פרסם',                     // E - פורסם
+          product.image_url || '',    // F - תמונות
+          '',                         // G
+          '',                         // H
+          '',                         // I
+          'מוצר עם וריאציות',          // J - סוג
+          'לא',                       // K
+          '',                         // L
+          '',                         // M - ברקוד (ריק)
+          productName.replace(/\s+/g, '-'),  // N - slug
+          categoryString,             // O - קטגוריות
+          '',                         // P
+          '',                         // Q
+          '',                         // R
+          '',                         // S
+          '',                         // T
+          ''                          // U
         ]);
         console.log(`Adding new main product: "${productName}" with ID ${nextId - 1}`);
       }
@@ -339,27 +339,27 @@ serve(async (req) => {
       } else {
         // Add new kg variation row with sequential ID
         newRows.push([
-          String(nextId++),
-          kgVariationName,
-          product.price_per_kg ? String(product.price_per_kg) : '',
-          '',
-          'פרסם',
-          product.image_url || '',
-          '',
-          '',
-          '',
-          'וריאציה',
-          'לא',
-          '',
-          '',
-          '',
-          '',
-          '',
-          '100',
-          'מחיר לקילו',
-          '',
-          '',
-          ''
+          String(nextId++),           // A - מזהה
+          kgVariationName,            // B - שם
+          product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר רגיל
+          '',                         // D - מחיר מבצע
+          'פרסם',                     // E - פורסם
+          product.image_url || '',    // F - תמונות
+          '',                         // G
+          '',                         // H
+          '',                         // I
+          'וריאציה',                  // J - סוג
+          'לא',                       // K
+          '',                         // L
+          '',                         // M - ברקוד (ריק)
+          kgVariationName.replace(/\s+/g, '-'),  // N - slug
+          categoryString,             // O - קטגוריות
+          '',                         // P
+          '100',                      // Q - משקל
+          'מחיר לקילו',               // R - שם תכונה
+          '',                         // S
+          '',                         // T
+          ''                          // U
         ]);
         console.log(`Adding new kg variation: "${kgVariationName}" with ID ${nextId - 1}`);
       }
@@ -374,27 +374,27 @@ serve(async (req) => {
       } else {
         // Add new unit variation row with sequential ID
         newRows.push([
-          String(nextId++),
-          unitVariationName,
-          product.price_per_unit ? String(product.price_per_unit) : '',
-          '',
-          'פרסם',
-          product.image_url || '',
-          '',
-          '',
-          '',
-          'וריאציה',
-          'לא',
-          '',
-          '',
-          '',
-          '',
-          '',
-          '100',
-          'מחיר ליחידה',
-          '',
-          '',
-          ''
+          String(nextId++),           // A - מזהה
+          unitVariationName,          // B - שם
+          product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר רגיל
+          '',                         // D - מחיר מבצע
+          'פרסם',                     // E - פורסם
+          product.image_url || '',    // F - תמונות
+          '',                         // G
+          '',                         // H
+          '',                         // I
+          'וריאציה',                  // J - סוג
+          'לא',                       // K
+          '',                         // L
+          '',                         // M - ברקוד (ריק)
+          unitVariationName.replace(/\s+/g, '-'),  // N - slug
+          categoryString,             // O - קטגוריות
+          '',                         // P
+          '100',                      // Q - משקל
+          'מחיר ליחידה',              // R - שם תכונה
+          '',                         // S
+          '',                         // T
+          ''                          // U
         ]);
         console.log(`Adding new unit variation: "${unitVariationName}" with ID ${nextId - 1}`);
       }
