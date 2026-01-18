@@ -415,9 +415,9 @@ serve(async (req) => {
         '',                         // U
         '',                         // V - Parent (ריק למוצר ראשי)
         'יחידת מידה',               // W - Attribute 1 name
-        'ק"ג | יח\'',               // X - Attribute 1 value(s) - כל הערכים!
+        'ק"ג, יח\'',                // X - Attribute 1 value(s) - מופרד בפסיק
         '1',                        // Y - Attribute 1 visible
-        '0'                         // Z - Attribute 1 global
+        '1'                         // Z - Attribute 1 global
       ]);
 
       // Kg variation row - immediately after main product
@@ -443,9 +443,9 @@ serve(async (req) => {
         '',                         // S
         '',                         // T
         '',                         // U
-        `id:${parentId}`,           // V - Parent
+        String(parentId),           // V - Parent (רק המספר)
         'יחידת מידה',               // W - Attribute 1 name
-        'ק"ג',                      // X - Attribute 1 value(s) - רק ערך זה!
+        'ק"ג',                      // X - Attribute 1 value(s)
         '',                         // Y
         ''                          // Z
       ]);
@@ -473,9 +473,9 @@ serve(async (req) => {
         '',                         // S
         '',                         // T
         '',                         // U
-        `id:${parentId}`,           // V - Parent
+        String(parentId),           // V - Parent (רק המספר)
         'יחידת מידה',               // W - Attribute 1 name
-        'יח\'',                     // X - Attribute 1 value(s) - רק ערך זה!
+        'יח\'',                     // X - Attribute 1 value(s)
         '',                         // Y
         ''                          // Z
       ]);
