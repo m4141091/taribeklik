@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images, FileSpreadsheet } from 'lucide-react';
+import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images, FileSpreadsheet, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -10,6 +10,7 @@ import { useProductCategories } from '@/hooks/useProductCategories';
 import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
 import { exportProductsToWooCommerce } from '@/lib/exportToWooCommerce';
+import { exportProductsToCsv } from '@/lib/exportToCsv';
 import { downloadProductImages, downloadSingleImage } from '@/lib/downloadProductImages';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
@@ -243,6 +244,27 @@ const ProductsTab: React.FC = () => {
     toast({ title: 'קובץ WooCommerce הורד בהצלחה!' });
   };
 
+  const handleExportCsv = () => {
+    if (products.length === 0) {
+      toast({
+        title: 'אין מוצרים לייצוא',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const productsWithCategories = products.map(product => {
+      const categoryIds = getProductCategoryIds(product.id);
+      const categoryNames = categories
+        .filter(c => categoryIds.includes(c.id))
+        .map(c => c.name);
+      return { product, categoryNames };
+    });
+    
+    exportProductsToCsv(productsWithCategories);
+    toast({ title: 'קובץ CSV הורד בהצלחה!' });
+  };
+
   const handleDownloadImages = async () => {
     const productsToDownload = selectedCategoryId === null ? products : filteredProducts;
     
@@ -382,7 +404,12 @@ const ProductsTab: React.FC = () => {
 
         <Button variant="outline" onClick={handleExportWooCommerce}>
           <Download className="w-4 h-4 ml-2" />
-          ייצוא ל-WooCommerce
+          ייצוא WooCommerce (Excel)
+        </Button>
+
+        <Button variant="outline" onClick={handleExportCsv}>
+          <FileText className="w-4 h-4 ml-2" />
+          ייצוא WooCommerce (CSV)
         </Button>
 
         <Button 
