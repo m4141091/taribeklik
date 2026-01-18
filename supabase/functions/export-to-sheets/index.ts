@@ -174,6 +174,93 @@ async function clearSheetFormatting(accessToken: string, sheetId: number): Promi
   console.log('Cleared sheet formatting (set white background)');
 }
 
+// Add dropdown validation to columns E, J, K
+async function addDropdownValidation(accessToken: string, sheetId: number): Promise<void> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      requests: [
+        // Column E (index 4) - סטטוס: פרסם / טיוטה
+        {
+          setDataValidation: {
+            range: {
+              sheetId: sheetId,
+              startRowIndex: 1,
+              endRowIndex: 10000,
+              startColumnIndex: 4,
+              endColumnIndex: 5
+            },
+            rule: {
+              condition: {
+                type: 'ONE_OF_LIST',
+                values: [{ userEnteredValue: 'פרסם' }, { userEnteredValue: 'טיוטה' }]
+              },
+              showCustomUi: true,
+              strict: false
+            }
+          }
+        },
+        // Column J (index 9) - סוג: מוצר עם וריאציות / וריאציה
+        {
+          setDataValidation: {
+            range: {
+              sheetId: sheetId,
+              startRowIndex: 1,
+              endRowIndex: 10000,
+              startColumnIndex: 9,
+              endColumnIndex: 10
+            },
+            rule: {
+              condition: {
+                type: 'ONE_OF_LIST',
+                values: [
+                  { userEnteredValue: 'מוצר עם וריאציות' },
+                  { userEnteredValue: 'וריאציה' }
+                ]
+              },
+              showCustomUi: true,
+              strict: false
+            }
+          }
+        },
+        // Column K (index 10) - ניתן להורדה: לא / כן
+        {
+          setDataValidation: {
+            range: {
+              sheetId: sheetId,
+              startRowIndex: 1,
+              endRowIndex: 10000,
+              startColumnIndex: 10,
+              endColumnIndex: 11
+            },
+            rule: {
+              condition: {
+                type: 'ONE_OF_LIST',
+                values: [{ userEnteredValue: 'לא' }, { userEnteredValue: 'כן' }]
+              },
+              showCustomUi: true,
+              strict: false
+            }
+          }
+        }
+      ]
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Add validation error:', error);
+  }
+  
+  console.log('Added dropdown validation to columns E, J, K');
+}
+
 // Get the name of the first sheet and its sheetId
 async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sheetId: number}> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties`;
@@ -406,11 +493,25 @@ serve(async (req) => {
     console.log('Clearing existing sheet data...');
     await clearSheetData(accessToken, sheetName);
 
+    // Filter duplicate products by name
+    const seenProducts = new Set<string>();
+    const uniqueProducts = products?.filter(product => {
+      const key = product.name.toLowerCase().trim();
+      if (seenProducts.has(key)) {
+        console.log(`Skipping duplicate product: ${product.name}`);
+        return false;
+      }
+      seenProducts.add(key);
+      return true;
+    }) || [];
+
+    console.log(`Filtered ${(products?.length || 0) - uniqueProducts.length} duplicate products`);
+
     // Build all rows in correct order: main product followed by its variations
     const allRows: string[][] = [];
     let nextId = 1;
 
-    products?.forEach(product => {
+    uniqueProducts.forEach(product => {
       const productName = product.name.trim();
       const kgVariationName = `${productName} ק"ג`;
       const unitVariationName = `${productName} יח'`;
@@ -522,11 +623,16 @@ serve(async (req) => {
       // Clear formatting (set white background)
       console.log('Clearing sheet formatting...');
       await clearSheetFormatting(accessToken, sheetId);
+      
+      // Add dropdown validation to columns E, J, K
+      console.log('Adding dropdown validation...');
+      await addDropdownValidation(accessToken, sheetId);
     }
 
     const result = {
       success: true,
-      totalProducts: products?.length || 0,
+      totalProducts: uniqueProducts.length,
+      duplicatesFiltered: (products?.length || 0) - uniqueProducts.length,
       totalRows: allRows.length,
       spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}`,
     };
