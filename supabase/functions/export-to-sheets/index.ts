@@ -389,6 +389,11 @@ serve(async (req) => {
       const categoryString = categoryNames.join(', ');
 
       const parentId = nextId++;
+      
+      // יצירת מק"טים ייחודיים
+      const parentSku = `PROD-${product.id.substring(0, 8)}`;
+      const kgSku = `${parentSku}-KG`;
+      const unitSku = `${parentSku}-UNIT`;
 
       // Main product row
       allRows.push([
@@ -401,10 +406,10 @@ serve(async (req) => {
         '',                         // G
         '',                         // H
         '',                         // I
-        'מוצר עם וריאציות',          // J - סוג
+        'variable',                 // J - סוג (באנגלית!)
         'לא',                       // K
         '',                         // L
-        '',                         // M - ברקוד
+        parentSku,                  // M - מק"ט/SKU
         productName.replace(/\s+/g, '-'),  // N - slug
         categoryString,             // O - קטגוריות
         '',                         // P
@@ -431,10 +436,10 @@ serve(async (req) => {
         '',                         // G
         '',                         // H
         '',                         // I
-        'וריאציה',                  // J
+        'variation',                // J - סוג (באנגלית!)
         'לא',                       // K
         '',                         // L
-        '',                         // M
+        kgSku,                      // M - מק"ט/SKU
         kgVariationName.replace(/\s+/g, '-'),  // N
         categoryString,             // O
         '',                         // P
@@ -443,7 +448,7 @@ serve(async (req) => {
         '',                         // S
         '',                         // T
         '',                         // U
-        String(parentId),           // V - Parent (רק המספר)
+        parentSku,                  // V - Parent (לפי מק"ט!)
         'כמות',                     // W - Attribute 1 name
         'kilo',                     // X - Attribute 1 value(s) - slug
         '',                         // Y
@@ -461,10 +466,10 @@ serve(async (req) => {
         '',                         // G
         '',                         // H
         '',                         // I
-        'וריאציה',                  // J
+        'variation',                // J - סוג (באנגלית!)
         'לא',                       // K
         '',                         // L
-        '',                         // M
+        unitSku,                    // M - מק"ט/SKU
         unitVariationName.replace(/\s+/g, '-'),  // N
         categoryString,             // O
         '',                         // P
@@ -473,7 +478,7 @@ serve(async (req) => {
         '',                         // S
         '',                         // T
         '',                         // U
-        String(parentId),           // V - Parent (רק המספר)
+        parentSku,                  // V - Parent (לפי מק"ט!)
         'כמות',                     // W - Attribute 1 name
         'piece',                    // X - Attribute 1 value(s) - slug
         '',                         // Y
