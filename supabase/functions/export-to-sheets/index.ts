@@ -310,8 +310,8 @@ serve(async (req) => {
 
     products?.forEach(product => {
       const productName = product.name.trim();
-      const kgVariationName = `${productName} - מחיר לקילו`;
-      const unitVariationName = `${productName} - מחיר ליחידה`;
+      const kgVariationName = `${productName} ק"ג`;
+      const unitVariationName = `${productName} יח'`;
       
       processedProducts.add(productName);
       processedProducts.add(kgVariationName);
@@ -384,7 +384,7 @@ serve(async (req) => {
           categoryString,             // O - קטגוריות
           '',                         // P
           '100',                      // Q - משקל
-          'מחיר לקילו',               // R - שם תכונה
+          'ק"ג',                      // R - שם תכונה
           '',                         // S
           '',                         // T
           ''                          // U
@@ -420,7 +420,7 @@ serve(async (req) => {
           categoryString,             // O - קטגוריות
           '',                         // P
           '100',                      // Q - משקל
-          'מחיר ליחידה',              // R - שם תכונה
+          'יח\'',                     // R - שם תכונה
           '',                         // S
           '',                         // T
           ''                          // U
