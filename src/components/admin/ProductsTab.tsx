@@ -298,19 +298,28 @@ const ProductsTab: React.FC = () => {
     }
 
     setIsExportingToSheets(true);
+    // Open window immediately to avoid popup blocker
+    const newWindow = window.open('', '_blank');
+    
     try {
       const { data, error } = await supabase.functions.invoke('export-to-sheets');
       
-      if (error) throw error;
+      if (error) {
+        if (newWindow) newWindow.close();
+        throw error;
+      }
       
       if (data.success) {
         toast({ 
           title: 'הייצוא הושלם בהצלחה!',
           description: `${data.totalProducts} מוצרים (${data.totalRows} שורות) נוספו לגיליון`,
         });
-        // Open the spreadsheet in a new tab
-        window.open(data.spreadsheetUrl, '_blank');
+        // Navigate the already-open window to the spreadsheet URL
+        if (newWindow) {
+          newWindow.location.href = data.spreadsheetUrl;
+        }
       } else {
+        if (newWindow) newWindow.close();
         throw new Error(data.error || 'שגיאה לא ידועה');
       }
     } catch (error) {
