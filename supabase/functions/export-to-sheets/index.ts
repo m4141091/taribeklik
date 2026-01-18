@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SPREADSHEET_ID = '1st4p9w_1YANGXTeE0JcZhhaK99uvwZzEXntldhmpof0';
+const SPREADSHEET_ID = '1PebfUSiCNPfQHMtHIPIwhfKwxjPK7vMN503xx4k6B3w';
 
 async function getAccessToken(credentials: any): Promise<string> {
   const header = {
@@ -254,20 +254,29 @@ serve(async (req) => {
     // Create map of existing products by name (column B - index 1)
     // Map: productName -> array of row numbers (1-indexed for Google Sheets)
     const existingProductRows = new Map<string, number[]>();
+    let maxExistingId = 0;
+    
     existingData.forEach((row, index) => {
       const productName = row[1]?.trim(); // Column B (index 1)
       if (productName && index > 0) { // Skip header row
         const rows = existingProductRows.get(productName) || [];
         rows.push(index + 1); // 1-indexed for Google Sheets
         existingProductRows.set(productName, rows);
+        
+        // Track max ID from column A
+        const idValue = parseInt(row[0], 10);
+        if (!isNaN(idValue) && idValue > maxExistingId) {
+          maxExistingId = idValue;
+        }
       }
     });
 
-    console.log(`Mapped ${existingProductRows.size} unique product names in sheet`);
+    console.log(`Mapped ${existingProductRows.size} unique product names in sheet, max ID: ${maxExistingId}`);
 
     // Prepare updates and new rows
     const cellUpdates: Array<{range: string, value: string}> = [];
     const newRows: string[][] = [];
+    let nextId = maxExistingId + 1;
 
     // Create a set to track products we've processed from the database
     const processedProducts = new Set<string>();
@@ -293,9 +302,9 @@ serve(async (req) => {
         cellUpdates.push({ range: `J${rowNum}`, value: 'מוצר עם וריאציות' });
         console.log(`Updating main product "${productName}" at row ${rowNum}`);
       } else {
-        // Add new main product row
+        // Add new main product row with sequential ID
         newRows.push([
-          '', // ID - leave empty, sheet might have its own
+          String(nextId++),
           productName,
           '',
           '',
@@ -317,7 +326,7 @@ serve(async (req) => {
           '',
           ''
         ]);
-        console.log(`Adding new main product: "${productName}"`);
+        console.log(`Adding new main product: "${productName}" with ID ${nextId - 1}`);
       }
 
       // Check if kg variation exists
@@ -328,9 +337,9 @@ serve(async (req) => {
         cellUpdates.push({ range: `J${rowNum}`, value: 'וריאציה' });
         console.log(`Updating kg variation "${kgVariationName}" at row ${rowNum}`);
       } else {
-        // Add new kg variation row
+        // Add new kg variation row with sequential ID
         newRows.push([
-          '',
+          String(nextId++),
           kgVariationName,
           product.price_per_kg ? String(product.price_per_kg) : '',
           '',
@@ -352,7 +361,7 @@ serve(async (req) => {
           '',
           ''
         ]);
-        console.log(`Adding new kg variation: "${kgVariationName}"`);
+        console.log(`Adding new kg variation: "${kgVariationName}" with ID ${nextId - 1}`);
       }
 
       // Check if unit variation exists
@@ -363,9 +372,9 @@ serve(async (req) => {
         cellUpdates.push({ range: `J${rowNum}`, value: 'וריאציה' });
         console.log(`Updating unit variation "${unitVariationName}" at row ${rowNum}`);
       } else {
-        // Add new unit variation row
+        // Add new unit variation row with sequential ID
         newRows.push([
-          '',
+          String(nextId++),
           unitVariationName,
           product.price_per_unit ? String(product.price_per_unit) : '',
           '',
@@ -387,7 +396,7 @@ serve(async (req) => {
           '',
           ''
         ]);
-        console.log(`Adding new unit variation: "${unitVariationName}"`);
+        console.log(`Adding new unit variation: "${unitVariationName}" with ID ${nextId - 1}`);
       }
     });
 
