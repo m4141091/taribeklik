@@ -134,7 +134,29 @@ CRITICAL Requirements:
         continue;
       }
 
-      const data = await response.json();
+      // Safely parse JSON response
+      const responseText = await response.text();
+      if (!responseText || responseText.trim() === '') {
+        console.log(`Attempt ${attempt}: Empty response from AI Gateway, retrying...`);
+        lastError = 'Empty response from AI Gateway';
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        continue;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.log(`Attempt ${attempt}: Invalid JSON response, retrying...`);
+        lastError = 'Invalid response from AI Gateway';
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        continue;
+      }
+
       const generatedImageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
       if (generatedImageUrl) {
