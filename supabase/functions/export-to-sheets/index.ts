@@ -131,6 +131,49 @@ async function clearSheetData(accessToken: string, sheetName: string): Promise<v
   console.log('Cleared sheet data (kept header row)');
 }
 
+// Clear all formatting from the sheet (set white background)
+async function clearSheetFormatting(accessToken: string, sheetId: number): Promise<void> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      requests: [{
+        repeatCell: {
+          range: {
+            sheetId: sheetId,
+            startRowIndex: 1, // Skip header row
+            endRowIndex: 10000,
+            startColumnIndex: 0,
+            endColumnIndex: 26 // Columns A-Z
+          },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: {
+                red: 1.0,
+                green: 1.0,
+                blue: 1.0
+              }
+            }
+          },
+          fields: 'userEnteredFormat.backgroundColor'
+        }
+      }]
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Clear formatting error:', error);
+  }
+  
+  console.log('Cleared sheet formatting (set white background)');
+}
+
 // Get the name of the first sheet and its sheetId
 async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sheetId: number}> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties`;
@@ -475,6 +518,10 @@ serve(async (req) => {
     if (allRows.length > 0) {
       console.log(`Writing ${allRows.length} rows to sheet...`);
       await appendRows(accessToken, allRows);
+      
+      // Clear formatting (set white background)
+      console.log('Clearing sheet formatting...');
+      await clearSheetFormatting(accessToken, sheetId);
     }
 
     const result = {
