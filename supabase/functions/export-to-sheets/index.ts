@@ -333,9 +333,9 @@ serve(async (req) => {
       const kgRows = existingProductRows.get(kgVariationName);
       if (kgRows && kgRows.length > 0) {
         const rowNum = kgRows[0];
-        cellUpdates.push({ range: `'גיליון1'!C${rowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
-        cellUpdates.push({ range: `'גיליון1'!E${rowNum}`, value: 'פרסם' });
-        cellUpdates.push({ range: `'גיליון1'!J${rowNum}`, value: 'וריאציה' });
+        cellUpdates.push({ range: `C${rowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
+        cellUpdates.push({ range: `E${rowNum}`, value: 'פרסם' });
+        cellUpdates.push({ range: `J${rowNum}`, value: 'וריאציה' });
         console.log(`Updating kg variation "${kgVariationName}" at row ${rowNum} with price ${product.price_per_kg}`);
       } else {
         // Add new kg variation row with sequential ID
@@ -369,9 +369,9 @@ serve(async (req) => {
       const unitRows = existingProductRows.get(unitVariationName);
       if (unitRows && unitRows.length > 0) {
         const rowNum = unitRows[0];
-        cellUpdates.push({ range: `'גיליון1'!C${rowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
-        cellUpdates.push({ range: `'גיליון1'!E${rowNum}`, value: 'פרסם' });
-        cellUpdates.push({ range: `'גיליון1'!J${rowNum}`, value: 'וריאציה' });
+        cellUpdates.push({ range: `C${rowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
+        cellUpdates.push({ range: `E${rowNum}`, value: 'פרסם' });
+        cellUpdates.push({ range: `J${rowNum}`, value: 'וריאציה' });
         console.log(`Updating unit variation "${unitVariationName}" at row ${rowNum} with price ${product.price_per_unit}`);
       } else {
         // Add new unit variation row with sequential ID
