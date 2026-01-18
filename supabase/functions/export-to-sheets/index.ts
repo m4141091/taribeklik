@@ -390,99 +390,95 @@ serve(async (req) => {
 
       const parentId = nextId++;
       
-      // יצירת מק"טים ייחודיים
-      const parentSku = `PROD-${product.id.substring(0, 8)}`;
-      const kgSku = `${parentSku}-KG`;
-      const unitSku = `${parentSku}-UNIT`;
 
-      // Main product row
+      // Main product row - values only in A, B, E, F, J, K, N, O, Y
       allRows.push([
-        String(parentId),           // A - מזהה
-        productName,                // B - שם
-        '',                         // C - מחיר רגיל
-        '',                         // D - מחיר מבצע
-        'פרסם',                     // E - פורסם
-        product.image_url || '',    // F - תמונות
-        '',                         // G
-        '',                         // H
-        '',                         // I
-        'מוצר עם וריאציות',          // J - סוג
-        'לא',                       // K
-        '',                         // L
-        parentSku,                  // M - מק"ט/SKU
-        productName.replace(/\s+/g, '-'),  // N - slug
-        categoryString,             // O - קטגוריות
-        '',                         // P
-        '',                         // Q
-        '',                         // R
-        '',                         // S
-        '',                         // T
-        '',                         // U
-        '',                         // V - Parent (ריק למוצר ראשי)
-        'כמות',                     // W - Attribute 1 name
-        'kilo, piece',              // X - Attribute 1 value(s) - slugs
-        'kilo, piece',              // Y - Attribute 1 value(s)
-        ''                          // Z
+        String(parentId),                    // A - מזהה ✅
+        productName,                         // B - שם ✅
+        '',                                  // C - ריק
+        '',                                  // D - ריק
+        'פרסם',                              // E - פורסם ✅
+        product.image_url || '',             // F - תמונות ✅
+        '',                                  // G - ריק
+        '',                                  // H - ריק
+        '',                                  // I - ריק
+        'מוצר עם וריאציות',                  // J - סוג ✅
+        'לא',                                // K ✅
+        '',                                  // L - ריק
+        '',                                  // M - ריק
+        productName.replace(/\s+/g, '-'),    // N - slug ✅
+        categoryString,                      // O - קטגוריות ✅
+        '',                                  // P - ריק
+        '',                                  // Q - ריק
+        '',                                  // R - ריק
+        '',                                  // S - ריק
+        '',                                  // T - ריק
+        '',                                  // U - ריק
+        '',                                  // V - ריק
+        '',                                  // W - ריק
+        '',                                  // X - ריק
+        'kilo, piece',                       // Y - ערכי תכונה ✅
+        ''                                   // Z - ריק
       ]);
 
-      // Kg variation row - immediately after main product
+      // Kg variation row - values only in A, B, C, E, F, J, K, N, O, Y
       allRows.push([
-        String(nextId++),           // A - מזהה
-        kgVariationName,            // B - שם
-        product.price_per_kg ? String(product.price_per_kg) : '',  // C
-        '',                         // D
-        'פרסם',                     // E
-        product.image_url || '',    // F
-        '',                         // G
-        '',                         // H
-        '',                         // I
-        'וריאציה',                  // J - סוג
-        'לא',                       // K
-        '',                         // L
-        kgSku,                      // M - מק"ט/SKU
-        kgVariationName.replace(/\s+/g, '-'),  // N
-        categoryString,             // O
-        '',                         // P
-        '100',                      // Q
-        'ק"ג',                      // R
-        '',                         // S
-        '',                         // T
-        '',                         // U
-        parentSku,                  // V - Parent (לפי מק"ט!)
-        'כמות',                     // W - Attribute 1 name
-        'kilo',                     // X - Attribute 1 value(s) - slug
-        'kilo',                     // Y - Attribute 1 value
-        ''                          // Z
+        String(nextId++),                    // A - מזהה ✅
+        kgVariationName,                     // B - שם ✅
+        product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר ✅
+        '',                                  // D - ריק
+        'פרסם',                              // E - פורסם ✅
+        product.image_url || '',             // F - תמונות ✅
+        '',                                  // G - ריק
+        '',                                  // H - ריק
+        '',                                  // I - ריק
+        'וריאציה',                           // J - סוג ✅
+        'לא',                                // K ✅
+        '',                                  // L - ריק
+        '',                                  // M - ריק
+        kgVariationName.replace(/\s+/g, '-'),// N - slug ✅
+        categoryString,                      // O - קטגוריות ✅
+        '',                                  // P - ריק
+        '',                                  // Q - ריק
+        '',                                  // R - ריק
+        '',                                  // S - ריק
+        '',                                  // T - ריק
+        '',                                  // U - ריק
+        '',                                  // V - ריק
+        '',                                  // W - ריק
+        '',                                  // X - ריק
+        'kilo',                              // Y - ערך תכונה ✅
+        ''                                   // Z - ריק
       ]);
 
-      // Unit variation row - immediately after kg variation
+      // Unit variation row - values only in A, B, C, E, F, J, K, N, O, Y
       allRows.push([
-        String(nextId++),           // A - מזהה
-        unitVariationName,          // B - שם
-        product.price_per_unit ? String(product.price_per_unit) : '',  // C
-        '',                         // D
-        'פרסם',                     // E
-        product.image_url || '',    // F
-        '',                         // G
-        '',                         // H
-        '',                         // I
-        'וריאציה',                  // J - סוג
-        'לא',                       // K
-        '',                         // L
-        unitSku,                    // M - מק"ט/SKU
-        unitVariationName.replace(/\s+/g, '-'),  // N
-        categoryString,             // O
-        '',                         // P
-        '100',                      // Q
-        'יח\'',                     // R
-        '',                         // S
-        '',                         // T
-        '',                         // U
-        parentSku,                  // V - Parent (לפי מק"ט!)
-        'כמות',                     // W - Attribute 1 name
-        'piece',                    // X - Attribute 1 value(s) - slug
-        'piece',                    // Y - Attribute 1 value
-        ''                          // Z
+        String(nextId++),                    // A - מזהה ✅
+        unitVariationName,                   // B - שם ✅
+        product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר ✅
+        '',                                  // D - ריק
+        'פרסם',                              // E - פורסם ✅
+        product.image_url || '',             // F - תמונות ✅
+        '',                                  // G - ריק
+        '',                                  // H - ריק
+        '',                                  // I - ריק
+        'וריאציה',                           // J - סוג ✅
+        'לא',                                // K ✅
+        '',                                  // L - ריק
+        '',                                  // M - ריק
+        unitVariationName.replace(/\s+/g, '-'),// N - slug ✅
+        categoryString,                      // O - קטגוריות ✅
+        '',                                  // P - ריק
+        '',                                  // Q - ריק
+        '',                                  // R - ריק
+        '',                                  // S - ריק
+        '',                                  // T - ריק
+        '',                                  // U - ריק
+        '',                                  // V - ריק
+        '',                                  // W - ריק
+        '',                                  // X - ריק
+        'piece',                             // Y - ערך תכונה ✅
+        ''                                   // Z - ריק
       ]);
 
       console.log(`Added product group: "${productName}" (ID: ${parentId}) with variations`);
