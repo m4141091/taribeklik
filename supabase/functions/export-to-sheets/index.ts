@@ -414,8 +414,8 @@ serve(async (req) => {
         '',                         // T
         '',                         // U
         '',                         // V - Parent (ריק למוצר ראשי)
-        'יחידת מידה',               // W - Attribute 1 name
-        'ק"ג, יח\'',                // X - Attribute 1 value(s) - מופרד בפסיק
+        'כמות',                     // W - Attribute 1 name
+        'kilo, piece',              // X - Attribute 1 value(s) - slugs
         '1',                        // Y - Attribute 1 visible
         '1'                         // Z - Attribute 1 global
       ]);
@@ -444,8 +444,8 @@ serve(async (req) => {
         '',                         // T
         '',                         // U
         String(parentId),           // V - Parent (רק המספר)
-        'יחידת מידה',               // W - Attribute 1 name
-        'ק"ג',                      // X - Attribute 1 value(s)
+        'כמות',                     // W - Attribute 1 name
+        'kilo',                     // X - Attribute 1 value(s) - slug
         '',                         // Y
         ''                          // Z
       ]);
@@ -474,8 +474,8 @@ serve(async (req) => {
         '',                         // T
         '',                         // U
         String(parentId),           // V - Parent (רק המספר)
-        'יחידת מידה',               // W - Attribute 1 name
-        'יח\'',                     // X - Attribute 1 value(s)
+        'כמות',                     // W - Attribute 1 name
+        'piece',                    // X - Attribute 1 value(s) - slug
         '',                         // Y
         ''                          // Z
       ]);
