@@ -108,6 +108,29 @@ async function readSheet(accessToken: string): Promise<string[][]> {
   return data.values || [];
 }
 
+// Get the name of the first sheet in the spreadsheet
+async function getFirstSheetName(accessToken: string): Promise<string> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties.title`;
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Get sheet name error:', error);
+    throw new Error(`Failed to get sheet name: ${error}`);
+  }
+  
+  const data = await response.json();
+  const sheetName = data.sheets?.[0]?.properties?.title || 'Sheet1';
+  console.log(`First sheet name: "${sheetName}"`);
+  return sheetName;
+}
+
 // Update specific cells in batch
 async function batchUpdateCells(accessToken: string, updates: Array<{range: string, value: string}>): Promise<void> {
   if (updates.length === 0) {
@@ -246,6 +269,10 @@ serve(async (req) => {
     const accessToken = await getAccessToken(credentials);
     console.log('Access token obtained');
 
+    // Get first sheet name dynamically
+    console.log('Getting first sheet name...');
+    const sheetName = await getFirstSheetName(accessToken);
+
     // Read existing sheet data
     console.log('Reading existing sheet data...');
     const existingData = await readSheet(accessToken);
@@ -298,8 +325,8 @@ serve(async (req) => {
       if (mainProductRows && mainProductRows.length > 0) {
         // Update existing row - only columns E (status) and J (type)
         const rowNum = mainProductRows[0];
-        cellUpdates.push({ range: `E${rowNum}`, value: 'פרסם' });
-        cellUpdates.push({ range: `J${rowNum}`, value: 'מוצר עם וריאציות' });
+        cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
+        cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'מוצר עם וריאציות' });
         console.log(`Updating main product "${productName}" at row ${rowNum}`);
       } else {
         // Add new main product row with sequential ID
@@ -333,9 +360,9 @@ serve(async (req) => {
       const kgRows = existingProductRows.get(kgVariationName);
       if (kgRows && kgRows.length > 0) {
         const rowNum = kgRows[0];
-        cellUpdates.push({ range: `C${rowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
-        cellUpdates.push({ range: `E${rowNum}`, value: 'פרסם' });
-        cellUpdates.push({ range: `J${rowNum}`, value: 'וריאציה' });
+        cellUpdates.push({ range: `'${sheetName}'!C${rowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
+        cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
+        cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'וריאציה' });
         console.log(`Updating kg variation "${kgVariationName}" at row ${rowNum} with price ${product.price_per_kg}`);
       } else {
         // Add new kg variation row with sequential ID
@@ -369,9 +396,9 @@ serve(async (req) => {
       const unitRows = existingProductRows.get(unitVariationName);
       if (unitRows && unitRows.length > 0) {
         const rowNum = unitRows[0];
-        cellUpdates.push({ range: `C${rowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
-        cellUpdates.push({ range: `E${rowNum}`, value: 'פרסם' });
-        cellUpdates.push({ range: `J${rowNum}`, value: 'וריאציה' });
+        cellUpdates.push({ range: `'${sheetName}'!C${rowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
+        cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
+        cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'וריאציה' });
         console.log(`Updating unit variation "${unitVariationName}" at row ${rowNum} with price ${product.price_per_unit}`);
       } else {
         // Add new unit variation row with sequential ID
