@@ -88,7 +88,7 @@ async function getAccessToken(credentials: any): Promise<string> {
 
 // Read existing sheet data
 async function readSheet(accessToken: string): Promise<string[][]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:V`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:Z`;
   
   const response = await fetch(url, {
     method: 'GET',
@@ -243,7 +243,7 @@ async function insertRowAt(
   }
 
   // Step 2: Write data to the new row
-  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/'${sheetName}'!A${rowIndex}:V${rowIndex}?valueInputOption=USER_ENTERED`;
+  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/'${sheetName}'!A${rowIndex}:Z${rowIndex}?valueInputOption=USER_ENTERED`;
   
   const writeResponse = await fetch(writeUrl, {
     method: 'PUT',
@@ -272,7 +272,7 @@ async function appendRows(accessToken: string, values: string[][]): Promise<void
     return;
   }
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:V:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:Z:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -413,7 +413,11 @@ serve(async (req) => {
         '',                         // S
         '',                         // T
         '',                         // U
-        ''                          // V - Parent (ריק למוצר ראשי)
+        '',                         // V - Parent (ריק למוצר ראשי)
+        'יחידת מידה',               // W - Attribute 1 name
+        'ק"ג | יח\'',               // X - Attribute 1 value(s) - כל הערכים!
+        '1',                        // Y - Attribute 1 visible
+        '0'                         // Z - Attribute 1 global
       ]);
 
       // Kg variation row - immediately after main product
@@ -439,7 +443,11 @@ serve(async (req) => {
         '',                         // S
         '',                         // T
         '',                         // U
-        `id:${parentId}`            // V - Parent
+        `id:${parentId}`,           // V - Parent
+        'יחידת מידה',               // W - Attribute 1 name
+        'ק"ג',                      // X - Attribute 1 value(s) - רק ערך זה!
+        '',                         // Y
+        ''                          // Z
       ]);
 
       // Unit variation row - immediately after kg variation
@@ -465,7 +473,11 @@ serve(async (req) => {
         '',                         // S
         '',                         // T
         '',                         // U
-        `id:${parentId}`            // V - Parent
+        `id:${parentId}`,           // V - Parent
+        'יחידת מידה',               // W - Attribute 1 name
+        'יח\'',                     // X - Attribute 1 value(s) - רק ערך זה!
+        '',                         // Y
+        ''                          // Z
       ]);
 
       console.log(`Added product group: "${productName}" (ID: ${parentId}) with variations`);
