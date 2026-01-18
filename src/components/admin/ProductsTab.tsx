@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images, FileSpreadsheet, FileText } from 'lucide-react';
+import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images, FileSpreadsheet, FileText, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useProductCategories } from '@/hooks/useProductCategories';
 import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
-import { exportProductsToWooCommerce } from '@/lib/exportToWooCommerce';
 import { exportProductsToCsv } from '@/lib/exportToCsv';
 import { downloadProductImages, downloadSingleImage } from '@/lib/downloadProductImages';
 import ProductFormDialog from './ProductFormDialog';
@@ -63,30 +63,37 @@ const ProductsTab: React.FC = () => {
   const [defaultCategoryId, setDefaultCategoryId] = useState<string | null>(null);
   const [isDownloadingImages, setIsDownloadingImages] = useState(false);
   const [isExportingToSheets, setIsExportingToSheets] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
-  // Get products for selected category
+  // Get products for selected category and search
   const filteredProducts = useMemo(() => {
-    if (selectedCategoryId === null) {
-      // Show all products
-      return products;
-    }
+    let result = products;
     
+    // Filter by category
     if (selectedCategoryId === 'uncategorized') {
-      // Show products without any category
-      return products.filter(product => {
+      result = result.filter(product => {
         const categoryIds = getProductCategoryIds(product.id);
         return categoryIds.length === 0;
       });
+    } else if (selectedCategoryId !== null) {
+      result = result.filter(product => {
+        const categoryIds = getProductCategoryIds(product.id);
+        return categoryIds.includes(selectedCategoryId);
+      });
     }
 
-    // Show products in selected category
-    return products.filter(product => {
-      const categoryIds = getProductCategoryIds(product.id);
-      return categoryIds.includes(selectedCategoryId);
-    });
-  }, [products, selectedCategoryId, productCategories, getProductCategoryIds]);
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      result = result.filter(product => 
+        product.name.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [products, selectedCategoryId, productCategories, getProductCategoryIds, searchQuery]);
 
   // Count products per category
   const categoryCounts = useMemo(() => {
@@ -221,27 +228,6 @@ const ProductsTab: React.FC = () => {
     }
     exportProductsToExcel(products);
     toast({ title: 'הקובץ הורד בהצלחה!' });
-  };
-
-  const handleExportWooCommerce = () => {
-    if (products.length === 0) {
-      toast({
-        title: 'אין מוצרים לייצוא',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    const productsWithCategories = products.map(product => {
-      const categoryIds = getProductCategoryIds(product.id);
-      const categoryNames = categories
-        .filter(c => categoryIds.includes(c.id))
-        .map(c => c.name);
-      return { product, categoryNames };
-    });
-    
-    exportProductsToWooCommerce(productsWithCategories);
-    toast({ title: 'קובץ WooCommerce הורד בהצלחה!' });
   };
 
   const handleExportCsv = () => {
@@ -402,11 +388,6 @@ const ProductsTab: React.FC = () => {
           ייצוא ל-Excel
         </Button>
 
-        <Button variant="outline" onClick={handleExportWooCommerce}>
-          <Download className="w-4 h-4 ml-2" />
-          ייצוא WooCommerce (Excel)
-        </Button>
-
         <Button variant="outline" onClick={handleExportCsv}>
           <FileText className="w-4 h-4 ml-2" />
           ייצוא WooCommerce (CSV)
@@ -429,6 +410,17 @@ const ProductsTab: React.FC = () => {
           <FileSpreadsheet className="w-4 h-4 ml-2" />
           {isExportingToSheets ? 'מייצא...' : 'מלא Google Sheets'}
         </Button>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="חפש מוצר..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pr-10"
+        />
       </div>
 
       {/* Category Folders */}
