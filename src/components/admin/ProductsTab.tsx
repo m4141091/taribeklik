@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images } from 'lucide-react';
+import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images, FileSpreadsheet } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
@@ -60,6 +61,7 @@ const ProductsTab: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [defaultCategoryId, setDefaultCategoryId] = useState<string | null>(null);
   const [isDownloadingImages, setIsDownloadingImages] = useState(false);
+  const [isExportingToSheets, setIsExportingToSheets] = useState(false);
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
@@ -274,7 +276,44 @@ const ProductsTab: React.FC = () => {
         variant: 'destructive',
       });
     } finally {
-      setIsDownloadingImages(false);
+    setIsDownloadingImages(false);
+    }
+  };
+
+  const handleExportToGoogleSheets = async () => {
+    if (products.length === 0) {
+      toast({
+        title: 'אין מוצרים לייצוא',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExportingToSheets(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('export-to-sheets');
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        toast({ 
+          title: 'הייצוא הושלם בהצלחה!',
+          description: `${data.totalProducts} מוצרים (${data.totalRows} שורות) נוספו לגיליון`,
+        });
+        // Open the spreadsheet in a new tab
+        window.open(data.spreadsheetUrl, '_blank');
+      } else {
+        throw new Error(data.error || 'שגיאה לא ידועה');
+      }
+    } catch (error) {
+      console.error('Export to sheets error:', error);
+      toast({
+        title: 'שגיאה בייצוא ל-Google Sheets',
+        description: error instanceof Error ? error.message : 'שגיאה לא ידועה',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExportingToSheets(false);
     }
   };
 
@@ -353,6 +392,15 @@ const ProductsTab: React.FC = () => {
         >
           <Images className="w-4 h-4 ml-2" />
           {isDownloadingImages ? 'מוריד...' : 'הורד תמונות'}
+        </Button>
+
+        <Button 
+          variant="outline" 
+          onClick={handleExportToGoogleSheets}
+          disabled={isExportingToSheets}
+        >
+          <FileSpreadsheet className="w-4 h-4 ml-2" />
+          {isExportingToSheets ? 'מייצא...' : 'מלא Google Sheets'}
         </Button>
       </div>
 
