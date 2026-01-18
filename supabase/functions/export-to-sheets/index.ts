@@ -421,8 +421,8 @@ serve(async (req) => {
         '',                         // V - Parent (ריק למוצר ראשי)
         'כמות',                     // W - Attribute 1 name
         'kilo, piece',              // X - Attribute 1 value(s) - slugs
-        '1',                        // Y - Attribute 1 visible
-        '1'                         // Z - Attribute 1 global
+        'kilo, piece',              // Y - Attribute 1 value(s)
+        ''                          // Z
       ]);
 
       // Kg variation row - immediately after main product
@@ -451,7 +451,7 @@ serve(async (req) => {
         parentSku,                  // V - Parent (לפי מק"ט!)
         'כמות',                     // W - Attribute 1 name
         'kilo',                     // X - Attribute 1 value(s) - slug
-        '',                         // Y
+        'kilo',                     // Y - Attribute 1 value
         ''                          // Z
       ]);
 
@@ -481,7 +481,7 @@ serve(async (req) => {
         parentSku,                  // V - Parent (לפי מק"ט!)
         'כמות',                     // W - Attribute 1 name
         'piece',                    // X - Attribute 1 value(s) - slug
-        '',                         // Y
+        'piece',                    // Y - Attribute 1 value
         ''                          // Z
       ]);
 
