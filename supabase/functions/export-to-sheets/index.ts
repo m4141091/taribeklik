@@ -409,6 +409,11 @@ serve(async (req) => {
     // Append new rows
     if (newRows.length > 0) {
       console.log(`Appending ${newRows.length} new rows...`);
+      // Log first row structure to verify columns
+      console.log('First new row structure:', JSON.stringify(newRows[0]));
+      console.log('First row column A (ID):', newRows[0][0]);
+      console.log('First row column B (Name):', newRows[0][1]);
+      console.log('First row column O (Categories):', newRows[0][14]);
       await appendRows(accessToken, newRows);
     }
 
