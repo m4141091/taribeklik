@@ -109,9 +109,10 @@ async function readSheet(accessToken: string): Promise<string[][]> {
 }
 
 // Clear all data except header row
-async function clearSheetData(accessToken: string, sheetId: number): Promise<void> {
-  // Delete all rows except the first (header)
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+async function clearSheetData(accessToken: string, sheetName: string): Promise<void> {
+  // Use values:clear API to clear content from row 2 onwards (keep header)
+  const range = encodeURIComponent(`${sheetName}!A2:Z10000`);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:clear`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -119,26 +120,12 @@ async function clearSheetData(accessToken: string, sheetId: number): Promise<voi
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      requests: [{
-        deleteDimension: {
-          range: {
-            sheetId: sheetId,
-            dimension: 'ROWS',
-            startIndex: 1, // Keep row 0 (header)
-            endIndex: 10000 // Delete up to 10000 rows
-          }
-        }
-      }]
-    }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    // Ignore error if there are no rows to delete
-    if (!error.includes('does not contain any data')) {
-      console.error('Clear sheet error:', error);
-    }
+    console.error('Clear sheet error:', error);
+    throw new Error(`Failed to clear sheet: ${error}`);
   }
   
   console.log('Cleared sheet data (kept header row)');
@@ -374,7 +361,7 @@ serve(async (req) => {
 
     // Clear all existing data (except header)
     console.log('Clearing existing sheet data...');
-    await clearSheetData(accessToken, sheetId);
+    await clearSheetData(accessToken, sheetName);
 
     // Build all rows in correct order: main product followed by its variations
     const allRows: string[][] = [];
