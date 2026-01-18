@@ -88,7 +88,7 @@ async function getAccessToken(credentials: any): Promise<string> {
 
 // Read existing sheet data
 async function readSheet(accessToken: string): Promise<string[][]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:U`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:V`;
   
   const response = await fetch(url, {
     method: 'GET',
@@ -173,7 +173,7 @@ async function appendRows(accessToken: string, values: string[][]): Promise<void
     return;
   }
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:U:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:V:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -343,18 +343,26 @@ serve(async (req) => {
       const categoryNames = productCategoriesMap.get(product.id) || [];
       const categoryString = categoryNames.join(', ');
 
+      // Save parent ID for linking variations
+      let parentId: number;
+
       // Check if main product exists in sheet
       const mainProductRows = existingProductRows.get(productName);
       if (mainProductRows && mainProductRows.length > 0) {
         // Update existing row - only columns E (status) and J (type)
         const rowNum = mainProductRows[0];
+        // Get existing ID from column A
+        const existingRow = existingData[rowNum - 1];
+        parentId = parseInt(existingRow?.[0], 10) || nextId++;
         cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
         cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'מוצר עם וריאציות' });
-        console.log(`Updating main product "${productName}" at row ${rowNum}`);
+        cellUpdates.push({ range: `'${sheetName}'!V${rowNum}`, value: '' }); // Parent empty for main product
+        console.log(`Updating main product "${productName}" at row ${rowNum}, parentId: ${parentId}`);
       } else {
         // Add new main product row with sequential ID
+        parentId = nextId++;
         newRows.push([
-          String(nextId++),           // A - מזהה
+          String(parentId),           // A - מזהה
           productName,                // B - שם
           '',                         // C - מחיר רגיל
           '',                         // D - מחיר מבצע
@@ -374,9 +382,10 @@ serve(async (req) => {
           '',                         // R
           '',                         // S
           '',                         // T
-          ''                          // U
+          '',                         // U
+          ''                          // V - Parent (ריק למוצר ראשי)
         ]);
-        console.log(`Adding new main product: "${productName}" with ID ${nextId - 1}`);
+        console.log(`Adding new main product: "${productName}" with ID ${parentId}`);
       }
 
       // Check if kg variation exists (flexible matching)
@@ -386,7 +395,8 @@ serve(async (req) => {
         cellUpdates.push({ range: `'${sheetName}'!C${rowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
         cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
         cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'וריאציה' });
-        console.log(`Updating kg variation "${kgVariationName}" at row ${rowNum} with price ${product.price_per_kg}`);
+        cellUpdates.push({ range: `'${sheetName}'!V${rowNum}`, value: `id:${parentId}` }); // Link to parent
+        console.log(`Updating kg variation "${kgVariationName}" at row ${rowNum} with price ${product.price_per_kg}, parent: ${parentId}`);
       } else {
         // Add new kg variation row with sequential ID
         newRows.push([
@@ -410,9 +420,10 @@ serve(async (req) => {
           'ק"ג',                      // R - שם תכונה
           '',                         // S
           '',                         // T
-          ''                          // U
+          '',                         // U
+          `id:${parentId}`            // V - Parent (מקשר לאב)
         ]);
-        console.log(`Adding new kg variation: "${kgVariationName}" with ID ${nextId - 1}`);
+        console.log(`Adding new kg variation: "${kgVariationName}" with ID ${nextId - 1}, parent: ${parentId}`);
       }
 
       // Check if unit variation exists (flexible matching)
@@ -422,7 +433,8 @@ serve(async (req) => {
         cellUpdates.push({ range: `'${sheetName}'!C${rowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
         cellUpdates.push({ range: `'${sheetName}'!E${rowNum}`, value: 'פרסם' });
         cellUpdates.push({ range: `'${sheetName}'!J${rowNum}`, value: 'וריאציה' });
-        console.log(`Updating unit variation "${unitVariationName}" at row ${rowNum} with price ${product.price_per_unit}`);
+        cellUpdates.push({ range: `'${sheetName}'!V${rowNum}`, value: `id:${parentId}` }); // Link to parent
+        console.log(`Updating unit variation "${unitVariationName}" at row ${rowNum} with price ${product.price_per_unit}, parent: ${parentId}`);
       } else {
         // Add new unit variation row with sequential ID
         newRows.push([
@@ -446,9 +458,10 @@ serve(async (req) => {
           'יח\'',                     // R - שם תכונה
           '',                         // S
           '',                         // T
-          ''                          // U
+          '',                         // U
+          `id:${parentId}`            // V - Parent (מקשר לאב)
         ]);
-        console.log(`Adding new unit variation: "${unitVariationName}" with ID ${nextId - 1}`);
+        console.log(`Adding new unit variation: "${unitVariationName}" with ID ${nextId - 1}, parent: ${parentId}`);
       }
     });
 
