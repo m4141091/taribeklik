@@ -78,6 +78,27 @@ export const useProductCategories = () => {
     await fetchProductCategories();
   };
 
+  // Batch function - adds multiple products to categories in one call
+  const addProductsToCategories = async (
+    productCategoryPairs: { productId: string; categoryIds: string[] }[]
+  ): Promise<void> => {
+    const inserts = productCategoryPairs.flatMap(({ productId, categoryIds }) =>
+      categoryIds.map(categoryId => ({
+        product_id: productId,
+        category_id: categoryId,
+      }))
+    );
+
+    if (inserts.length === 0) return;
+
+    const { error } = await supabase
+      .from('product_categories')
+      .insert(inserts);
+
+    if (error) throw error;
+    await fetchProductCategories(); // Only once at the end!
+  };
+
   return {
     productCategories,
     loading,
@@ -86,5 +107,6 @@ export const useProductCategories = () => {
     getProductCategoryIds,
     getProductsByCategory,
     addProductToCategories,
+    addProductsToCategories,
   };
 };

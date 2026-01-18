@@ -47,6 +47,7 @@ const ProductsTab: React.FC = () => {
     getProductCategoryIds,
     setProductCategoryIds,
     addProductToCategories,
+    addProductsToCategories,
   } = useProductCategories();
   const { toast } = useToast();
 
@@ -146,9 +147,10 @@ const ProductsTab: React.FC = () => {
     try {
       const createdProducts = await createProducts(productsData);
       if (categoryId) {
-        for (const product of createdProducts) {
-          await addProductToCategories(product.id, [categoryId]);
-        }
+        // Single batch call instead of loop - prevents flickering!
+        await addProductsToCategories(
+          createdProducts.map(p => ({ productId: p.id, categoryIds: [categoryId] }))
+        );
       }
       toast({ title: `נוספו ${productsData.length} מוצרים בהצלחה!` });
     } catch (error) {
