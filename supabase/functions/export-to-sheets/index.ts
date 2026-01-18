@@ -152,7 +152,7 @@ async function batchUpdateCells(accessToken: string, updates: Array<{range: stri
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      valueInputOption: 'RAW',
+      valueInputOption: 'USER_ENTERED',
       data: data
     }),
   });
@@ -173,7 +173,7 @@ async function appendRows(accessToken: string, values: string[][]): Promise<void
     return;
   }
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:U:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:U:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -278,6 +278,29 @@ serve(async (req) => {
     const existingData = await readSheet(accessToken);
     console.log(`Found ${existingData.length} existing rows`);
 
+    // Helper function to find variation rows with flexible matching
+    function findVariationRows(
+      existingRows: Map<string, number[]>, 
+      baseName: string, 
+      type: 'kg' | 'unit'
+    ): number[] | undefined {
+      const kgSuffixes = ['ק"ג', "ק''ג", ' ק"ג', 'ק״ג', 'ק"ג'];
+      const unitSuffixes = ["יח'", "יח''", ' יח\'', 'יח׳', "יח'"];
+      const suffixes = type === 'kg' ? kgSuffixes : unitSuffixes;
+      
+      for (const [name, rows] of existingRows) {
+        if (name.startsWith(baseName)) {
+          for (const suffix of suffixes) {
+            if (name.includes(suffix) || name.endsWith(suffix)) {
+              console.log(`Found match for "${baseName}" (${type}): "${name}"`);
+              return rows;
+            }
+          }
+        }
+      }
+      return undefined;
+    }
+
     // Create map of existing products by name (column B - index 1)
     // Map: productName -> array of row numbers (1-indexed for Google Sheets)
     const existingProductRows = new Map<string, number[]>();
@@ -356,8 +379,8 @@ serve(async (req) => {
         console.log(`Adding new main product: "${productName}" with ID ${nextId - 1}`);
       }
 
-      // Check if kg variation exists
-      const kgRows = existingProductRows.get(kgVariationName);
+      // Check if kg variation exists (flexible matching)
+      const kgRows = findVariationRows(existingProductRows, productName, 'kg');
       if (kgRows && kgRows.length > 0) {
         const rowNum = kgRows[0];
         cellUpdates.push({ range: `'${sheetName}'!C${rowNum}`, value: product.price_per_kg ? String(product.price_per_kg) : '' });
@@ -392,8 +415,8 @@ serve(async (req) => {
         console.log(`Adding new kg variation: "${kgVariationName}" with ID ${nextId - 1}`);
       }
 
-      // Check if unit variation exists
-      const unitRows = existingProductRows.get(unitVariationName);
+      // Check if unit variation exists (flexible matching)
+      const unitRows = findVariationRows(existingProductRows, productName, 'unit');
       if (unitRows && unitRows.length > 0) {
         const rowNum = unitRows[0];
         cellUpdates.push({ range: `'${sheetName}'!C${rowNum}`, value: product.price_per_unit ? String(product.price_per_unit) : '' });
