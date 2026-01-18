@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Copy } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -63,6 +65,15 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const { toast } = useToast();
+
+  const handleCopyUrl = () => {
+    const url = form.watch('image_url');
+    if (url) {
+      navigator.clipboard.writeText(url);
+      toast({ title: 'כתובת התמונה הועתקה!' });
+    }
+  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -272,6 +283,29 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
               productName={productName}
               onImageChange={(url) => form.setValue('image_url', url)}
             />
+
+            {form.watch('image_url') && (
+              <div className="space-y-2">
+                <Label>כתובת התמונה</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={form.watch('image_url')}
+                    readOnly
+                    className="bg-muted text-xs"
+                    dir="ltr"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyUrl}
+                    title="העתק כתובת"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <Label htmlFor="in_stock">במלאי השבוע</Label>
