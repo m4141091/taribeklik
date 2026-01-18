@@ -8,6 +8,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProductCategories } from '@/hooks/useProductCategories';
 import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
+import { exportProductsToWooCommerce } from '@/lib/exportToWooCommerce';
 import { downloadProductImages, downloadSingleImage } from '@/lib/downloadProductImages';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
@@ -219,6 +220,27 @@ const ProductsTab: React.FC = () => {
     toast({ title: 'הקובץ הורד בהצלחה!' });
   };
 
+  const handleExportWooCommerce = () => {
+    if (products.length === 0) {
+      toast({
+        title: 'אין מוצרים לייצוא',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const productsWithCategories = products.map(product => {
+      const categoryIds = getProductCategoryIds(product.id);
+      const categoryNames = categories
+        .filter(c => categoryIds.includes(c.id))
+        .map(c => c.name);
+      return { product, categoryNames };
+    });
+    
+    exportProductsToWooCommerce(productsWithCategories);
+    toast({ title: 'קובץ WooCommerce הורד בהצלחה!' });
+  };
+
   const handleDownloadImages = async () => {
     const productsToDownload = selectedCategoryId === null ? products : filteredProducts;
     
@@ -317,6 +339,11 @@ const ProductsTab: React.FC = () => {
         <Button variant="outline" onClick={handleExport}>
           <Download className="w-4 h-4 ml-2" />
           ייצוא ל-Excel
+        </Button>
+
+        <Button variant="outline" onClick={handleExportWooCommerce}>
+          <Download className="w-4 h-4 ml-2" />
+          ייצוא ל-WooCommerce
         </Button>
 
         <Button 
