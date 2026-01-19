@@ -548,7 +548,7 @@ serve(async (req) => {
         '',                                  // V - ריק
         '',                                  // W - ריק
         '',                                  // X - ריק
-        'kilo, piece',                       // Y - ערכי תכונה ✅
+        '',                                  // Y - ריק (ערכים רק בוריאציות)
         ''                                   // Z - ריק
       ]);
 
@@ -568,7 +568,7 @@ serve(async (req) => {
         '',                                  // L - ריק
         '',                                  // M - ריק
         kgVariationName.replace(/\s+/g, '-'),// N - slug ✅
-        categoryString,                      // O - קטגוריות ✅
+        '',                                  // O - ריק (קטגוריה רק במוצר ראשי)
         '',                                  // P - ריק
         '',                                  // Q - ריק
         '',                                  // R - ריק
@@ -598,7 +598,7 @@ serve(async (req) => {
         '',                                  // L - ריק
         '',                                  // M - ריק
         unitVariationName.replace(/\s+/g, '-'),// N - slug ✅
-        categoryString,                      // O - קטגוריות ✅
+        '',                                  // O - ריק (קטגוריה רק במוצר ראשי)
         '',                                  // P - ריק
         '',                                  // Q - ריק
         '',                                  // R - ריק
