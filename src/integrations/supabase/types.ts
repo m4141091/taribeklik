@@ -87,6 +87,7 @@ export type Database = {
           price_per_unit: number | null
           pricing_type: string
           updated_at: string
+          wordpress_image_url: string | null
         }
         Insert: {
           average_weight_kg?: number | null
@@ -103,6 +104,7 @@ export type Database = {
           price_per_unit?: number | null
           pricing_type?: string
           updated_at?: string
+          wordpress_image_url?: string | null
         }
         Update: {
           average_weight_kg?: number | null
@@ -119,6 +121,7 @@ export type Database = {
           price_per_unit?: number | null
           pricing_type?: string
           updated_at?: string
+          wordpress_image_url?: string | null
         }
         Relationships: []
       }

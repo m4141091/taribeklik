@@ -7,6 +7,7 @@ export interface Product {
   average_weight_kg?: number | null;
   pricing_type: 'kg' | 'unit';
   image_url?: string | null;
+  wordpress_image_url?: string | null;
   is_active: boolean;
   in_stock_this_week: boolean;
   created_at: string;
@@ -22,6 +23,7 @@ export interface ProductFormData {
   price_per_unit?: number;
   average_weight_kg?: number;
   image_url?: string;
+  wordpress_image_url?: string;
   is_active: boolean;
   in_stock_this_week: boolean;
 }
