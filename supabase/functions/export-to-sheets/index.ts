@@ -286,6 +286,60 @@ async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sh
   return { name: sheetName, sheetId };
 }
 
+// Update header row to match our data structure
+async function updateHeaderRow(accessToken: string, sheetName: string): Promise<void> {
+  const headers = [
+    'מזהה',                    // A - Identifier (empty data)
+    'Name',                    // B - שם
+    'Regular price',           // C - מחיר רגיל
+    'Sale price',              // D - מחיר מבצע
+    'Published',               // E - פורסם
+    'Images',                  // F - תמונות
+    'Tax status',              // G
+    'Tax class',               // H
+    'In stock?',               // I
+    'Type',                    // J - סוג
+    'Downloadable',            // K
+    'Virtual',                 // L
+    'Stock',                   // M
+    'Slug',                    // N
+    'Categories',              // O - קטגוריות
+    'Tags',                    // P
+    'Shipping class',          // Q
+    'Allow customer reviews?', // R
+    'Purchase note',           // S
+    'Sale price dates from',   // T
+    'Sale price dates to',     // U
+    'Parent',                  // V
+    'Grouped products',        // W
+    'Upsells',                 // X
+    'Attribute 1 values',      // Y - ערכי תכונה
+    'Position'                 // Z
+  ];
+  
+  const range = encodeURIComponent(`${sheetName}!A1:Z1`);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=RAW`;
+  
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      values: [headers]
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Update header row error:', error);
+    throw new Error(`Failed to update header row: ${error}`);
+  }
+  
+  console.log('Updated header row');
+}
+
 // Update specific cells in batch
 async function batchUpdateCells(accessToken: string, updates: Array<{range: string, value: string}>): Promise<void> {
   if (updates.length === 0) {
@@ -502,6 +556,10 @@ serve(async (req) => {
     // Get first sheet info (name and sheetId)
     console.log('Getting first sheet info...');
     const { name: sheetName, sheetId } = await getFirstSheetInfo(accessToken);
+
+    // Update header row to match our data structure
+    console.log('Updating header row...');
+    await updateHeaderRow(accessToken, sheetName);
 
     // Clear all existing data (except header)
     console.log('Clearing existing sheet data...');
