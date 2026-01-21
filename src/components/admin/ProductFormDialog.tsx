@@ -76,6 +76,14 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     }
   };
 
+  const handleCopyWordpressUrl = () => {
+    const url = form.watch('wordpress_image_url');
+    if (url) {
+      navigator.clipboard.writeText(url);
+      toast({ title: 'כתובת WordPress הועתקה!' });
+    }
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -317,13 +325,26 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>כתובת תמונה ב-WordPress</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://taribeclic.shop/wp-content/uploads/..." 
-                      dir="ltr"
-                      {...field} 
-                    />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input 
+                        placeholder="https://taribeclic.shop/wp-content/uploads/..." 
+                        dir="ltr"
+                        {...field} 
+                      />
+                    </FormControl>
+                    {field.value && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleCopyWordpressUrl}
+                        title="העתק כתובת WordPress"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
