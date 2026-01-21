@@ -10,7 +10,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProductCategories } from '@/hooks/useProductCategories';
 import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
-import { exportProductsToCsv } from '@/lib/exportToCsv';
+import { exportProductsToWooCommerce } from '@/lib/exportToWooCommerce';
 import { downloadProductImages, downloadSingleImage } from '@/lib/downloadProductImages';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
@@ -247,8 +247,8 @@ const ProductsTab: React.FC = () => {
       return { product, categoryNames };
     });
     
-    exportProductsToCsv(productsWithCategories);
-    toast({ title: 'קובץ CSV הורד בהצלחה!' });
+    exportProductsToWooCommerce(productsWithCategories);
+    toast({ title: 'קובץ WooCommerce הורד בהצלחה!' });
   };
 
   const handleDownloadImages = async () => {
