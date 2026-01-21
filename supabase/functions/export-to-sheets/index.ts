@@ -510,18 +510,46 @@ serve(async (req) => {
     // Format: productName -> { rowIndex: number, data: string[] }
     const existingProductsMap = new Map<string, { rowIndex: number, data: string[] }>();
     
+    // Also track all variation rows that need Column Y update
+    const variationsToUpdate: Array<{ rowIndex: number, name: string, yValue: string }> = [];
+    
     existingRows.forEach((row, index) => {
       if (index === 0) return; // Skip header row
-      const productName = (row[1] || '').trim().toLowerCase(); // Column B
+      const productName = (row[1] || '').trim(); // Column B - keep original case
+      const productNameLower = productName.toLowerCase();
+      const columnY = (row[24] || '').trim(); // Column Y
+      const columnJ = (row[9] || '').trim(); // Column J - Type
+      
       if (productName) {
-        existingProductsMap.set(productName, {
+        existingProductsMap.set(productNameLower, {
           rowIndex: index + 1, // 1-based row number for Google Sheets
           data: row
         });
+        
+        // Check if this is a variation row with empty Column Y
+        if (columnJ === 'וריאציה' && !columnY) {
+          // Determine if it's kg or unit based on the name
+          let yValue = '';
+          if (productName.includes('ק"ג') || productName.includes('קילו') || productName.includes('kg')) {
+            yValue = 'kilo';
+          } else if (productName.includes("יח'") || productName.includes('יחידה') || productName.includes('unit')) {
+            yValue = 'piece';
+          }
+          
+          if (yValue) {
+            console.log(`Found variation "${productName}" at row ${index + 1} with empty Column Y, will set to "${yValue}"`);
+            variationsToUpdate.push({
+              rowIndex: index + 1,
+              name: productName,
+              yValue
+            });
+          }
+        }
       }
     });
 
     console.log(`Mapped ${existingProductsMap.size} existing product rows`);
+    console.log(`Found ${variationsToUpdate.length} variations that need Column Y update`);
 
     // Filter duplicate products by name
     const seenProducts = new Set<string>();
@@ -594,11 +622,19 @@ serve(async (req) => {
       }
     });
 
-    console.log(`Summary: ${rowsToUpdate.length} rows to update, ${rowsToAdd.length} rows to add, ${rowsOnlyInSheet.length} rows only in sheet`);
+    // Add Column Y updates from variationsToUpdate (these are found by scanning the sheet directly)
+    variationsToUpdate.forEach(({ rowIndex, name, yValue }) => {
+      rowsToUpdate.push({
+        range: `${sheetName}!Y${rowIndex}`,
+        values: [[yValue]]
+      });
+    });
+
+    console.log(`Summary: ${rowsToUpdate.length} rows to update (Column Y), ${rowsToAdd.length} rows to add, ${rowsOnlyInSheet.length} rows only in sheet`);
 
     // Execute updates
     if (rowsToUpdate.length > 0) {
-      console.log(`Updating ${rowsToUpdate.length} existing rows...`);
+      console.log(`Updating ${rowsToUpdate.length} Column Y values...`);
       await batchUpdateRows(accessToken, rowsToUpdate);
     }
 
