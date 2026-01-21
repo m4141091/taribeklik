@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     
     console.log(`Received ${mappings.length} mappings to import`);
 
-    // First, get all products to create a name -> id map with normalized names
+    // First, get all products
     const { data: products, error: fetchError } = await supabase
       .from('products')
       .select('id, name');
@@ -37,13 +37,7 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch products: ${fetchError.message}`);
     }
 
-    // Create a map of normalized names to product records
-    const productMap = new Map<string, { id: string; name: string }>();
-    for (const product of products || []) {
-      productMap.set(normalizeName(product.name), product);
-    }
-
-    console.log(`Found ${productMap.size} products in database`);
+    console.log(`Found ${products?.length || 0} products in database`);
 
     let updated = 0;
     const notFound: string[] = [];
@@ -52,36 +46,45 @@ Deno.serve(async (req) => {
     for (const { name, imageUrl } of mappings) {
       if (!name || !imageUrl) continue;
       
-      const normalizedName = normalizeName(name);
-      const product = productMap.get(normalizedName);
+      const normalizedCsvName = normalizeName(name);
       
-      if (!product) {
+      // Find all products that START with the CSV name (prefix matching)
+      const matchingProducts = (products || []).filter(product => 
+        normalizeName(product.name).startsWith(normalizedCsvName)
+      );
+      
+      if (matchingProducts.length === 0) {
         notFound.push(name);
-        console.log(`Product not found: "${name}" (normalized: "${normalizedName}")`);
+        console.log(`No products found for: "${name}" (normalized: "${normalizedCsvName}")`);
         continue;
       }
 
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ wordpress_image_url: imageUrl })
-        .eq('id', product.id);
-      
-      if (updateError) {
-        console.error(`Failed to update product "${name}": ${updateError.message}`);
-      } else {
-        updated++;
-        updatedProducts.push(product.name);
+      console.log(`Found ${matchingProducts.length} products matching "${name}": ${matchingProducts.map(p => p.name).join(', ')}`);
+
+      // Update all matching products with the same WordPress image URL
+      for (const product of matchingProducts) {
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ wordpress_image_url: imageUrl })
+          .eq('id', product.id);
+        
+        if (updateError) {
+          console.error(`Failed to update product "${product.name}": ${updateError.message}`);
+        } else {
+          updated++;
+          updatedProducts.push(product.name);
+        }
       }
     }
 
-    console.log(`Updated ${updated} products, ${notFound.length} not found`);
+    console.log(`Updated ${updated} products total, ${notFound.length} CSV names not matched`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         updated, 
         notFound,
-        updatedProducts: updatedProducts.slice(0, 10) // Return first 10 for confirmation
+        updatedProducts: updatedProducts.slice(0, 20) // Return first 20 for confirmation
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
