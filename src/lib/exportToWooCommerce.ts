@@ -6,20 +6,23 @@ interface ProductWithCategories {
   categoryNames: string[];
 }
 
+const createSlug = (name: string): string => {
+  return name.replace(/\s+/g, '-');
+};
+
 export const exportProductsToWooCommerce = (
   productsWithCategories: ProductWithCategories[],
   fileName: string = 'woocommerce-products'
 ) => {
   const rows: Record<string, string | number>[] = [];
-  let idCounter = 1;
 
   productsWithCategories.forEach(({ product, categoryNames }) => {
-    const parentId = idCounter;
     const categoryString = categoryNames.join(', ');
+    const slug = createSlug(product.name);
     
     // Row 1: Main product (מוצר עם וריאציות)
     rows.push({
-      'מזהה': idCounter++,
+      'מזהה': '',
       'שם מוצר': product.name,
       'מחיר': '',
       'מחיר מבצע': '',
@@ -30,66 +33,78 @@ export const exportProductsToWooCommerce = (
       'תיאור קצר': '',
       'סוג': 'מוצר עם וריאציות',
       'ניתן להורדה': 'לא',
-      'קישור הורדה': '',
+      'קישור להורדה': '',
+      'ברקוד': '',
+      'מזהה כתובת (slug)': slug,
       'קטגוריות': categoryString,
       'תת קטגוריה': '',
       'מותגים': '',
       'תגיות': '',
       'מלאי': '',
-      'צבע (a)': '',
-      'תמונה 2': '',
-      'תמונה 3': '',
-      'תמונה 4': '',
+      'אורך': '',
+      'רוחב': '',
+      'גובה': '',
+      'משקל': '',
+      'סוג משלוח': '',
+      'כמות': '',
     });
 
     // Row 2: Variation - price per kg (מחיר לקילו)
     rows.push({
-      'מזהה': idCounter++,
-      'שם מוצר': `${product.name} - מחיר לקילו`,
+      'מזהה': '',
+      'שם מוצר': product.name,
       'מחיר': product.price_per_kg || '',
       'מחיר מבצע': '',
       'סטטוס': 'פרסם',
       'תמונה 1': product.image_url || '',
-      'מק"ט': `${parentId}-kg`,
+      'מק"ט': '',
       'תיאור מפורט': '',
       'תיאור קצר': '',
       'סוג': 'וריאציה',
       'ניתן להורדה': 'לא',
-      'קישור הורדה': '',
+      'קישור להורדה': '',
+      'ברקוד': '',
+      'מזהה כתובת (slug)': `${slug}-קג`,
       'קטגוריות': '',
       'תת קטגוריה': '',
       'מותגים': '',
       'תגיות': '',
-      'מלאי': 100,
-      'צבע (a)': 'מחיר לקילו',
-      'תמונה 2': '',
-      'תמונה 3': '',
-      'תמונה 4': '',
+      'מלאי': '',
+      'אורך': '',
+      'רוחב': '',
+      'גובה': '',
+      'משקל': '',
+      'סוג משלוח': '',
+      'כמות': 'kilo',
     });
 
     // Row 3: Variation - price per unit (מחיר ליחידה)
     rows.push({
-      'מזהה': idCounter++,
-      'שם מוצר': `${product.name} - מחיר ליחידה`,
+      'מזהה': '',
+      'שם מוצר': product.name,
       'מחיר': product.price_per_unit || '',
       'מחיר מבצע': '',
       'סטטוס': 'פרסם',
       'תמונה 1': product.image_url || '',
-      'מק"ט': `${parentId}-unit`,
+      'מק"ט': '',
       'תיאור מפורט': '',
       'תיאור קצר': '',
       'סוג': 'וריאציה',
       'ניתן להורדה': 'לא',
-      'קישור הורדה': '',
+      'קישור להורדה': '',
+      'ברקוד': '',
+      'מזהה כתובת (slug)': `${slug}-יח`,
       'קטגוריות': '',
       'תת קטגוריה': '',
       'מותגים': '',
       'תגיות': '',
-      'מלאי': 100,
-      'צבע (a)': 'מחיר ליחידה',
-      'תמונה 2': '',
-      'תמונה 3': '',
-      'תמונה 4': '',
+      'מלאי': '',
+      'אורך': '',
+      'רוחב': '',
+      'גובה': '',
+      'משקל': '',
+      'סוג משלוח': '',
+      'כמות': 'piece',
     });
   });
 
@@ -97,29 +112,33 @@ export const exportProductsToWooCommerce = (
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.json_to_sheet(rows);
 
-  // Set column widths
+  // Set column widths (A-Y, 25 columns)
   worksheet['!cols'] = [
-    { wch: 8 },   // מזהה
-    { wch: 30 },  // שם מוצר
-    { wch: 10 },  // מחיר
-    { wch: 12 },  // מחיר מבצע
-    { wch: 10 },  // סטטוס
-    { wch: 50 },  // תמונה 1
-    { wch: 12 },  // מק"ט
-    { wch: 20 },  // תיאור מפורט
-    { wch: 15 },  // תיאור קצר
-    { wch: 18 },  // סוג
-    { wch: 12 },  // ניתן להורדה
-    { wch: 15 },  // קישור הורדה
-    { wch: 20 },  // קטגוריות
-    { wch: 15 },  // תת קטגוריה
-    { wch: 12 },  // מותגים
-    { wch: 12 },  // תגיות
-    { wch: 8 },   // מלאי
-    { wch: 15 },  // צבע (a)
-    { wch: 50 },  // תמונה 2
-    { wch: 50 },  // תמונה 3
-    { wch: 50 },  // תמונה 4
+    { wch: 8 },   // A - מזהה
+    { wch: 30 },  // B - שם מוצר
+    { wch: 10 },  // C - מחיר
+    { wch: 12 },  // D - מחיר מבצע
+    { wch: 10 },  // E - סטטוס
+    { wch: 50 },  // F - תמונה 1
+    { wch: 12 },  // G - מק"ט
+    { wch: 20 },  // H - תיאור מפורט
+    { wch: 15 },  // I - תיאור קצר
+    { wch: 18 },  // J - סוג
+    { wch: 12 },  // K - ניתן להורדה
+    { wch: 15 },  // L - קישור להורדה
+    { wch: 12 },  // M - ברקוד
+    { wch: 20 },  // N - slug
+    { wch: 20 },  // O - קטגוריות
+    { wch: 15 },  // P - תת קטגוריה
+    { wch: 12 },  // Q - מותגים
+    { wch: 12 },  // R - תגיות
+    { wch: 8 },   // S - מלאי
+    { wch: 8 },   // T - אורך
+    { wch: 8 },   // U - רוחב
+    { wch: 8 },   // V - גובה
+    { wch: 8 },   // W - משקל
+    { wch: 12 },  // X - סוג משלוח
+    { wch: 12 },  // Y - כמות
   ];
 
   // Add worksheet to workbook
