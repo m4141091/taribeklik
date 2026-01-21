@@ -543,7 +543,7 @@ serve(async (req) => {
         '',                                  // C - ריק
         '',                                  // D - ריק
         'פרסם',                              // E - פורסם ✅
-        product.wordpress_image_url || '',   // F - תמונות WordPress ✅
+        product.image_url || '',              // F - תמונות ✅
         '',                                  // G - ריק
         '',                                  // H - ריק
         '',                                  // I - ריק
@@ -573,7 +573,7 @@ serve(async (req) => {
         product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר ✅
         '',                                  // D - ריק
         'פרסם',                              // E - פורסם ✅
-        product.wordpress_image_url || '',   // F - תמונות WordPress ✅
+        product.image_url || '',              // F - תמונות ✅
         '',                                  // G - ריק
         '',                                  // H - ריק
         '',                                  // I - ריק
@@ -603,7 +603,7 @@ serve(async (req) => {
         product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר ✅
         '',                                  // D - ריק
         'פרסם',                              // E - פורסם ✅
-        product.wordpress_image_url || '',   // F - תמונות WordPress ✅
+        product.image_url || '',              // F - תמונות ✅
         '',                                  // G - ריק
         '',                                  // H - ריק
         '',                                  // I - ריק
