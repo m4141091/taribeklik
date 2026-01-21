@@ -509,110 +509,107 @@ serve(async (req) => {
 
     // Build all rows in correct order: main product followed by its variations
     const allRows: string[][] = [];
-    let nextId = 1;
+
+    // Helper function to create slug
+    const createSlug = (name: string): string => {
+      return name.replace(/\s+/g, '-');
+    };
 
     uniqueProducts.forEach(product => {
       const productName = product.name.trim();
-      const kgVariationName = `${productName} ק"ג`;
-      const unitVariationName = `${productName} יח'`;
+      const slug = createSlug(productName);
 
       const categoryNames = productCategoriesMap.get(product.id) || [];
       const categoryString = categoryNames.join(', ');
 
-      const parentId = nextId++;
-      
-
-      // Main product row - values only in A, B, E, F, J, K, N, O, Y
+      // Main product row (25 columns A-Y)
       allRows.push([
-        String(parentId),                    // A - מזהה ✅
-        productName,                         // B - שם ✅
-        '',                                  // C - ריק
-        '',                                  // D - ריק
-        'פרסם',                              // E - פורסם ✅
-        product.image_url || '',             // F - תמונות ✅
-        '',                                  // G - ריק
-        '',                                  // H - ריק
-        '',                                  // I - ריק
-        'מוצר עם וריאציות',                  // J - סוג ✅
-        'לא',                                // K ✅
-        '',                                  // L - ריק
-        '',                                  // M - ריק
-        productName.replace(/\s+/g, '-'),    // N - slug ✅
-        categoryString,                      // O - קטגוריות ✅
-        '',                                  // P - ריק
-        '',                                  // Q - ריק
-        '',                                  // R - ריק
-        '',                                  // S - ריק
-        '',                                  // T - ריק
-        '',                                  // U - ריק
-        '',                                  // V - ריק
-        '',                                  // W - ריק
-        '',                                  // X - ריק
-        '',                                  // Y - ריק (ערכים רק בוריאציות)
-        ''                                   // Z - ריק
+        '',                                  // A - מזהה (ריק!)
+        productName,                         // B - שם מוצר
+        '',                                  // C - מחיר
+        '',                                  // D - מחיר מבצע
+        'פרסם',                              // E - סטטוס
+        product.image_url || '',             // F - תמונה 1
+        '',                                  // G - מק"ט
+        '',                                  // H - תיאור מפורט
+        '',                                  // I - תיאור קצר
+        'מוצר עם וריאציות',                  // J - סוג
+        'לא',                                // K - ניתן להורדה
+        '',                                  // L - קישור להורדה
+        '',                                  // M - ברקוד
+        slug,                                // N - מזהה כתובת (slug)
+        categoryString,                      // O - קטגוריות
+        '',                                  // P - תת קטגוריה
+        '',                                  // Q - מותגים
+        '',                                  // R - תגיות
+        '',                                  // S - מלאי
+        '',                                  // T - אורך
+        '',                                  // U - רוחב
+        '',                                  // V - גובה
+        '',                                  // W - משקל
+        '',                                  // X - סוג משלוח
+        '',                                  // Y - כמות (ריק במוצר ראשי)
       ]);
 
-      // Kg variation row - values only in A, B, C, E, F, J, K, N, O, Y
+      // Kg variation row (25 columns A-Y)
       allRows.push([
-        String(nextId++),                    // A - מזהה ✅
-        kgVariationName,                     // B - שם ✅
-        product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר ✅
-        '',                                  // D - ריק
-        'פרסם',                              // E - פורסם ✅
-        product.image_url || '',             // F - תמונות ✅
-        '',                                  // G - ריק
-        '',                                  // H - ריק
-        '',                                  // I - ריק
-        'וריאציה',                           // J - סוג ✅
-        'לא',                                // K ✅
-        '',                                  // L - ריק
-        '',                                  // M - ריק
-        kgVariationName.replace(/\s+/g, '-'),// N - slug ✅
-        '',                                  // O - ריק (קטגוריה רק במוצר ראשי)
-        '',                                  // P - ריק
-        '',                                  // Q - ריק
-        '',                                  // R - ריק
-        '',                                  // S - ריק
-        '',                                  // T - ריק
-        '',                                  // U - ריק
-        '',                                  // V - ריק
-        '',                                  // W - ריק
-        '',                                  // X - ריק
-        'kilo',                              // Y - ערך תכונה ✅
-        ''                                   // Z - ריק
+        '',                                  // A - מזהה (ריק!)
+        productName,                         // B - שם מוצר (ללא suffix!)
+        product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר
+        '',                                  // D - מחיר מבצע
+        'פרסם',                              // E - סטטוס
+        product.image_url || '',             // F - תמונה 1
+        '',                                  // G - מק"ט
+        '',                                  // H - תיאור מפורט
+        '',                                  // I - תיאור קצר
+        'וריאציה',                           // J - סוג
+        'לא',                                // K - ניתן להורדה
+        '',                                  // L - קישור להורדה
+        '',                                  // M - ברקוד
+        `${slug}-קג`,                        // N - slug עם suffix
+        '',                                  // O - קטגוריות (ריק בוריאציות!)
+        '',                                  // P - תת קטגוריה
+        '',                                  // Q - מותגים
+        '',                                  // R - תגיות
+        '',                                  // S - מלאי
+        '',                                  // T - אורך
+        '',                                  // U - רוחב
+        '',                                  // V - גובה
+        '',                                  // W - משקל
+        '',                                  // X - סוג משלוח
+        'kilo',                              // Y - כמות
       ]);
 
-      // Unit variation row - values only in A, B, C, E, F, J, K, N, O, Y
+      // Unit variation row (25 columns A-Y)
       allRows.push([
-        String(nextId++),                    // A - מזהה ✅
-        unitVariationName,                   // B - שם ✅
-        product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר ✅
-        '',                                  // D - ריק
-        'פרסם',                              // E - פורסם ✅
-        product.image_url || '',             // F - תמונות ✅
-        '',                                  // G - ריק
-        '',                                  // H - ריק
-        '',                                  // I - ריק
-        'וריאציה',                           // J - סוג ✅
-        'לא',                                // K ✅
-        '',                                  // L - ריק
-        '',                                  // M - ריק
-        unitVariationName.replace(/\s+/g, '-'),// N - slug ✅
-        '',                                  // O - ריק (קטגוריה רק במוצר ראשי)
-        '',                                  // P - ריק
-        '',                                  // Q - ריק
-        '',                                  // R - ריק
-        '',                                  // S - ריק
-        '',                                  // T - ריק
-        '',                                  // U - ריק
-        '',                                  // V - ריק
-        '',                                  // W - ריק
-        '',                                  // X - ריק
-        'piece',                             // Y - ערך תכונה ✅
-        ''                                   // Z - ריק
+        '',                                  // A - מזהה (ריק!)
+        productName,                         // B - שם מוצר (ללא suffix!)
+        product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר
+        '',                                  // D - מחיר מבצע
+        'פרסם',                              // E - סטטוס
+        product.image_url || '',             // F - תמונה 1
+        '',                                  // G - מק"ט
+        '',                                  // H - תיאור מפורט
+        '',                                  // I - תיאור קצר
+        'וריאציה',                           // J - סוג
+        'לא',                                // K - ניתן להורדה
+        '',                                  // L - קישור להורדה
+        '',                                  // M - ברקוד
+        `${slug}-יח`,                        // N - slug עם suffix
+        '',                                  // O - קטגוריות (ריק בוריאציות!)
+        '',                                  // P - תת קטגוריה
+        '',                                  // Q - מותגים
+        '',                                  // R - תגיות
+        '',                                  // S - מלאי
+        '',                                  // T - אורך
+        '',                                  // U - רוחב
+        '',                                  // V - גובה
+        '',                                  // W - משקל
+        '',                                  // X - סוג משלוח
+        'piece',                             // Y - כמות
       ]);
 
-      console.log(`Added product group: "${productName}" (ID: ${parentId}) with variations`);
+      console.log(`Added product group: "${productName}" with variations`);
     });
 
     // Write all rows at once
