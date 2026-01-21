@@ -1,11 +1,13 @@
 /**
- * IMPORTANT: Smart Sync Mode
- * ---------------------------
- * לא למחוק את כל הנתונים אלא לעדכן מה שחסר!
- * - אם מוצר קיים בגיליון ובמסד - לעדכן רק שדות שונים
- * - אם מוצר חסר בגיליון - להוסיף אותו
- * - אם מוצר קיים בגיליון אבל לא במסד - לשאול לפני מחיקה
- * - אם נתונים שונים - לעדכן לפי מסד הנתונים שלנו
+ * IMPORTANT: Smart Sync Mode - Selective Update
+ * ----------------------------------------------
+ * לא לשנות נתונים קיימים! רק לעדכן עמודה Y (ערך תכונה) בוריאציות
+ * 
+ * כללים:
+ * - עמודה J (סוג) - לא לגעת! הנתונים בגיליון נכונים
+ * - עמודה Y - לעדכן רק אם ריקה בוריאציה
+ * - שורות חדשות - להוסיף רק אם המוצר לא קיים
+ * - לפני מחיקה - לשאול את המשתמש
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -288,24 +290,12 @@ async function addDropdownValidation(accessToken: string, sheetId: number): Prom
 }
 
 /**
- * Compare two rows and return which columns are different
- * Only compares columns that we care about: B, C, E, F, J, K, N, O, Y
- * @returns Array of column indices that are different
+ * Check if Column Y needs to be updated for a variation row
+ * Only returns true if Column Y is empty and this is a variation
  */
-function compareRows(existing: string[], newData: string[]): number[] {
-  const differences: number[] = [];
-  // Columns to compare: B(1), C(2), E(4), F(5), J(9), K(10), N(13), O(14), Y(24)
-  const columnsToCompare = [1, 2, 4, 5, 9, 10, 13, 14, 24];
-  
-  columnsToCompare.forEach(col => {
-    const existingVal = (existing[col] || '').trim();
-    const newVal = (newData[col] || '').trim();
-    if (existingVal !== newVal) {
-      differences.push(col);
-    }
-  });
-  
-  return differences;
+function needsColumnYUpdate(existing: string[]): boolean {
+  const existingY = (existing[24] || '').trim();
+  return !existingY; // Return true if Column Y is empty
 }
 
 /**
@@ -575,15 +565,19 @@ serve(async (req) => {
         const existing = existingProductsMap.get(name);
         
         if (existing) {
-          // Row exists - check if it needs updating
-          const differences = compareRows(existing.data, productRows[idx]);
-          if (differences.length > 0) {
-            console.log(`Row "${name}" has differences in columns: ${differences.join(', ')}`);
+          // Row exists - check if Column Y needs updating (only for variations)
+          const isVariation = idx > 0; // 0 = parent, 1 = kg, 2 = unit
+          
+          if (isVariation && needsColumnYUpdate(existing.data)) {
+            // Column Y is empty - update ONLY Column Y
+            const yValue = idx === 1 ? 'kilo' : 'piece';
+            console.log(`Updating Column Y for "${name}" to "${yValue}"`);
             rowsToUpdate.push({
-              range: `${sheetName}!A${existing.rowIndex}:Z${existing.rowIndex}`,
-              values: [productRows[idx]]
+              range: `${sheetName}!Y${existing.rowIndex}`,  // Only Column Y!
+              values: [[yValue]]
             });
           }
+          // Do NOT update anything else - existing data is correct!
         } else {
           // Row doesn't exist - add it
           console.log(`Row "${name}" is new, will be added`);
