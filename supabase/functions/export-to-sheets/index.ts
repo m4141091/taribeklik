@@ -525,13 +525,8 @@ serve(async (req) => {
     const allRows: string[][] = [];
     let nextId = 1;
 
-    // ניקוי גרשיים כפולים משמות מוצרים
-    const sanitizeName = (name: string): string => {
-      return name.replace(/"/g, '');
-    };
-
     uniqueProducts.forEach(product => {
-      const productName = sanitizeName(product.name.trim());
+      const productName = product.name.trim();
       const kgVariationName = `${productName} ק"ג`;
       const unitVariationName = `${productName} יח'`;
 
