@@ -418,6 +418,14 @@ serve(async (req) => {
   try {
     console.log('Starting smart export to Google Sheets...');
     
+    // קבלת פרמטרים מהבקשה
+    const url = new URL(req.url);
+    const productId = url.searchParams.get('productId');
+    
+    if (productId) {
+      console.log(`Exporting single product: ${productId}`);
+    }
+    
     // Get credentials from environment
     const credentialsJson = Deno.env.get('GOOGLE_SHEETS_CREDENTIALS');
     if (!credentialsJson) {
@@ -432,12 +440,18 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch all active products
-    const { data: products, error: productsError } = await supabase
+    // Fetch products - all active or specific one
+    let productsQuery = supabase
       .from('products')
       .select('*')
-      .eq('is_active', true)
-      .order('name');
+      .eq('is_active', true);
+    
+    // אם יש productId, לסנן רק אותו
+    if (productId) {
+      productsQuery = productsQuery.eq('id', productId);
+    }
+    
+    const { data: products, error: productsError } = await productsQuery.order('name');
 
     if (productsError) {
       console.error('Products fetch error:', productsError);
@@ -511,8 +525,13 @@ serve(async (req) => {
     const allRows: string[][] = [];
     let nextId = 1;
 
+    // ניקוי גרשיים כפולים משמות מוצרים
+    const sanitizeName = (name: string): string => {
+      return name.replace(/"/g, '');
+    };
+
     uniqueProducts.forEach(product => {
-      const productName = product.name.trim();
+      const productName = sanitizeName(product.name.trim());
       const kgVariationName = `${productName} ק"ג`;
       const unitVariationName = `${productName} יח'`;
 
