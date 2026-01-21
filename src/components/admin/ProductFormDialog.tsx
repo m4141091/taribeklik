@@ -42,6 +42,7 @@ const formSchema = z.object({
   price_per_unit: z.number().optional(),
   average_weight_kg: z.number().optional(),
   image_url: z.string().optional(),
+  wordpress_image_url: z.string().optional(),
   is_active: z.boolean(),
   in_stock_this_week: z.boolean(),
 });
@@ -84,6 +85,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       price_per_unit: undefined,
       average_weight_kg: undefined,
       image_url: '',
+      wordpress_image_url: '',
       is_active: true,
       in_stock_this_week: true,
     },
@@ -119,6 +121,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         price_per_unit: product.price_per_unit || undefined,
         average_weight_kg: product.average_weight_kg || undefined,
         image_url: product.image_url || '',
+        wordpress_image_url: product.wordpress_image_url || '',
         is_active: product.is_active,
         in_stock_this_week: product.in_stock_this_week,
       });
@@ -131,6 +134,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         price_per_unit: undefined,
         average_weight_kg: undefined,
         image_url: '',
+        wordpress_image_url: '',
         is_active: true,
         in_stock_this_week: true,
       });
@@ -306,6 +310,24 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 </div>
               </div>
             )}
+
+            <FormField
+              control={form.control}
+              name="wordpress_image_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>כתובת תמונה ב-WordPress</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://taribeclic.shop/wp-content/uploads/..." 
+                      dir="ltr"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex items-center justify-between">
               <Label htmlFor="in_stock">במלאי השבוע</Label>

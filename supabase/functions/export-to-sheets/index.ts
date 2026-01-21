@@ -538,12 +538,12 @@ serve(async (req) => {
 
       // Main product row - values only in A, B, E, F, J, K, N, O, Y
       allRows.push([
-        String(parentId),                    // A - מזהה ✅
+        '',                                  // A - ריק
         productName,                         // B - שם ✅
         '',                                  // C - ריק
         '',                                  // D - ריק
         'פרסם',                              // E - פורסם ✅
-        product.image_url || '',             // F - תמונות ✅
+        product.wordpress_image_url || '',   // F - תמונות WordPress ✅
         '',                                  // G - ריק
         '',                                  // H - ריק
         '',                                  // I - ריק
@@ -568,12 +568,12 @@ serve(async (req) => {
 
       // Kg variation row - values only in A, B, C, E, F, J, K, N, O, Y
       allRows.push([
-        String(nextId++),                    // A - מזהה ✅
+        '',                                  // A - ריק
         kgVariationName,                     // B - שם ✅
         product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר ✅
         '',                                  // D - ריק
         'פרסם',                              // E - פורסם ✅
-        product.image_url || '',             // F - תמונות ✅
+        product.wordpress_image_url || '',   // F - תמונות WordPress ✅
         '',                                  // G - ריק
         '',                                  // H - ריק
         '',                                  // I - ריק
@@ -598,12 +598,12 @@ serve(async (req) => {
 
       // Unit variation row - values only in A, B, C, E, F, J, K, N, O, Y
       allRows.push([
-        String(nextId++),                    // A - מזהה ✅
+        '',                                  // A - ריק
         unitVariationName,                   // B - שם ✅
         product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר ✅
         '',                                  // D - ריק
         'פרסם',                              // E - פורסם ✅
-        product.image_url || '',             // F - תמונות ✅
+        product.wordpress_image_url || '',   // F - תמונות WordPress ✅
         '',                                  // G - ריק
         '',                                  // H - ריק
         '',                                  // I - ריק

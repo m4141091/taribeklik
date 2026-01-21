@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN wordpress_image_url text;
