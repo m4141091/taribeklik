@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images, FileSpreadsheet, FileText, Search, ImageIcon } from 'lucide-react';
+import { Plus, Upload, Download, Edit, Trash2, Eye, EyeOff, Package, List, Folder, FolderOpen, Images, FileSpreadsheet, FileText, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -63,7 +63,6 @@ const ProductsTab: React.FC = () => {
   const [defaultCategoryId, setDefaultCategoryId] = useState<string | null>(null);
   const [isDownloadingImages, setIsDownloadingImages] = useState(false);
   const [isExportingToSheets, setIsExportingToSheets] = useState(false);
-  const [isImportingWordpressImages, setIsImportingWordpressImages] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
@@ -335,146 +334,6 @@ const ProductsTab: React.FC = () => {
     }
   };
 
-  const handleImportWordpressImages = async () => {
-    // CSV data with product name and WordPress image URL
-    const csvData = `שם מוצר,כתובת תמונה בוורדפרס
-אבטיח,https://taribeclic.shop/wp-content/uploads/2026/01/אבטיח.png
-אבוקדו,https://taribeclic.shop/wp-content/uploads/2026/01/אבוקדו.png
-אגוזי מלך,https://taribeclic.shop/wp-content/uploads/2026/01/אגוזי-מלך.png
-אגוזי קשיו,https://taribeclic.shop/wp-content/uploads/2026/01/אגוזי-קשיו.png
-אגס,https://taribeclic.shop/wp-content/uploads/2026/01/אגס.png
-אננס,https://taribeclic.shop/wp-content/uploads/2026/01/אננס.png
-אפרסמון,https://taribeclic.shop/wp-content/uploads/2026/01/אפרסמון.png
-אפרסק,https://taribeclic.shop/wp-content/uploads/2026/01/אפרסק.png
-אשכולית אדומה,https://taribeclic.shop/wp-content/uploads/2026/01/אשכולית-אדומה.png
-אשכולית לבנה,https://taribeclic.shop/wp-content/uploads/2026/01/אשכולית-לבנה.png
-בוטנים,https://taribeclic.shop/wp-content/uploads/2026/01/בוטנים.png
-בטטה,https://taribeclic.shop/wp-content/uploads/2026/01/בטטה.png
-בננה,https://taribeclic.shop/wp-content/uploads/2026/01/בננה.png
-בצל,https://taribeclic.shop/wp-content/uploads/2026/01/בצל.png
-בצל ירוק,https://taribeclic.shop/wp-content/uploads/2026/01/בצל-ירוק.png
-בצל סגול,https://taribeclic.shop/wp-content/uploads/2026/01/בצל-סגול.png
-ברוקולי,https://taribeclic.shop/wp-content/uploads/2026/01/ברוקולי.png
-גוייבה,https://taribeclic.shop/wp-content/uploads/2026/01/גוייבה.png
-גזר,https://taribeclic.shop/wp-content/uploads/2026/01/גזר.png
-גרייפ פרוט,https://taribeclic.shop/wp-content/uploads/2026/01/גרייפ-פרוט.png
-דובדבן,https://taribeclic.shop/wp-content/uploads/2026/01/דובדבן.png
-דלורית,https://taribeclic.shop/wp-content/uploads/2026/01/דלורית.png
-דלעת ערמונים,https://taribeclic.shop/wp-content/uploads/2026/01/דלעת-ערמונים.png
-זנגוויל,https://taribeclic.shop/wp-content/uploads/2026/01/זנגויל.png
-חזרת,https://taribeclic.shop/wp-content/uploads/2026/01/חזרת.png
-חסה,https://taribeclic.shop/wp-content/uploads/2026/01/חסה.png
-חסה סלנובה,https://taribeclic.shop/wp-content/uploads/2026/01/חסה-סלנובה.png
-חציל,https://taribeclic.shop/wp-content/uploads/2026/01/חציל.png
-כוסברה,https://taribeclic.shop/wp-content/uploads/2026/01/כוסברה.png
-כרוב לבן,https://taribeclic.shop/wp-content/uploads/2026/01/כרוב-לבן.png
-כרוב סגול,https://taribeclic.shop/wp-content/uploads/2026/01/כרוב-סגול.png
-כרישה,https://taribeclic.shop/wp-content/uploads/2026/01/כרישה.png
-כרפס,https://taribeclic.shop/wp-content/uploads/2026/01/כרפס.png
-לוביה,https://taribeclic.shop/wp-content/uploads/2026/01/לוביה.png
-לימון,https://taribeclic.shop/wp-content/uploads/2026/01/לימון.png
-ליצ'י,https://taribeclic.shop/wp-content/uploads/2026/01/ליצי.png
-מיני גזר,https://taribeclic.shop/wp-content/uploads/2026/01/מיני-גזר.png
-מלון,https://taribeclic.shop/wp-content/uploads/2026/01/מלון.png
-מלפפון,https://taribeclic.shop/wp-content/uploads/2026/01/מלפפון.png
-מלפפון בייבי,https://taribeclic.shop/wp-content/uploads/2026/01/מלפפון-בייבי.png
-מנגו,https://taribeclic.shop/wp-content/uploads/2026/01/מנגו.png
-מנדרינה,https://taribeclic.shop/wp-content/uploads/2026/01/מנדרינה.png
-מרווה,https://taribeclic.shop/wp-content/uploads/2026/01/מרווה.png
-נבטים,https://taribeclic.shop/wp-content/uploads/2026/01/נבטים.png
-נענע,https://taribeclic.shop/wp-content/uploads/2026/01/נענע.png
-נקטרינה,https://taribeclic.shop/wp-content/uploads/2026/01/נקטרינה.png
-סלק אדום,https://taribeclic.shop/wp-content/uploads/2026/01/סלק-אדום.png
-סלרי,https://taribeclic.shop/wp-content/uploads/2026/01/סלרי.png
-עגבניה,https://taribeclic.shop/wp-content/uploads/2026/01/עגבניה.png
-עגבניות שרי,https://taribeclic.shop/wp-content/uploads/2026/01/עגבניות-שרי.png
-עגבניות שרי מיקס צבעוניות,https://taribeclic.shop/wp-content/uploads/2026/01/עגבניות-שרי-מיקס.png
-ענבים לבנים,https://taribeclic.shop/wp-content/uploads/2026/01/ענבים-לבנים.png
-ענבים שחורים,https://taribeclic.shop/wp-content/uploads/2026/01/ענבים-שחורים.png
-פאפאיה,https://taribeclic.shop/wp-content/uploads/2026/01/פאפאיה.png
-פומלה,https://taribeclic.shop/wp-content/uploads/2026/01/פומלה.png
-פומלית,https://taribeclic.shop/wp-content/uploads/2026/01/פומלית.png
-פטל,https://taribeclic.shop/wp-content/uploads/2026/01/פטל.png
-פטריות שיטאקי,https://taribeclic.shop/wp-content/uploads/2026/01/פטריות-שיטאקי.png
-פטריות שמפיניון,https://taribeclic.shop/wp-content/uploads/2026/01/פטריות-שמפיניון.png
-פטרוזיליה,https://taribeclic.shop/wp-content/uploads/2026/01/פטרוזיליה.png
-פלפל אדום,https://taribeclic.shop/wp-content/uploads/2026/01/פלפל-אדום.png
-פלפל ירוק,https://taribeclic.shop/wp-content/uploads/2026/01/פלפל-ירוק.png
-פלפל כתום,https://taribeclic.shop/wp-content/uploads/2026/01/פלפל-כתום.png
-פלפל צהוב,https://taribeclic.shop/wp-content/uploads/2026/01/פלפל-צהוב.png
-פלפל חריף אדום,https://taribeclic.shop/wp-content/uploads/2026/01/פלפל-חריף-אדום.png
-פלפל חריף ירוק,https://taribeclic.shop/wp-content/uploads/2026/01/פלפל-חריף-ירוק.png
-פלפל חריף ירוק ג'לפניו,https://taribeclic.shop/wp-content/uploads/2026/01/ג׳לפניו.png
-פסיפלורה,https://taribeclic.shop/wp-content/uploads/2026/01/פסיפלורה.png
-קולורבי,https://taribeclic.shop/wp-content/uploads/2026/01/קולורבי.png
-קיווי,https://taribeclic.shop/wp-content/uploads/2026/01/קיווי.png
-קישוא,https://taribeclic.shop/wp-content/uploads/2026/01/קישוא.png
-קלמנטינה,https://taribeclic.shop/wp-content/uploads/2026/01/קלמנטינה.png
-קרמבולה,https://taribeclic.shop/wp-content/uploads/2026/01/קרמבולה.png
-רימון,https://taribeclic.shop/wp-content/uploads/2026/01/רימון.png
-רוזמרין,https://taribeclic.shop/wp-content/uploads/2026/01/רוזמרין.png
-רוקט,https://taribeclic.shop/wp-content/uploads/2026/01/רוקט.png
-שום,https://taribeclic.shop/wp-content/uploads/2026/01/שום.png
-שומר,https://taribeclic.shop/wp-content/uploads/2026/01/שומר.png
-שזיף,https://taribeclic.shop/wp-content/uploads/2026/01/שזיף.png
-שמיר,https://taribeclic.shop/wp-content/uploads/2026/01/שמיר.png
-שעועית ירוקה,https://taribeclic.shop/wp-content/uploads/2026/01/שעועית-ירוקה.png
-תאנה,https://taribeclic.shop/wp-content/uploads/2026/01/תאנה.png
-תות,https://taribeclic.shop/wp-content/uploads/2026/01/תות.png
-תירס,https://taribeclic.shop/wp-content/uploads/2026/01/תירס.png
-תמר מג'הול,https://taribeclic.shop/wp-content/uploads/2026/01/תמר-מג׳הול.png
-תפוז,https://taribeclic.shop/wp-content/uploads/2026/01/תפוז.png
-תפו"ע גולדן דלישס,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-גולדן-דלישס.png
-תפו"ע גרנד סמיט,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-גרנד-סמיט.png
-תפו"ע יונתן,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-יונתן.png
-תפו"ע ירוק,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-ירוק.png
-תפו"ע פינק ליידי,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-פינק-ליידי.png
-תפו"ע פינק ליידי ישראלי,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-פינק-ליידי-ישראלי.png
-תפו"ע פינק ליידי מובחר,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-פינק-ליידי-מובחר.png
-תפו"ע פינק ליידי רגיל,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-פינק-ליידי-רגיל.png
-תפו"ע פינק ליידי - יח',https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-פינק-ליידי-יח.png
-תפו"ע קנדי,https://taribeclic.shop/wp-content/uploads/2026/01/תפוע-קנדי.png
-תפו"א,https://taribeclic.shop/wp-content/uploads/2026/01/תפוא.png
-תפו"א אדום,https://taribeclic.shop/wp-content/uploads/2026/01/תפוא-אדום.png
-תרד,https://taribeclic.shop/wp-content/uploads/2026/01/תרד.png`;
-
-    const lines = csvData.split('\n').slice(1); // Skip header
-    const mappings = lines.map(line => {
-      const parts = line.split(',');
-      return {
-        name: parts[0]?.trim(),
-        imageUrl: parts[1]?.trim()
-      };
-    }).filter(m => m.name && m.imageUrl);
-
-    setIsImportingWordpressImages(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('import-wordpress-images', {
-        body: { mappings }
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: 'הייבוא הושלם!',
-          description: `עודכנו ${data.updated} מוצרים${data.notFound?.length > 0 ? `, ${data.notFound.length} לא נמצאו` : ''}`,
-        });
-      } else {
-        throw new Error(data.error || 'שגיאה לא ידועה');
-      }
-    } catch (error) {
-      console.error('Import WordPress images error:', error);
-      toast({
-        title: 'שגיאה בייבוא',
-        description: error instanceof Error ? error.message : 'שגיאה לא ידועה',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsImportingWordpressImages(false);
-    }
-  };
-
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setShowFormDialog(true);
@@ -559,15 +418,6 @@ const ProductsTab: React.FC = () => {
         >
           <FileSpreadsheet className="w-4 h-4 ml-2" />
           {isExportingToSheets ? 'מייצא...' : 'מלא Google Sheets'}
-        </Button>
-
-        <Button 
-          variant="outline" 
-          onClick={handleImportWordpressImages}
-          disabled={isImportingWordpressImages}
-        >
-          <ImageIcon className="w-4 h-4 ml-2" />
-          {isImportingWordpressImages ? 'מייבא...' : 'ייבוא תמונות WordPress'}
         </Button>
       </div>
 

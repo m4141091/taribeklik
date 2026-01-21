@@ -75,7 +75,6 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     }
   };
 
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -307,7 +306,6 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 </div>
               </div>
             )}
-
 
             <div className="flex items-center justify-between">
               <Label htmlFor="in_stock">במלאי השבוע</Label>

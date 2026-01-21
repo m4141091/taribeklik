@@ -1,15 +1,3 @@
-/**
- * IMPORTANT: Smart Sync Mode - Selective Update
- * ----------------------------------------------
- * לא לשנות נתונים קיימים! רק לעדכן עמודה Y (ערך תכונה) בוריאציות
- * 
- * כללים:
- * - עמודה J (סוג) - לא לגעת! הנתונים בגיליון נכונים
- * - עמודה Y - לעדכן רק אם ריקה בוריאציה
- * - שורות חדשות - להוסיף רק אם המוצר לא קיים
- * - לפני מחיקה - לשאול את המשתמש
- */
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -120,40 +108,33 @@ async function readSheet(accessToken: string): Promise<string[][]> {
   return data.values || [];
 }
 
-// Get the name of the first sheet and its sheetId
-async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sheetId: number}> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties`;
+// Clear all data except header row
+async function clearSheetData(accessToken: string, sheetName: string): Promise<void> {
+  // Use values:clear API to clear content from row 2 onwards (keep header)
+  const range = encodeURIComponent(`${sheetName}!A2:Z10000`);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:clear`;
   
   const response = await fetch(url, {
-    method: 'GET',
+    method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
     },
   });
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Get sheet info error:', error);
-    throw new Error(`Failed to get sheet info: ${error}`);
+    console.error('Clear sheet error:', error);
+    throw new Error(`Failed to clear sheet: ${error}`);
   }
   
-  const data = await response.json();
-  const sheetProps = data.sheets?.[0]?.properties;
-  const sheetName = sheetProps?.title || 'Sheet1';
-  const sheetId = sheetProps?.sheetId || 0;
-  console.log(`First sheet: "${sheetName}" (id: ${sheetId})`);
-  return { name: sheetName, sheetId };
+  console.log('Cleared sheet data (kept header row)');
 }
 
-// Update specific rows in batch
-async function batchUpdateRows(accessToken: string, updates: Array<{range: string, values: string[][]}>): Promise<void> {
-  if (updates.length === 0) {
-    console.log('No rows to update');
-    return;
-  }
-
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
-
+// Clear all formatting from the sheet (set white background)
+async function clearSheetFormatting(accessToken: string, sheetId: number): Promise<void> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+  
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -161,45 +142,36 @@ async function batchUpdateRows(accessToken: string, updates: Array<{range: strin
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      valueInputOption: 'USER_ENTERED',
-      data: updates
+      requests: [{
+        repeatCell: {
+          range: {
+            sheetId: sheetId,
+            startRowIndex: 1, // Skip header row
+            endRowIndex: 10000,
+            startColumnIndex: 0,
+            endColumnIndex: 26 // Columns A-Z
+          },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: {
+                red: 1.0,
+                green: 1.0,
+                blue: 1.0
+              }
+            }
+          },
+          fields: 'userEnteredFormat.backgroundColor'
+        }
+      }]
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Batch update error:', error);
-    throw new Error(`Failed to batch update: ${error}`);
+    console.error('Clear formatting error:', error);
   }
   
-  console.log(`Updated ${updates.length} rows`);
-}
-
-// Append new rows at the end of the sheet
-async function appendRows(accessToken: string, values: string[][]): Promise<void> {
-  if (values.length === 0) {
-    console.log('No rows to append');
-    return;
-  }
-
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:Z:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ values }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error('Append rows error:', error);
-    throw new Error(`Failed to append rows: ${error}`);
-  }
-  
-  console.log(`Appended ${values.length} rows`);
+  console.log('Cleared sheet formatting (set white background)');
 }
 
 // Add dropdown validation to columns E, J, K
@@ -289,119 +261,152 @@ async function addDropdownValidation(accessToken: string, sheetId: number): Prom
   console.log('Added dropdown validation to columns E, J, K');
 }
 
-/**
- * Check if Column Y needs to be updated for a variation row
- * Only returns true if Column Y is empty and this is a variation
- */
-function needsColumnYUpdate(existing: string[]): boolean {
-  const existingY = (existing[24] || '').trim();
-  return !existingY; // Return true if Column Y is empty
+// Get the name of the first sheet and its sheetId
+async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sheetId: number}> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties`;
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Get sheet info error:', error);
+    throw new Error(`Failed to get sheet info: ${error}`);
+  }
+  
+  const data = await response.json();
+  const sheetProps = data.sheets?.[0]?.properties;
+  const sheetName = sheetProps?.title || 'Sheet1';
+  const sheetId = sheetProps?.sheetId || 0;
+  console.log(`First sheet: "${sheetName}" (id: ${sheetId})`);
+  return { name: sheetName, sheetId };
 }
 
-/**
- * Build product rows for a single product
- */
-function buildProductRows(
-  product: any, 
-  categoryString: string
-): string[][] {
-  const productName = product.name.trim();
-  const kgVariationName = `${productName} ק"ג`;
-  const unitVariationName = `${productName} יח'`;
+// Update specific cells in batch
+async function batchUpdateCells(accessToken: string, updates: Array<{range: string, value: string}>): Promise<void> {
+  if (updates.length === 0) {
+    console.log('No updates to make');
+    return;
+  }
 
-  const rows: string[][] = [];
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
+  
+  const data = updates.map(u => ({
+    range: u.range,
+    values: [[u.value]]
+  }));
 
-  // Main product row
-  rows.push([
-    '',                                  // A - ריק
-    productName,                         // B - שם ✅
-    '',                                  // C - ריק
-    '',                                  // D - ריק
-    'פרסם',                              // E - פורסם ✅
-    product.image_url || '',             // F - תמונות ✅
-    '',                                  // G - ריק
-    '',                                  // H - ריק
-    '',                                  // I - ריק
-    'מוצר עם וריאציות',                  // J - סוג ✅
-    'לא',                                // K ✅
-    '',                                  // L - ריק
-    '',                                  // M - ריק
-    productName.replace(/\s+/g, '-'),    // N - slug ✅
-    categoryString,                      // O - קטגוריות ✅
-    '',                                  // P - ריק
-    '',                                  // Q - ריק
-    '',                                  // R - ריק
-    '',                                  // S - ריק
-    '',                                  // T - ריק
-    '',                                  // U - ריק
-    '',                                  // V - ריק
-    '',                                  // W - ריק
-    '',                                  // X - ריק
-    '',                                  // Y - ריק (ערכים רק בוריאציות)
-    ''                                   // Z - ריק
-  ]);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      valueInputOption: 'USER_ENTERED',
+      data: data
+    }),
+  });
 
-  // Kg variation row
-  rows.push([
-    '',                                  // A - ריק
-    kgVariationName,                     // B - שם ✅
-    product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר ✅
-    '',                                  // D - ריק
-    'פרסם',                              // E - פורסם ✅
-    product.image_url || '',             // F - תמונות ✅
-    '',                                  // G - ריק
-    '',                                  // H - ריק
-    '',                                  // I - ריק
-    'וריאציה',                           // J - סוג ✅
-    'לא',                                // K ✅
-    '',                                  // L - ריק
-    '',                                  // M - ריק
-    kgVariationName.replace(/\s+/g, '-'),// N - slug ✅
-    '',                                  // O - ריק (קטגוריה רק במוצר ראשי)
-    '',                                  // P - ריק
-    '',                                  // Q - ריק
-    '',                                  // R - ריק
-    '',                                  // S - ריק
-    '',                                  // T - ריק
-    '',                                  // U - ריק
-    '',                                  // V - ריק
-    '',                                  // W - ריק
-    '',                                  // X - ריק
-    'kilo',                              // Y - ערך תכונה ✅
-    ''                                   // Z - ריק
-  ]);
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Batch update error:', error);
+    throw new Error(`Failed to batch update: ${error}`);
+  }
+  
+  console.log(`Updated ${updates.length} cells`);
+}
 
-  // Unit variation row
-  rows.push([
-    '',                                  // A - ריק
-    unitVariationName,                   // B - שם ✅
-    product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר ✅
-    '',                                  // D - ריק
-    'פרסם',                              // E - פורסם ✅
-    product.image_url || '',             // F - תמונות ✅
-    '',                                  // G - ריק
-    '',                                  // H - ריק
-    '',                                  // I - ריק
-    'וריאציה',                           // J - סוג ✅
-    'לא',                                // K ✅
-    '',                                  // L - ריק
-    '',                                  // M - ריק
-    unitVariationName.replace(/\s+/g, '-'),// N - slug ✅
-    '',                                  // O - ריק (קטגוריה רק במוצר ראשי)
-    '',                                  // P - ריק
-    '',                                  // Q - ריק
-    '',                                  // R - ריק
-    '',                                  // S - ריק
-    '',                                  // T - ריק
-    '',                                  // U - ריק
-    '',                                  // V - ריק
-    '',                                  // W - ריק
-    '',                                  // X - ריק
-    'piece',                             // Y - ערך תכונה ✅
-    ''                                   // Z - ריק
-  ]);
+// Insert a new row at a specific index and write data to it
+async function insertRowAt(
+  accessToken: string, 
+  sheetId: number,
+  sheetName: string,
+  rowIndex: number, 
+  rowData: string[]
+): Promise<void> {
+  // Step 1: Insert an empty row at the specified index
+  const insertUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+  
+  const insertResponse = await fetch(insertUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      requests: [{
+        insertDimension: {
+          range: {
+            sheetId: sheetId,
+            dimension: 'ROWS',
+            startIndex: rowIndex - 1, // 0-indexed
+            endIndex: rowIndex        // 0-indexed, exclusive
+          },
+          inheritFromBefore: false
+        }
+      }]
+    }),
+  });
 
-  return rows;
+  if (!insertResponse.ok) {
+    const error = await insertResponse.text();
+    console.error('Insert row error:', error);
+    throw new Error(`Failed to insert row: ${error}`);
+  }
+
+  // Step 2: Write data to the new row
+  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/'${sheetName}'!A${rowIndex}:Z${rowIndex}?valueInputOption=USER_ENTERED`;
+  
+  const writeResponse = await fetch(writeUrl, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      values: [rowData]
+    }),
+  });
+
+  if (!writeResponse.ok) {
+    const error = await writeResponse.text();
+    console.error('Write row error:', error);
+    throw new Error(`Failed to write row data: ${error}`);
+  }
+
+  console.log(`Inserted row at position ${rowIndex}`);
+}
+
+// Append new rows at the end of the sheet
+async function appendRows(accessToken: string, values: string[][]): Promise<void> {
+  if (values.length === 0) {
+    console.log('No rows to append');
+    return;
+  }
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:Z:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ values }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Append rows error:', error);
+    throw new Error(`Failed to append rows: ${error}`);
+  }
+  
+  console.log(`Appended ${values.length} rows`);
 }
 
 serve(async (req) => {
@@ -411,8 +416,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting SMART SYNC export to Google Sheets...');
-    console.log('Mode: Update only what is missing or different - DO NOT delete all data!');
+    console.log('Starting smart export to Google Sheets...');
     
     // קבלת פרמטרים מהבקשה
     const url = new URL(req.url);
@@ -499,57 +503,9 @@ serve(async (req) => {
     console.log('Getting first sheet info...');
     const { name: sheetName, sheetId } = await getFirstSheetInfo(accessToken);
 
-    // ==========================================
-    // SMART SYNC: Read existing data first
-    // ==========================================
-    console.log('Reading existing sheet data for smart sync...');
-    const existingRows = await readSheet(accessToken);
-    console.log(`Found ${existingRows.length} existing rows in sheet (including header)`);
-
-    // Build map of existing products by name (Column B)
-    // Format: productName -> { rowIndex: number, data: string[] }
-    const existingProductsMap = new Map<string, { rowIndex: number, data: string[] }>();
-    
-    // Also track all variation rows that need Column Y update
-    const variationsToUpdate: Array<{ rowIndex: number, name: string, yValue: string }> = [];
-    
-    existingRows.forEach((row, index) => {
-      if (index === 0) return; // Skip header row
-      const productName = (row[1] || '').trim(); // Column B - keep original case
-      const productNameLower = productName.toLowerCase();
-      const columnY = (row[24] || '').trim(); // Column Y
-      const columnJ = (row[9] || '').trim(); // Column J - Type
-      
-      if (productName) {
-        existingProductsMap.set(productNameLower, {
-          rowIndex: index + 1, // 1-based row number for Google Sheets
-          data: row
-        });
-        
-        // Check if this is a variation row with empty Column Y
-        if (columnJ === 'וריאציה' && !columnY) {
-          // Determine if it's kg or unit based on the name
-          let yValue = '';
-          if (productName.includes('ק"ג') || productName.includes('קילו') || productName.includes('kg')) {
-            yValue = 'kilo';
-          } else if (productName.includes("יח'") || productName.includes('יחידה') || productName.includes('unit')) {
-            yValue = 'piece';
-          }
-          
-          if (yValue) {
-            console.log(`Found variation "${productName}" at row ${index + 1} with empty Column Y, will set to "${yValue}"`);
-            variationsToUpdate.push({
-              rowIndex: index + 1,
-              name: productName,
-              yValue
-            });
-          }
-        }
-      }
-    });
-
-    console.log(`Mapped ${existingProductsMap.size} existing product rows`);
-    console.log(`Found ${variationsToUpdate.length} variations that need Column Y update`);
+    // Clear all existing data (except header)
+    console.log('Clearing existing sheet data...');
+    await clearSheetData(accessToken, sheetName);
 
     // Filter duplicate products by name
     const seenProducts = new Set<string>();
@@ -563,108 +519,139 @@ serve(async (req) => {
       return true;
     }) || [];
 
-    console.log(`Processing ${uniqueProducts.length} unique products from database`);
+    console.log(`Filtered ${(products?.length || 0) - uniqueProducts.length} duplicate products`);
 
-    // Track what we need to do
-    const rowsToUpdate: Array<{ range: string, values: string[][] }> = [];
-    const rowsToAdd: string[][] = [];
-    const processedNames = new Set<string>();
+    // Build all rows in correct order: main product followed by its variations
+    const allRows: string[][] = [];
+    let nextId = 1;
 
-    // Process each product from database
     uniqueProducts.forEach(product => {
-      const categoryNames = productCategoriesMap.get(product.id) || [];
-      const categoryString = categoryNames.join(', ');
-      
-      // Build the 3 rows for this product
-      const productRows = buildProductRows(product, categoryString);
-      
       const productName = product.name.trim();
       const kgVariationName = `${productName} ק"ג`;
       const unitVariationName = `${productName} יח'`;
+
+      const categoryNames = productCategoriesMap.get(product.id) || [];
+      const categoryString = categoryNames.join(', ');
+
+      const parentId = nextId++;
       
-      const rowNames = [
-        productName.toLowerCase(),
-        kgVariationName.toLowerCase(),
-        unitVariationName.toLowerCase()
-      ];
 
-      rowNames.forEach((name, idx) => {
-        processedNames.add(name);
-        const existing = existingProductsMap.get(name);
-        
-        if (existing) {
-          // Row exists - check if Column Y needs updating (only for variations)
-          const isVariation = idx > 0; // 0 = parent, 1 = kg, 2 = unit
-          
-          if (isVariation && needsColumnYUpdate(existing.data)) {
-            // Column Y is empty - update ONLY Column Y
-            const yValue = idx === 1 ? 'kilo' : 'piece';
-            console.log(`Updating Column Y for "${name}" to "${yValue}"`);
-            rowsToUpdate.push({
-              range: `${sheetName}!Y${existing.rowIndex}`,  // Only Column Y!
-              values: [[yValue]]
-            });
-          }
-          // Do NOT update anything else - existing data is correct!
-        } else {
-          // Row doesn't exist - add it
-          console.log(`Row "${name}" is new, will be added`);
-          rowsToAdd.push(productRows[idx]);
-        }
-      });
+      // Main product row - values only in A, B, E, F, J, K, N, O, Y
+      allRows.push([
+        String(parentId),                    // A - מזהה ✅
+        productName,                         // B - שם ✅
+        '',                                  // C - ריק
+        '',                                  // D - ריק
+        'פרסם',                              // E - פורסם ✅
+        product.image_url || '',             // F - תמונות ✅
+        '',                                  // G - ריק
+        '',                                  // H - ריק
+        '',                                  // I - ריק
+        'מוצר עם וריאציות',                  // J - סוג ✅
+        'לא',                                // K ✅
+        '',                                  // L - ריק
+        '',                                  // M - ריק
+        productName.replace(/\s+/g, '-'),    // N - slug ✅
+        categoryString,                      // O - קטגוריות ✅
+        '',                                  // P - ריק
+        '',                                  // Q - ריק
+        '',                                  // R - ריק
+        '',                                  // S - ריק
+        '',                                  // T - ריק
+        '',                                  // U - ריק
+        '',                                  // V - ריק
+        '',                                  // W - ריק
+        '',                                  // X - ריק
+        '',                                  // Y - ריק (ערכים רק בוריאציות)
+        ''                                   // Z - ריק
+      ]);
+
+      // Kg variation row - values only in A, B, C, E, F, J, K, N, O, Y
+      allRows.push([
+        String(nextId++),                    // A - מזהה ✅
+        kgVariationName,                     // B - שם ✅
+        product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר ✅
+        '',                                  // D - ריק
+        'פרסם',                              // E - פורסם ✅
+        product.image_url || '',             // F - תמונות ✅
+        '',                                  // G - ריק
+        '',                                  // H - ריק
+        '',                                  // I - ריק
+        'וריאציה',                           // J - סוג ✅
+        'לא',                                // K ✅
+        '',                                  // L - ריק
+        '',                                  // M - ריק
+        kgVariationName.replace(/\s+/g, '-'),// N - slug ✅
+        '',                                  // O - ריק (קטגוריה רק במוצר ראשי)
+        '',                                  // P - ריק
+        '',                                  // Q - ריק
+        '',                                  // R - ריק
+        '',                                  // S - ריק
+        '',                                  // T - ריק
+        '',                                  // U - ריק
+        '',                                  // V - ריק
+        '',                                  // W - ריק
+        '',                                  // X - ריק
+        'kilo',                              // Y - ערך תכונה ✅
+        ''                                   // Z - ריק
+      ]);
+
+      // Unit variation row - values only in A, B, C, E, F, J, K, N, O, Y
+      allRows.push([
+        String(nextId++),                    // A - מזהה ✅
+        unitVariationName,                   // B - שם ✅
+        product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר ✅
+        '',                                  // D - ריק
+        'פרסם',                              // E - פורסם ✅
+        product.image_url || '',             // F - תמונות ✅
+        '',                                  // G - ריק
+        '',                                  // H - ריק
+        '',                                  // I - ריק
+        'וריאציה',                           // J - סוג ✅
+        'לא',                                // K ✅
+        '',                                  // L - ריק
+        '',                                  // M - ריק
+        unitVariationName.replace(/\s+/g, '-'),// N - slug ✅
+        '',                                  // O - ריק (קטגוריה רק במוצר ראשי)
+        '',                                  // P - ריק
+        '',                                  // Q - ריק
+        '',                                  // R - ריק
+        '',                                  // S - ריק
+        '',                                  // T - ריק
+        '',                                  // U - ריק
+        '',                                  // V - ריק
+        '',                                  // W - ריק
+        '',                                  // X - ריק
+        'piece',                             // Y - ערך תכונה ✅
+        ''                                   // Z - ריק
+      ]);
+
+      console.log(`Added product group: "${productName}" (ID: ${parentId}) with variations`);
     });
 
-    // Find rows that exist in sheet but not in our database
-    const rowsOnlyInSheet: string[] = [];
-    existingProductsMap.forEach((value, name) => {
-      if (!processedNames.has(name)) {
-        rowsOnlyInSheet.push(name);
-      }
-    });
-
-    // Add Column Y updates from variationsToUpdate (these are found by scanning the sheet directly)
-    variationsToUpdate.forEach(({ rowIndex, name, yValue }) => {
-      rowsToUpdate.push({
-        range: `${sheetName}!Y${rowIndex}`,
-        values: [[yValue]]
-      });
-    });
-
-    console.log(`Summary: ${rowsToUpdate.length} rows to update (Column Y), ${rowsToAdd.length} rows to add, ${rowsOnlyInSheet.length} rows only in sheet`);
-
-    // Execute updates
-    if (rowsToUpdate.length > 0) {
-      console.log(`Updating ${rowsToUpdate.length} Column Y values...`);
-      await batchUpdateRows(accessToken, rowsToUpdate);
+    // Write all rows at once
+    if (allRows.length > 0) {
+      console.log(`Writing ${allRows.length} rows to sheet...`);
+      await appendRows(accessToken, allRows);
+      
+      // Clear formatting (set white background)
+      console.log('Clearing sheet formatting...');
+      await clearSheetFormatting(accessToken, sheetId);
+      
+      // Add dropdown validation to columns E, J, K
+      console.log('Adding dropdown validation...');
+      await addDropdownValidation(accessToken, sheetId);
     }
-
-    // Execute additions
-    if (rowsToAdd.length > 0) {
-      console.log(`Adding ${rowsToAdd.length} new rows...`);
-      await appendRows(accessToken, rowsToAdd);
-    }
-
-    // Add dropdown validation
-    console.log('Ensuring dropdown validation...');
-    await addDropdownValidation(accessToken, sheetId);
 
     const result = {
       success: true,
-      mode: 'smart_sync',
-      summary: {
-        totalProductsInDb: uniqueProducts.length,
-        rowsUpdated: rowsToUpdate.length,
-        rowsAdded: rowsToAdd.length,
-        rowsUnchanged: (uniqueProducts.length * 3) - rowsToUpdate.length - rowsToAdd.length,
-        rowsOnlyInSheet: rowsOnlyInSheet.length
-      },
-      // If there are rows only in sheet, return them for user decision
-      requiresConfirmation: rowsOnlyInSheet.length > 0,
-      productsOnlyInSheet: rowsOnlyInSheet.length > 0 ? rowsOnlyInSheet.slice(0, 20) : [], // Limit to 20 for display
+      totalProducts: uniqueProducts.length,
+      duplicatesFiltered: (products?.length || 0) - uniqueProducts.length,
+      totalRows: allRows.length,
       spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}`,
     };
 
-    console.log('Smart sync completed:', result);
+    console.log('Export completed:', result);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

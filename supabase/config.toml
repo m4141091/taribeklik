@@ -1,4 +1,1 @@
 project_id = "gtqykgqmfzokybioibwq"
-
-[functions.import-wordpress-images]
-verify_jwt = false

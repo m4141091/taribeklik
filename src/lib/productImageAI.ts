@@ -64,16 +64,9 @@ export const generateProductImage = async (productName: string): Promise<string>
   const generatedImageUrl = data.imageUrl;
   console.log('AI generated image, uploading to storage...');
   
-  let finalUrl: string;
-  if (generatedImageUrl.startsWith('data:')) {
-    // It's base64 - use existing function
-    finalUrl = await uploadBase64Image(generatedImageUrl);
-  } else {
-    // It's a URL - download and upload
-    finalUrl = await uploadImageFromUrl(generatedImageUrl);
-  }
-  
+  const finalUrl = await uploadBase64Image(generatedImageUrl);
   console.log('Final image URL:', finalUrl);
+  
   return finalUrl;
 };
 
@@ -136,27 +129,6 @@ export const base64ToBlob = (base64: string): Blob => {
   
   const byteArray = new Uint8Array(byteNumbers);
   return new Blob([byteArray], { type: 'image/png' });
-};
-
-export const uploadImageFromUrl = async (imageUrl: string): Promise<string> => {
-  const response = await fetch(imageUrl);
-  const blob = await response.blob();
-  
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
-  
-  const { error: uploadError } = await supabase.storage
-    .from('product-images')
-    .upload(fileName, blob, {
-      contentType: 'image/png',
-    });
-
-  if (uploadError) throw uploadError;
-
-  const { data } = supabase.storage
-    .from('product-images')
-    .getPublicUrl(fileName);
-
-  return data.publicUrl;
 };
 
 export const uploadBase64Image = async (base64: string): Promise<string> => {
