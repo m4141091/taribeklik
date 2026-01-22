@@ -6,8 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SPREADSHEET_ID = '1600GHPosM1lNaWE9SdGMS0AFZiXEEJuN9P7Han5081g';
-
 async function getAccessToken(credentials: any): Promise<string> {
   const header = {
     alg: 'RS256',
@@ -87,8 +85,8 @@ async function getAccessToken(credentials: any): Promise<string> {
 }
 
 // Read existing sheet data
-async function readSheet(accessToken: string): Promise<string[][]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:Z`;
+async function readSheet(accessToken: string, spreadsheetId: string): Promise<string[][]> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A:Z`;
   
   const response = await fetch(url, {
     method: 'GET',
@@ -109,10 +107,10 @@ async function readSheet(accessToken: string): Promise<string[][]> {
 }
 
 // Clear all data except header row
-async function clearSheetData(accessToken: string, sheetName: string): Promise<void> {
+async function clearSheetData(accessToken: string, spreadsheetId: string, sheetName: string): Promise<void> {
   // Use values:clear API to clear content from row 2 onwards (keep header)
   const range = encodeURIComponent(`${sheetName}!A2:Z10000`);
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:clear`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:clear`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -132,8 +130,8 @@ async function clearSheetData(accessToken: string, sheetName: string): Promise<v
 }
 
 // Clear all formatting from the sheet (set white background)
-async function clearSheetFormatting(accessToken: string, sheetId: number): Promise<void> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+async function clearSheetFormatting(accessToken: string, spreadsheetId: string, sheetId: number): Promise<void> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -175,8 +173,8 @@ async function clearSheetFormatting(accessToken: string, sheetId: number): Promi
 }
 
 // Add dropdown validation to columns E, J, K
-async function addDropdownValidation(accessToken: string, sheetId: number): Promise<void> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+async function addDropdownValidation(accessToken: string, spreadsheetId: string, sheetId: number): Promise<void> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -262,8 +260,8 @@ async function addDropdownValidation(accessToken: string, sheetId: number): Prom
 }
 
 // Get the name of the first sheet and its sheetId
-async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sheetId: number}> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties`;
+async function getFirstSheetInfo(accessToken: string, spreadsheetId: string): Promise<{name: string, sheetId: number}> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`;
   
   const response = await fetch(url, {
     method: 'GET',
@@ -287,13 +285,13 @@ async function getFirstSheetInfo(accessToken: string): Promise<{name: string, sh
 }
 
 // Update specific cells in batch
-async function batchUpdateCells(accessToken: string, updates: Array<{range: string, value: string}>): Promise<void> {
+async function batchUpdateCells(accessToken: string, spreadsheetId: string, updates: Array<{range: string, value: string}>): Promise<void> {
   if (updates.length === 0) {
     console.log('No updates to make');
     return;
   }
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`;
   
   const data = updates.map(u => ({
     range: u.range,
@@ -323,14 +321,15 @@ async function batchUpdateCells(accessToken: string, updates: Array<{range: stri
 
 // Insert a new row at a specific index and write data to it
 async function insertRowAt(
-  accessToken: string, 
+  accessToken: string,
+  spreadsheetId: string,
   sheetId: number,
   sheetName: string,
   rowIndex: number, 
   rowData: string[]
 ): Promise<void> {
   // Step 1: Insert an empty row at the specified index
-  const insertUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`;
+  const insertUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
   
   const insertResponse = await fetch(insertUrl, {
     method: 'POST',
@@ -360,7 +359,7 @@ async function insertRowAt(
   }
 
   // Step 2: Write data to the new row
-  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/'${sheetName}'!A${rowIndex}:Z${rowIndex}?valueInputOption=USER_ENTERED`;
+  const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${sheetName}'!A${rowIndex}:Z${rowIndex}?valueInputOption=USER_ENTERED`;
   
   const writeResponse = await fetch(writeUrl, {
     method: 'PUT',
@@ -383,13 +382,13 @@ async function insertRowAt(
 }
 
 // Append new rows at the end of the sheet
-async function appendRows(accessToken: string, values: string[][]): Promise<void> {
+async function appendRows(accessToken: string, spreadsheetId: string, values: string[][]): Promise<void> {
   if (values.length === 0) {
     console.log('No rows to append');
     return;
   }
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/A:Z:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A:Z:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -416,7 +415,15 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting smart export to Google Sheets...');
+    // Parse request body to get spreadsheetId
+    const body = await req.json().catch(() => ({}));
+    const spreadsheetId = body.spreadsheetId;
+    
+    if (!spreadsheetId) {
+      throw new Error('spreadsheetId is required');
+    }
+    
+    console.log(`Starting smart export to Google Sheets (${spreadsheetId})...`);
     
     // Get credentials from environment
     const credentialsJson = Deno.env.get('GOOGLE_SHEETS_CREDENTIALS');
@@ -487,11 +494,11 @@ serve(async (req) => {
 
     // Get first sheet info (name and sheetId)
     console.log('Getting first sheet info...');
-    const { name: sheetName, sheetId } = await getFirstSheetInfo(accessToken);
+    const { name: sheetName, sheetId } = await getFirstSheetInfo(accessToken, spreadsheetId);
 
     // Clear all existing data (except header)
     console.log('Clearing existing sheet data...');
-    await clearSheetData(accessToken, sheetName);
+    await clearSheetData(accessToken, spreadsheetId, sheetName);
 
     // Filter duplicate products by name
     const seenProducts = new Set<string>();
@@ -615,15 +622,15 @@ serve(async (req) => {
     // Write all rows at once
     if (allRows.length > 0) {
       console.log(`Writing ${allRows.length} rows to sheet...`);
-      await appendRows(accessToken, allRows);
+      await appendRows(accessToken, spreadsheetId, allRows);
       
       // Clear formatting (set white background)
       console.log('Clearing sheet formatting...');
-      await clearSheetFormatting(accessToken, sheetId);
+      await clearSheetFormatting(accessToken, spreadsheetId, sheetId);
       
       // Add dropdown validation to columns E, J, K
       console.log('Adding dropdown validation...');
-      await addDropdownValidation(accessToken, sheetId);
+      await addDropdownValidation(accessToken, spreadsheetId, sheetId);
     }
 
     const result = {
@@ -631,7 +638,7 @@ serve(async (req) => {
       totalProducts: uniqueProducts.length,
       duplicatesFiltered: (products?.length || 0) - uniqueProducts.length,
       totalRows: allRows.length,
-      spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}`,
+      spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
     };
 
     console.log('Export completed:', result);
