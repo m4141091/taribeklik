@@ -18,6 +18,14 @@ import ProductListInputDialog from './ProductListInputDialog';
 import ImageLightbox from './ImageLightbox';
 import ProductImage from './ProductImage';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -64,6 +72,8 @@ const ProductsTab: React.FC = () => {
   const [isDownloadingImages, setIsDownloadingImages] = useState(false);
   const [isExportingToSheets, setIsExportingToSheets] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSheetsDialog, setShowSheetsDialog] = useState(false);
+  const [sheetsUrl, setSheetsUrl] = useState('');
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
@@ -288,7 +298,13 @@ const ProductsTab: React.FC = () => {
     }
   };
 
-  const handleExportToGoogleSheets = async () => {
+  const extractSpreadsheetId = (url: string): string | null => {
+    // Supports: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit...
+    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    return match ? match[1] : null;
+  };
+
+  const handleOpenSheetsDialog = () => {
     if (products.length === 0) {
       toast({
         title: 'אין מוצרים לייצוא',
@@ -296,13 +312,30 @@ const ProductsTab: React.FC = () => {
       });
       return;
     }
+    setShowSheetsDialog(true);
+  };
 
+  const handleExportToGoogleSheets = async () => {
+    const spreadsheetId = extractSpreadsheetId(sheetsUrl);
+    
+    if (!spreadsheetId) {
+      toast({
+        title: 'כתובת לא תקינה',
+        description: 'יש להזין כתובת תקינה של Google Sheets',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setShowSheetsDialog(false);
     setIsExportingToSheets(true);
     // Open window immediately to avoid popup blocker
     const newWindow = window.open('', '_blank');
     
     try {
-      const { data, error } = await supabase.functions.invoke('export-to-sheets');
+      const { data, error } = await supabase.functions.invoke('export-to-sheets', {
+        body: { spreadsheetId }
+      });
       
       if (error) {
         if (newWindow) newWindow.close();
@@ -413,7 +446,7 @@ const ProductsTab: React.FC = () => {
 
         <Button 
           variant="outline" 
-          onClick={handleExportToGoogleSheets}
+          onClick={handleOpenSheetsDialog}
           disabled={isExportingToSheets}
         >
           <FileSpreadsheet className="w-4 h-4 ml-2" />
@@ -620,6 +653,37 @@ const ProductsTab: React.FC = () => {
         productId={lightboxProduct?.id || ''}
         onImageUpdate={handleImageUpdate}
       />
+
+      <Dialog open={showSheetsDialog} onOpenChange={setShowSheetsDialog}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>ייצוא ל-Google Sheets</DialogTitle>
+            <DialogDescription>
+              הזיני את כתובת הגיליון שאליו תרצי לייצא את המוצרים.
+              <br />
+              <span className="text-xs text-muted-foreground">
+                שימי לב: יש לוודא שלחשבון השירות יש הרשאת עריכה לגיליון.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              value={sheetsUrl}
+              onChange={(e) => setSheetsUrl(e.target.value)}
+              dir="ltr"
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowSheetsDialog(false)}>
+              ביטול
+            </Button>
+            <Button onClick={handleExportToGoogleSheets} disabled={!sheetsUrl.trim()}>
+              ייצוא
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
