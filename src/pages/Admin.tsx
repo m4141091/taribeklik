@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2, LogOut, Eye, EyeOff, GripVertical } from 'lucide-re
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProductsTab from '@/components/admin/ProductsTab';
 import CategoriesManager from '@/components/admin/CategoriesManager';
+import ProductUpdateTab from '@/components/admin/ProductUpdateTab';
 const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
@@ -162,6 +163,7 @@ const AdminContent = () => {
             <TabsTrigger value="sections">סקשנים</TabsTrigger>
             <TabsTrigger value="products">מוצרים</TabsTrigger>
             <TabsTrigger value="categories">קטגוריות</TabsTrigger>
+            <TabsTrigger value="update">עדכון מוצרים</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sections">
@@ -269,6 +271,10 @@ const AdminContent = () => {
               <h2 className="text-xl font-semibold text-foreground">ניהול קטגוריות</h2>
               <CategoriesManager />
             </div>
+          </TabsContent>
+
+          <TabsContent value="update">
+            <ProductUpdateTab />
           </TabsContent>
         </Tabs>
       </main>
