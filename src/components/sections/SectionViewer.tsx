@@ -2,6 +2,7 @@ import React from 'react';
 import { Section, SectionElement } from '@/types/section';
 import { isSafeUrl } from '@/lib/urlValidation';
 import TypewriterText from '@/components/TypewriterText';
+import logoPattern from '@/assets/logo-pattern.png';
 
 interface SectionViewerProps {
   section: Section;
@@ -112,6 +113,9 @@ const RenderElement = ({ element }: { element: SectionElement }) => {
 };
 
 export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
+  // Check if this is the "about" section (second section) that needs the pattern overlay
+  const isAboutSection = section.slug === 'ktzat-alenu' || section.display_order === 1;
+  
   return (
     <section
       className="w-full relative"
@@ -127,6 +131,18 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
       }}
       dir="rtl"
     >
+      {/* Pattern overlay for about section */}
+      {isAboutSection && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `url(${logoPattern})`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '80px 80px',
+            opacity: 0.03,
+          }}
+        />
+      )}
       {/* Container בגודל מקסימלי קבוע - זהה לעריכה */}
       <div
         className="relative h-full mx-auto"
