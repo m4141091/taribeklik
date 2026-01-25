@@ -2,9 +2,12 @@ import React from 'react';
 import { Section, SectionElement } from '@/types/section';
 import { isSafeUrl } from '@/lib/urlValidation';
 import TypewriterText from '@/components/TypewriterText';
+import logoPattern from '@/assets/logo-pattern.png';
+import sectionSeparator from '@/assets/section-separator.png';
 
 interface SectionViewerProps {
   section: Section;
+  showTopSeparator?: boolean;
 }
 
 const RenderElement = ({ element }: { element: SectionElement }) => {
@@ -111,59 +114,96 @@ const RenderElement = ({ element }: { element: SectionElement }) => {
   }
 };
 
-export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
-  return (
-    <section
-      className="w-full relative"
-      style={{
-        height: `${section.height}px`,
-        backgroundColor: section.background_color || undefined,
-        backgroundImage: section.background_image_url
-          ? `url(${section.background_image_url})`
-          : undefined,
-        backgroundSize: section.background_size || 'cover',
-        backgroundPosition: section.background_position || 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-      dir="rtl"
-    >
-      {/* Container בגודל מקסימלי קבוע - זהה לעריכה */}
-      <div
-        className="relative h-full mx-auto"
-        style={{ maxWidth: '1200px' }}
-      >
-        {section.elements
-          ?.sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
-          .map((el) => {
-            const isFullWidth = el.size.width === '100%';
-            
-            const width =
-              typeof el.size.width === 'string'
-                ? el.size.width
-                : `${el.size.width}px`;
-            const height =
-              typeof el.size.height === 'string'
-                ? el.size.height
-                : `${el.size.height}px`;
+// Check if section should have pattern overlay (dark green about section)
+const shouldHavePatternOverlay = (section: Section): boolean => {
+  const bgColor = section.background_color?.toLowerCase();
+  return bgColor === '#162e14' || bgColor === '#193017' || section.slug === 'ktzat-alenu';
+};
 
-            return (
-              <div
-                key={el.id}
-                className="absolute"
-                style={{
-                  left: isFullWidth ? '0' : `${el.position.x}%`,
-                  top: `${el.position.y}%`,
-                  transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
-                  width,
-                  height,
-                  zIndex: el.zIndex || 1,
-                }}
-              >
-                <RenderElement element={el} />
-              </div>
-            );
-          })}
-      </div>
-    </section>
+export const SectionViewer: React.FC<SectionViewerProps> = ({ section, showTopSeparator = false }) => {
+  const hasPatternOverlay = shouldHavePatternOverlay(section);
+  
+  return (
+    <div className="relative w-full">
+      {/* Top separator - torn paper effect */}
+      {showTopSeparator && (
+        <div className="absolute top-0 left-0 right-0 w-full z-10" style={{ transform: 'translateY(-100%)' }}>
+          <img 
+            src={sectionSeparator} 
+            alt="" 
+            className="w-full h-auto object-cover"
+            style={{ display: 'block' }}
+          />
+        </div>
+      )}
+      
+      <section
+        className="w-full relative"
+        style={{
+          height: `${section.height}px`,
+          backgroundColor: section.background_color || undefined,
+          backgroundImage: hasPatternOverlay 
+            ? undefined 
+            : section.background_image_url
+              ? `url(${section.background_image_url})`
+              : undefined,
+          backgroundSize: section.background_size || 'cover',
+          backgroundPosition: section.background_position || 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+        dir="rtl"
+      >
+        {/* Pattern overlay for about section */}
+        {hasPatternOverlay && (
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `url(${logoPattern})`,
+              backgroundRepeat: 'repeat',
+              backgroundSize: '120px 120px',
+              opacity: 0.06,
+            }}
+          />
+        )}
+        
+        {/* Container בגודל מקסימלי קבוע - זהה לעריכה */}
+        <div
+          className="relative h-full mx-auto"
+          style={{ maxWidth: '1200px' }}
+        >
+          {section.elements
+            ?.sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
+            .map((el) => {
+              const isFullWidth = el.size.width === '100%';
+              
+              const width =
+                typeof el.size.width === 'string'
+                  ? el.size.width
+                  : `${el.size.width}px`;
+              const height =
+                typeof el.size.height === 'string'
+                  ? el.size.height
+                  : `${el.size.height}px`;
+
+              return (
+                <div
+                  key={el.id}
+                  className="absolute"
+                  style={{
+                    left: isFullWidth ? '0' : `${el.position.x}%`,
+                    top: `${el.position.y}%`,
+                    transform: isFullWidth ? 'translateY(-50%)' : 'translate(-50%, -50%)',
+                    width,
+                    height,
+                    zIndex: el.zIndex || 1,
+                  }}
+                >
+                  <RenderElement element={el} />
+                </div>
+              );
+            })}
+        </div>
+      </section>
+    </div>
   );
 };

@@ -15,8 +15,12 @@ export const DynamicSections: React.FC = () => {
 
   return (
     <>
-      {sections.map((section) => (
-        <SectionViewer key={section.id} section={section} />
+      {sections.map((section, index) => (
+        <SectionViewer 
+          key={section.id} 
+          section={section} 
+          showTopSeparator={index > 0}
+        />
       ))}
     </>
   );
