@@ -138,7 +138,7 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
           style={{
             backgroundImage: `url(${logoPattern})`,
             backgroundRepeat: 'repeat',
-            backgroundSize: '80px 80px',
+            backgroundSize: '40px 40px',
             opacity: 0.03,
           }}
         />
