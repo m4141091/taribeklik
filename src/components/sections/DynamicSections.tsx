@@ -15,13 +15,18 @@ export const DynamicSections: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="relative">
       {sections.map((section, index) => (
         <React.Fragment key={section.id}>
-          <SectionViewer section={section} />
-          {/* Separator between first and second section */}
-          {index === 0 && sections.length > 1 && (
-            <div className="w-full relative" style={{ marginTop: '-60px', zIndex: 10 }}>
+          {/* Separator positioned at the top of the second section */}
+          {index === 1 && (
+            <div 
+              className="absolute left-0 right-0 z-20 pointer-events-none"
+              style={{ 
+                top: `${sections[0].height}px`,
+                transform: 'translateY(-50%)',
+              }}
+            >
               <img 
                 src={sectionSeparator} 
                 alt="" 
@@ -30,8 +35,9 @@ export const DynamicSections: React.FC = () => {
               />
             </div>
           )}
+          <SectionViewer section={section} />
         </React.Fragment>
       ))}
-    </>
+    </div>
   );
 };
