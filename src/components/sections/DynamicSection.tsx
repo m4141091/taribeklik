@@ -34,7 +34,7 @@ export const DynamicSection: React.FC<DynamicSectionProps> = ({ section }) => {
               backgroundImage: `url(${logoPattern})`,
               backgroundRepeat: 'repeat',
               backgroundSize: '40px 40px',
-              opacity: 0.03,
+              opacity: 0.015,
             }}
           />
         )}
