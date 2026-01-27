@@ -14,17 +14,37 @@ export const DynamicSections: React.FC = () => {
     return null;
   }
 
+  // Calculate cumulative heights for positioning
+  const getCumulativeHeight = (upToIndex: number) => {
+    return sections.slice(0, upToIndex).reduce((acc, s) => acc + s.height, 0);
+  };
+
   return (
     <div className="relative">
-      {sections.map((section, index) => (
-        <React.Fragment key={section.id}>
-          {/* Add overlap extension for first section to eliminate white line */}
-          {index === 0 && sections.length > 1 && (
+      {sections.map((section, index) => {
+        const topPosition = getCumulativeHeight(index);
+        
+        return (
+          <React.Fragment key={section.id}>
+            <SectionViewer section={section} />
+          </React.Fragment>
+        );
+      })}
+      
+      {/* Background overlaps and separators between consecutive sections */}
+      {sections.slice(0, -1).map((section, index) => {
+        const nextSection = sections[index + 1];
+        const junctionTop = getCumulativeHeight(index + 1);
+        
+        return (
+          <React.Fragment key={`separator-${section.id}`}>
+            {/* First section background extension (below its natural end) */}
             <div 
-              className="absolute left-0 right-0 z-5"
+              className="absolute left-0 right-0"
               style={{
-                top: `${section.height - 20}px`,
-                height: '40px',
+                top: `${junctionTop - 60}px`,
+                height: '80px',
+                zIndex: 5,
                 backgroundColor: section.background_color || 'transparent',
                 backgroundImage: section.background_image_url 
                   ? `url(${section.background_image_url})` 
@@ -33,41 +53,43 @@ export const DynamicSections: React.FC = () => {
                 backgroundPosition: 'center bottom',
               }}
             />
-          )}
-          {/* Add overlap extension for second section to eliminate white line */}
-          {index === 1 && (
+            
+            {/* Second section background extension (above its natural start) */}
             <div 
-              className="absolute left-0 right-0 z-5"
+              className="absolute left-0 right-0"
               style={{
-                top: `${sections[0].height - 20}px`,
-                height: '40px',
-                backgroundColor: section.background_color || 'transparent',
+                top: `${junctionTop - 30}px`,
+                height: '80px',
+                zIndex: 6,
+                backgroundColor: nextSection.background_color || 'transparent',
               }}
             />
-          )}
-          <SectionViewer section={section} />
-        </React.Fragment>
-      ))}
-      {/* Separator positioned at the junction between sections */}
-      {sections.length > 1 && (
-        <div 
-          className="absolute left-0 right-0 z-20 pointer-events-none"
-          style={{ 
-            top: `${sections[0].height}px`,
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <img 
-            src={sectionSeparator} 
-            alt="" 
-            className="w-full"
-            style={{ 
-              display: 'block',
-              height: 'auto',
-            }}
-          />
-        </div>
-      )}
+            
+            {/* Torn paper separator image */}
+            <div 
+              className="absolute left-0 right-0 pointer-events-none"
+              style={{ 
+                top: `${junctionTop}px`,
+                transform: 'translateY(-50%)',
+                zIndex: 20,
+                marginLeft: '-2px',
+                marginRight: '-2px',
+                width: 'calc(100% + 4px)',
+              }}
+            >
+              <img 
+                src={sectionSeparator} 
+                alt="" 
+                style={{ 
+                  display: 'block',
+                  width: '100%',
+                  height: 'auto',
+                }}
+              />
+            </div>
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };
