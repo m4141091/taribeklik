@@ -54,12 +54,12 @@ export const DynamicSections: React.FC = () => {
               }}
             />
             
-            {/* Second section background extension - extends UP to meet separator */}
+            {/* Second section background - starts exactly at junction (below separator) */}
             <div 
               className="absolute left-0 right-0"
               style={{
-                top: `${junctionTop - 20}px`,
-                height: '120px',
+                top: `${junctionTop + 25}px`,
+                height: '100px',
                 zIndex: 6,
                 backgroundColor: nextSection.background_color || 'transparent',
               }}
