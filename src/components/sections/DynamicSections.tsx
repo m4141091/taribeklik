@@ -54,11 +54,11 @@ export const DynamicSections: React.FC = () => {
               }}
             />
             
-            {/* Second section background - starts exactly at junction (below separator) */}
+            {/* Second section background - starts exactly below separator torn edge */}
             <div 
               className="absolute left-0 right-0"
               style={{
-                top: `${junctionTop + 25}px`,
+                top: `${junctionTop + 15}px`,
                 height: '100px',
                 zIndex: 6,
                 backgroundColor: nextSection.background_color || 'transparent',
