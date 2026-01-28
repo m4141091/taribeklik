@@ -20,7 +20,7 @@ export const DynamicSections: React.FC = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden">
       {sections.map((section, index) => {
         const topPosition = getCumulativeHeight(index);
         
@@ -31,19 +31,19 @@ export const DynamicSections: React.FC = () => {
         );
       })}
       
-      {/* Background overlaps and separators between consecutive sections */}
+      {/* Separators between consecutive sections - positioned on top of section backgrounds */}
       {sections.slice(0, -1).map((section, index) => {
         const nextSection = sections[index + 1];
         const junctionTop = getCumulativeHeight(index + 1);
         
         return (
           <React.Fragment key={`separator-${section.id}`}>
-            {/* First section background extension (below its natural end) */}
+            {/* First section background extension - extends DOWN to cover separator area */}
             <div 
               className="absolute left-0 right-0"
               style={{
-                top: `${junctionTop - 60}px`,
-                height: '80px',
+                top: `${junctionTop - 100}px`,
+                height: '120px',
                 zIndex: 5,
                 backgroundColor: section.background_color || 'transparent',
                 backgroundImage: section.background_image_url 
@@ -54,27 +54,24 @@ export const DynamicSections: React.FC = () => {
               }}
             />
             
-            {/* Second section background extension (above its natural start) */}
+            {/* Second section background extension - extends UP to meet separator */}
             <div 
               className="absolute left-0 right-0"
               style={{
-                top: `${junctionTop - 30}px`,
-                height: '80px',
+                top: `${junctionTop - 20}px`,
+                height: '120px',
                 zIndex: 6,
                 backgroundColor: nextSection.background_color || 'transparent',
               }}
             />
             
-            {/* Torn paper separator image */}
+            {/* Torn paper separator - sits exactly at junction with high z-index */}
             <div 
               className="absolute left-0 right-0 pointer-events-none"
               style={{ 
                 top: `${junctionTop}px`,
                 transform: 'translateY(-50%)',
                 zIndex: 20,
-                marginLeft: '-2px',
-                marginRight: '-2px',
-                width: 'calc(100% + 4px)',
               }}
             >
               <img 
