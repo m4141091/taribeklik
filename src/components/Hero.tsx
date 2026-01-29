@@ -47,13 +47,14 @@ const Hero = () => {
           </p>
 
           {/* Products Button */}
-          <Button
-            size="lg"
-            className="group flex items-center gap-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-3 text-[16px] mb-3"
+          <button
+            className="group flex items-center gap-3 bg-background/90 backdrop-blur-sm text-foreground hover:bg-background rounded-full pl-3 pr-6 py-2 text-[16px] mb-3 border border-border/50 shadow-sm transition-all"
           >
-            <span>למוצרים</span>
-            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-          </Button>
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary">
+              <ArrowLeft className="w-4 h-4 text-primary-foreground transition-transform group-hover:-translate-x-0.5" />
+            </span>
+            <span className="font-discovery">למוצרים</span>
+          </button>
 
           {/* Search Input */}
           <div className="flex items-center gap-3 bg-background rounded-full px-6 py-3 border border-border max-w-[280px]">
