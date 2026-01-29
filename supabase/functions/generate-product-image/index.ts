@@ -1,12 +1,65 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+
+// Authentication and authorization helper
+async function verifyAdminAccess(req: Request): Promise<{ error: Response | null }> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    };
+  }
+
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+  
+  if (claimsError || !claimsData?.claims) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    };
+  }
+
+  const userId = claimsData.claims.sub;
+
+  // Verify admin role
+  const { data: roleData, error: roleError } = await supabaseClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('role', 'admin')
+    .maybeSingle();
+
+  if (roleError || !roleData) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    };
+  }
+
+  return { error: null };
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -15,6 +68,12 @@ serve(async (req) => {
   }
 
   try {
+    // Verify admin access before proceeding
+    const { error: authError } = await verifyAdminAccess(req);
+    if (authError) {
+      return authError;
+    }
+
     const { action, productName, imageUrl, instruction, backgroundImageBase64 } = await req.json();
     
     console.log(`Processing ${action} request for: ${productName || 'image edit'}`);
