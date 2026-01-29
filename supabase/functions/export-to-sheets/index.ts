@@ -3,8 +3,60 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+// Authentication and authorization helper
+async function verifyAdminAccess(req: Request): Promise<{ error: Response | null }> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    };
+  }
+
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+  
+  if (claimsError || !claimsData?.claims) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    };
+  }
+
+  const userId = claimsData.claims.sub;
+
+  // Verify admin role
+  const { data: roleData, error: roleError } = await supabaseClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('role', 'admin')
+    .maybeSingle();
+
+  if (roleError || !roleData) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    };
+  }
+
+  return { error: null };
+}
 
 async function getAccessToken(credentials: any): Promise<string> {
   const header = {
@@ -415,6 +467,12 @@ serve(async (req) => {
   }
 
   try {
+    // Verify admin access before proceeding
+    const { error: authError } = await verifyAdminAccess(req);
+    if (authError) {
+      return authError;
+    }
+
     // Parse request body to get spreadsheetId
     const body = await req.json().catch(() => ({}));
     const spreadsheetId = body.spreadsheetId;
@@ -434,7 +492,7 @@ serve(async (req) => {
     const credentials = JSON.parse(credentialsJson);
     console.log('Credentials loaded for:', credentials.client_email);
 
-    // Create Supabase client
+    // Create Supabase client with service role for data access
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -500,164 +558,137 @@ serve(async (req) => {
     console.log('Clearing existing sheet data...');
     await clearSheetData(accessToken, spreadsheetId, sheetName);
 
-    // Filter duplicate products by name
-    const seenProducts = new Set<string>();
-    const uniqueProducts = products?.filter(product => {
-      const key = product.name.toLowerCase().trim();
-      if (seenProducts.has(key)) {
-        console.log(`Skipping duplicate product: ${product.name}`);
-        return false;
+    // Clear existing formatting
+    console.log('Clearing existing formatting...');
+    await clearSheetFormatting(accessToken, spreadsheetId, sheetId);
+
+    // Prepare all product rows
+    const productRows: string[][] = [];
+    
+    for (const product of products || []) {
+      // Get categories for this product
+      const productCats = productCategoriesMap.get(product.id) || [];
+      const categoriesStr = productCats.join(', ');
+
+      // Calculate base price and sale price (if kg pricing with unit variation)
+      let regularPrice = '';
+      let salePrice = '';
+      
+      if (product.pricing_type === 'kg' && product.price_per_kg) {
+        regularPrice = product.price_per_kg.toString();
+        if (product.has_unit_variation && product.average_weight_kg && product.price_per_unit) {
+          salePrice = product.price_per_unit.toString();
+        }
+      } else if (product.pricing_type === 'unit' && product.price_per_unit) {
+        regularPrice = product.price_per_unit.toString();
       }
-      seenProducts.add(key);
-      return true;
-    }) || [];
 
-    console.log(`Filtered ${(products?.length || 0) - uniqueProducts.length} duplicate products`);
+      // Format image URL for WooCommerce
+      const imageUrl = product.wordpress_image_url || product.image_url || '';
 
-    // Build all rows in correct order: main product followed by its variations
-    const allRows: string[][] = [];
-
-    // Helper function to create slug
-    const createSlug = (name: string): string => {
-      return name.replace(/\s+/g, '-');
-    };
-
-    uniqueProducts.forEach(product => {
-      const productName = product.name.trim();
-      const slug = createSlug(productName);
-
-      const categoryNames = productCategoriesMap.get(product.id) || [];
-      const categoryString = categoryNames.join(', ');
-
-      // Main product row (25 columns A-Y)
-      allRows.push([
-        '',                                  // A - מזהה (ריק!)
-        productName,                         // B - שם מוצר
-        '',                                  // C - מחיר
-        '',                                  // D - מחיר מבצע
-        'פרסם',                              // E - סטטוס
-        product.image_url || '',             // F - תמונה 1
-        '',                                  // G - מק"ט
-        '',                                  // H - תיאור מפורט
-        '',                                  // I - תיאור קצר
-        'מוצר עם וריאציות',                  // J - סוג
-        'לא',                                // K - ניתן להורדה
-        '',                                  // L - קישור להורדה
-        '',                                  // M - ברקוד
-        slug,                                // N - מזהה כתובת (slug)
-        categoryString,                      // O - קטגוריות
-        '',                                  // P - תת קטגוריה
-        '',                                  // Q - מותגים
-        '',                                  // R - תגיות
-        '',                                  // S - מלאי
-        '',                                  // T - אורך
-        '',                                  // U - רוחב
-        '',                                  // V - גובה
-        '',                                  // W - משקל
-        '',                                  // X - סוג משלוח
-        '',                                  // Y - כמות (ריק במוצר ראשי)
-      ]);
-
-      // Kg variation row (25 columns A-Y)
-      allRows.push([
-        '',                                  // A - מזהה (ריק!)
-        productName,                         // B - שם מוצר (ללא suffix!)
-        product.price_per_kg ? String(product.price_per_kg) : '',  // C - מחיר
-        '',                                  // D - מחיר מבצע
-        'פרסם',                              // E - סטטוס
-        product.image_url || '',             // F - תמונה 1
-        '',                                  // G - מק"ט
-        '',                                  // H - תיאור מפורט
-        '',                                  // I - תיאור קצר
-        'וריאציה',                           // J - סוג
-        'לא',                                // K - ניתן להורדה
-        '',                                  // L - קישור להורדה
-        '',                                  // M - ברקוד
-        `${slug}-קג`,                        // N - slug עם suffix
-        '',                                  // O - קטגוריות (ריק בוריאציות!)
-        '',                                  // P - תת קטגוריה
-        '',                                  // Q - מותגים
-        '',                                  // R - תגיות
-        '',                                  // S - מלאי
-        '',                                  // T - אורך
-        '',                                  // U - רוחב
-        '',                                  // V - גובה
-        '',                                  // W - משקל
-        '',                                  // X - סוג משלוח
-        'kilo',                              // Y - כמות
-      ]);
-
-      // Unit variation row (25 columns A-Y)
-      allRows.push([
-        '',                                  // A - מזהה (ריק!)
-        productName,                         // B - שם מוצר (ללא suffix!)
-        product.price_per_unit ? String(product.price_per_unit) : '',  // C - מחיר
-        '',                                  // D - מחיר מבצע
-        'פרסם',                              // E - סטטוס
-        product.image_url || '',             // F - תמונה 1
-        '',                                  // G - מק"ט
-        '',                                  // H - תיאור מפורט
-        '',                                  // I - תיאור קצר
-        'וריאציה',                           // J - סוג
-        'לא',                                // K - ניתן להורדה
-        '',                                  // L - קישור להורדה
-        '',                                  // M - ברקוד
-        `${slug}-יח`,                        // N - slug עם suffix
-        '',                                  // O - קטגוריות (ריק בוריאציות!)
-        '',                                  // P - תת קטגוריה
-        '',                                  // Q - מותגים
-        '',                                  // R - תגיות
-        '',                                  // S - מלאי
-        '',                                  // T - אורך
-        '',                                  // U - רוחב
-        '',                                  // V - גובה
-        '',                                  // W - משקל
-        '',                                  // X - סוג משלוח
-        'piece',                             // Y - כמות
-      ]);
-
-      console.log(`Added product group: "${productName}" with variations`);
-    });
-
-    // Write all rows at once
-    if (allRows.length > 0) {
-      console.log(`Writing ${allRows.length} rows to sheet...`);
-      await appendRows(accessToken, spreadsheetId, allRows);
+      // Determine product type and variation info
+      const hasVariation = product.pricing_type === 'kg' && product.has_unit_variation;
       
-      // Clear formatting (set white background)
-      console.log('Clearing sheet formatting...');
-      await clearSheetFormatting(accessToken, spreadsheetId, sheetId);
-      
-      // Add dropdown validation to columns E, J, K
-      console.log('Adding dropdown validation...');
-      await addDropdownValidation(accessToken, spreadsheetId, sheetId);
+      if (hasVariation) {
+        // Parent product row (variable product)
+        const parentRow = [
+          product.id,                           // A: מזהה
+          'מוצר עם וריאציות',                  // B: סוג
+          product.name,                         // C: שם
+          'פרסם',                               // D: סטטוס
+          categoriesStr,                        // E: קטגוריות
+          imageUrl,                             // F: תמונה
+          '',                                   // G: מחיר רגיל (parent has no price)
+          '',                                   // H: מחיר מבצע
+          'weight',                             // I: שם תכונה 1
+          'יחידה | קילו',                       // J: ערכים תכונה 1
+          '1',                                  // K: גלוי בעמוד מוצר תכונה 1
+          '1',                                  // L: גלובלי תכונה 1
+        ];
+        productRows.push(parentRow);
+
+        // Unit variation row
+        const unitRow = [
+          `${product.id}-unit`,                 // A: מזהה
+          'וריאציה',                            // B: סוג
+          `${product.name} - יחידה`,           // C: שם
+          'פרסם',                               // D: סטטוס
+          '',                                   // E: קטגוריות (empty for variation)
+          '',                                   // F: תמונה (empty for variation)
+          product.price_per_unit?.toString() || '', // G: מחיר רגיל
+          '',                                   // H: מחיר מבצע
+          'weight',                             // I: שם תכונה 1
+          'יחידה',                              // J: ערך תכונה 1
+          '',                                   // K: גלוי בעמוד מוצר (empty for variation)
+          '',                                   // L: גלובלי (empty for variation)
+          product.id,                           // M: Parent ID
+        ];
+        productRows.push(unitRow);
+
+        // Kg variation row
+        const kgRow = [
+          `${product.id}-kg`,                   // A: מזהה
+          'וריאציה',                            // B: סוג
+          `${product.name} - קילו`,            // C: שם
+          'פרסם',                               // D: סטטוס
+          '',                                   // E: קטגוריות (empty for variation)
+          '',                                   // F: תמונה (empty for variation)
+          product.price_per_kg?.toString() || '', // G: מחיר רגיל
+          '',                                   // H: מחיר מבצע
+          'weight',                             // I: שם תכונה 1
+          'קילו',                               // J: ערך תכונה 1
+          '',                                   // K: גלוי בעמוד מוצר (empty for variation)
+          '',                                   // L: גלובלי (empty for variation)
+          product.id,                           // M: Parent ID
+        ];
+        productRows.push(kgRow);
+      } else {
+        // Simple product row
+        const row = [
+          product.id,                           // A: מזהה
+          'מוצר פשוט',                          // B: סוג
+          product.name,                         // C: שם
+          'פרסם',                               // D: סטטוס
+          categoriesStr,                        // E: קטגוריות
+          imageUrl,                             // F: תמונה
+          regularPrice,                         // G: מחיר רגיל
+          salePrice,                            // H: מחיר מבצע
+          '',                                   // I: שם תכונה 1
+          '',                                   // J: ערכים תכונה 1
+          '',                                   // K: גלוי בעמוד מוצר תכונה 1
+          '',                                   // L: גלובלי תכונה 1
+        ];
+        productRows.push(row);
+      }
     }
 
-    const result = {
-      success: true,
-      totalProducts: uniqueProducts.length,
-      duplicatesFiltered: (products?.length || 0) - uniqueProducts.length,
-      totalRows: allRows.length,
-      spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
-    };
+    // Append all product rows
+    console.log(`Appending ${productRows.length} rows...`);
+    await appendRows(accessToken, spreadsheetId, productRows);
 
-    console.log('Export completed:', result);
+    // Add dropdown validations
+    console.log('Adding dropdown validations...');
+    await addDropdownValidation(accessToken, spreadsheetId, sheetId);
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.log('Export completed successfully!');
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: `Exported ${products?.length || 0} products (${productRows.length} rows including variations)`,
+        productsCount: products?.length || 0,
+        rowsCount: productRows.length
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Export error:', error);
     return new Response(
       JSON.stringify({ 
-        success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
       }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
