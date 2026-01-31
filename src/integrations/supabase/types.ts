@@ -217,7 +217,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      sections_public: {
+        Row: {
+          background_color: string | null
+          background_image_url: string | null
+          background_position: string | null
+          background_size: string | null
+          created_at: string | null
+          display_order: number | null
+          elements: Json | null
+          height: number | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          slug: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          background_color?: string | null
+          background_image_url?: string | null
+          background_position?: string | null
+          background_size?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          elements?: Json | null
+          height?: number | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          background_color?: string | null
+          background_image_url?: string | null
+          background_position?: string | null
+          background_size?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          elements?: Json | null
+          height?: number | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
