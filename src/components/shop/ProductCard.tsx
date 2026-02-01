@@ -49,16 +49,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
 
   return (
     <div 
-      className="relative rounded-2xl p-4 flex flex-col items-center"
+      className="relative rounded-2xl p-4 flex flex-col items-center shadow-md transition-shadow hover:shadow-lg"
       style={{ backgroundColor: '#F7F2ED' }}
     >
       {/* Product Image */}
-      <div className="w-full aspect-square flex items-center justify-center mb-3">
+      <div className="w-full aspect-square flex items-center justify-center mb-3 overflow-hidden rounded-t-xl">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="max-w-full max-h-full object-contain"
+            className="max-w-full max-h-full object-contain transition-transform duration-300 ease-out hover:scale-125"
           />
         ) : (
           <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center">
