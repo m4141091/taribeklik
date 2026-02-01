@@ -76,7 +76,7 @@ const Shop = () => {
   const isLoading = productsLoading || categoriesLoading;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen" style={{ backgroundColor: '#F0E8DF' }}>
       <Header />
       
       {/* Spacer for fixed header */}

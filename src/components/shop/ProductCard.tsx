@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types/product';
-import productCardBg from '@/assets/product-card-bg.png';
 
 interface ProductCardProps {
   product: Product;
@@ -51,11 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   return (
     <div 
       className="relative rounded-2xl p-4 flex flex-col items-center"
-      style={{
-        backgroundImage: `url(${productCardBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      style={{ backgroundColor: '#F7F2ED' }}
     >
       {/* Product Image */}
       <div className="w-full aspect-square flex items-center justify-center mb-3">
@@ -120,21 +115,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           <div className="flex bg-white rounded-full p-1 shadow-sm">
             <button
               onClick={() => setSelectedPricing('unit')}
-              className={`px-3 py-1 rounded-full text-sm font-discovery transition-colors ${
-                selectedPricing === 'unit'
-                  ? 'bg-foreground text-white'
-                  : 'text-foreground hover:bg-muted'
-              }`}
+              className="px-3 py-1 rounded-full text-sm font-discovery transition-colors text-foreground"
+              style={{ 
+                backgroundColor: selectedPricing === 'unit' ? '#F25F40' : '#F8DDC7',
+                color: selectedPricing === 'unit' ? 'white' : undefined
+              }}
             >
               יח'
             </button>
             <button
               onClick={() => setSelectedPricing('kg')}
-              className={`px-3 py-1 rounded-full text-sm font-discovery transition-colors ${
-                selectedPricing === 'kg'
-                  ? 'bg-foreground text-white'
-                  : 'text-foreground hover:bg-muted'
-              }`}
+              className="px-3 py-1 rounded-full text-sm font-discovery transition-colors text-foreground"
+              style={{ 
+                backgroundColor: selectedPricing === 'kg' ? '#F25F40' : '#F8DDC7',
+                color: selectedPricing === 'kg' ? 'white' : undefined
+              }}
             >
               ק"ג
             </button>
