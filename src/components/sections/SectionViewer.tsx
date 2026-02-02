@@ -121,13 +121,6 @@ export const SectionViewer: React.FC<SectionViewerProps> = ({ section }) => {
       className="w-full relative"
       style={{
         height: `${section.height}px`,
-        backgroundColor: section.background_color || undefined,
-        backgroundImage: section.background_image_url
-          ? `url(${section.background_image_url})`
-          : undefined,
-        backgroundSize: section.background_size || 'cover',
-        backgroundPosition: section.background_position || 'center',
-        backgroundRepeat: 'no-repeat',
       }}
       dir="rtl"
     >
