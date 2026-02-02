@@ -77,11 +77,7 @@ const BuilderContent = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [canvasHeight, setCanvasHeight] = useState(600);
-  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [activeTab, setActiveTab] = useState<'elements' | 'settings' | 'layers'>('elements');
-  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-  const [backgroundSize, setBackgroundSize] = useState<'cover' | 'contain' | '100%'>('cover');
-  const [backgroundPosition, setBackgroundPosition] = useState('center');
   const [isActive, setIsActive] = useState(false);
 
   // Drag state
@@ -127,10 +123,6 @@ const BuilderContent = () => {
         setSectionName(parsedSection.name);
         setElements(parsedSection.elements);
         setCanvasHeight(parsedSection.height);
-        setBackgroundColor(parsedSection.background_color || '#ffffff');
-        setBackgroundImage(parsedSection.background_image_url);
-        setBackgroundSize((data as any).background_size || 'cover');
-        setBackgroundPosition((data as any).background_position || 'center');
         setIsActive(parsedSection.is_active || false);
       } catch (error) {
         console.error('Error fetching section:', error);
@@ -319,10 +311,6 @@ const BuilderContent = () => {
         .update({
           name: sectionName,
           height: canvasHeight,
-          background_color: backgroundColor,
-          background_image_url: backgroundImage,
-          background_size: backgroundSize,
-          background_position: backgroundPosition,
           elements: JSON.parse(JSON.stringify(elements)),
           is_active: isActive,
         })
@@ -343,71 +331,6 @@ const BuilderContent = () => {
       });
     } finally {
       setSaving(false);
-    }
-  };
-
-  // Upload background image
-  const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !id) return;
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${id}/background.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('section-assets')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('section-assets')
-        .getPublicUrl(fileName);
-
-      setBackgroundImage(publicUrl);
-      
-      // Save directly to database
-      const { error: updateError } = await supabase
-        .from('sections')
-        .update({ background_image_url: publicUrl })
-        .eq('id', id);
-      
-      if (updateError) throw updateError;
-      
-      toast({ title: 'רקע הועלה ונשמר בהצלחה!' });
-    } catch (error) {
-      console.error('Error uploading background:', error);
-      toast({
-        title: 'שגיאה',
-        description: 'שגיאה בהעלאת הרקע',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Remove background image
-  const handleRemoveBackground = async () => {
-    if (!id) return;
-    
-    try {
-      setBackgroundImage(null);
-      
-      const { error } = await supabase
-        .from('sections')
-        .update({ background_image_url: null })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      toast({ title: 'רקע הוסר בהצלחה' });
-    } catch (error) {
-      console.error('Error removing background:', error);
-      toast({
-        title: 'שגיאה',
-        description: 'שגיאה בהסרת הרקע',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -617,63 +540,6 @@ const BuilderContent = () => {
                       min={200}
                       max={2000}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-2">צבע רקע</label>
-                    <input
-                      type="color"
-                      value={backgroundColor}
-                      onChange={(e) => setBackgroundColor(e.target.value)}
-                      className="w-full h-10 rounded cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-2">תמונת רקע</label>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBackgroundUpload}
-                    />
-                    {backgroundImage && (
-                      <>
-                        <button
-                          onClick={handleRemoveBackground}
-                          className="text-sm text-destructive mt-2 hover:underline"
-                        >
-                          הסר רקע
-                        </button>
-                        <div className="mt-4">
-                          <label className="block text-sm mb-2">התאמת רקע</label>
-                          <select
-                            value={backgroundSize}
-                            onChange={(e) => setBackgroundSize(e.target.value as 'cover' | 'contain' | '100%')}
-                            className="w-full h-10 rounded-md border border-input bg-background px-3"
-                          >
-                            <option value="cover">מילוי (Cover) - חותך במידת הצורך</option>
-                            <option value="contain">התאם (Contain) - שומר פרופורציות</option>
-                            <option value="100%">100% - גודל מלא</option>
-                          </select>
-                        </div>
-                        <div className="mt-4">
-                          <label className="block text-sm mb-2">מיקום רקע</label>
-                          <select
-                            value={backgroundPosition}
-                            onChange={(e) => setBackgroundPosition(e.target.value)}
-                            className="w-full h-10 rounded-md border border-input bg-background px-3"
-                          >
-                            <option value="center">מרכז</option>
-                            <option value="top">למעלה</option>
-                            <option value="bottom">למטה</option>
-                            <option value="left">שמאל</option>
-                            <option value="right">ימין</option>
-                            <option value="top left">למעלה שמאל</option>
-                            <option value="top right">למעלה ימין</option>
-                            <option value="bottom left">למטה שמאל</option>
-                            <option value="bottom right">למטה ימין</option>
-                          </select>
-                        </div>
-                      </>
-                    )}
                   </div>
                 </div>
               </>
@@ -1160,10 +1026,10 @@ const BuilderContent = () => {
                   name: sectionName,
                   slug: section?.slug || '',
                   height: canvasHeight,
-                  background_color: backgroundColor,
-                  background_image_url: backgroundImage,
-                  background_size: backgroundSize,
-                  background_position: backgroundPosition,
+                  background_color: null,
+                  background_image_url: null,
+                  background_size: null,
+                  background_position: null,
                   elements: elements,
                   is_active: section?.is_active ?? true,
                   display_order: section?.display_order ?? 0,
@@ -1181,10 +1047,7 @@ const BuilderContent = () => {
               style={{
                 maxWidth: '1200px',
                 height: `${canvasHeight}px`,
-                backgroundColor,
-                backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-                backgroundSize,
-                backgroundPosition,
+                backgroundColor: 'transparent',
                 backgroundRepeat: 'no-repeat',
               }}
               onClick={() => setSelectedElement(null)}
