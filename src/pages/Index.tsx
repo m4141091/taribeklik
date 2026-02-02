@@ -1,21 +1,17 @@
 import Header from "@/components/Header";
 import { DynamicSections } from "@/components/sections/DynamicSections";
+import homepageBackground from "@/assets/homepage-background.png";
 
 const Index = () => {
   return (
-    <main className="min-h-screen">
-      
+    <main 
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${homepageBackground})` }}
+    >
       <Header />
       
       {/* Dynamic Sections from Builder */}
       <DynamicSections />
-      
-      {/* Placeholder for next sections */}
-      <section className="bg-background py-20">
-        <div className="container mx-auto text-center">
-          <p className="text-muted-foreground">סקשנים נוספים יתווספו בקרוב...</p>
-        </div>
-      </section>
     </main>
   );
 };
