@@ -31,60 +31,30 @@ export const DynamicSections: React.FC = () => {
         );
       })}
       
-      {/* Separators between consecutive sections - positioned on top of section backgrounds */}
+      {/* Separators between consecutive sections */}
       {sections.slice(0, -1).map((section, index) => {
-        const nextSection = sections[index + 1];
         const junctionTop = getCumulativeHeight(index + 1);
         
         return (
-          <React.Fragment key={`separator-${section.id}`}>
-            {/* First section background extension - extends DOWN to cover separator area */}
-            <div 
-              className="absolute left-0 right-0"
-              style={{
-                top: `${junctionTop - 100}px`,
-                height: '120px',
-                zIndex: 5,
-                backgroundColor: section.background_color || 'transparent',
-                backgroundImage: section.background_image_url 
-                  ? `url(${section.background_image_url})` 
-                  : undefined,
-                backgroundSize: section.background_size || 'cover',
-                backgroundPosition: 'center bottom',
-              }}
-            />
-            
-            {/* Second section background - starts exactly below separator torn edge */}
-            <div 
-              className="absolute left-0 right-0"
-              style={{
-                top: `${junctionTop + 15}px`,
-                height: '100px',
-                zIndex: 6,
-                backgroundColor: nextSection.background_color || 'transparent',
-              }}
-            />
-            
-            {/* Torn paper separator - sits exactly at junction with high z-index */}
-            <div 
-              className="absolute left-0 right-0 pointer-events-none"
+          <div 
+            key={`separator-${section.id}`}
+            className="absolute left-0 right-0 pointer-events-none"
+            style={{ 
+              top: `${junctionTop}px`,
+              transform: 'translateY(-50%)',
+              zIndex: 20,
+            }}
+          >
+            <img 
+              src={sectionSeparator} 
+              alt="" 
               style={{ 
-                top: `${junctionTop}px`,
-                transform: 'translateY(-50%)',
-                zIndex: 20,
+                display: 'block',
+                width: '100%',
+                height: 'auto',
               }}
-            >
-              <img 
-                src={sectionSeparator} 
-                alt="" 
-                style={{ 
-                  display: 'block',
-                  width: '100%',
-                  height: 'auto',
-                }}
-              />
-            </div>
-          </React.Fragment>
+            />
+          </div>
         );
       })}
     </div>
