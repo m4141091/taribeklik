@@ -1,17 +1,28 @@
 import Header from "@/components/Header";
-import { DynamicSections } from "@/components/sections/DynamicSections";
 import homepageBackground from "@/assets/homepage-background.png";
 
 const Index = () => {
   return (
     <main 
-      className="min-h-screen bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: `url(${homepageBackground})` }}
+      className="bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{ 
+        backgroundImage: `url(${homepageBackground})`,
+        minHeight: '2500px', // Full page height to show entire background
+      }}
+      dir="rtl"
     >
       <Header />
       
-      {/* Dynamic Sections from Builder */}
-      <DynamicSections />
+      {/* Full homepage - ready for elements */}
+      <div className="container mx-auto px-8 pt-32">
+        {/* 
+          כאן אפשר להוסיף אלמנטים לאורך כל הדף:
+          - כותרות
+          - טקסטים
+          - כפתורים
+          - תמונות
+        */}
+      </div>
     </main>
   );
 };
