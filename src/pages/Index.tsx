@@ -4,10 +4,12 @@ import homepageBackground from "@/assets/homepage-background.png";
 const Index = () => {
   return (
     <main 
-      className="bg-cover bg-center bg-no-repeat bg-fixed"
+      className="bg-no-repeat w-full"
       style={{ 
         backgroundImage: `url(${homepageBackground})`,
-        minHeight: '2500px', // Full page height to show entire background
+        backgroundSize: '100% auto',
+        backgroundPosition: 'top center',
+        minHeight: '4000px', // Match full background image height
       }}
       dir="rtl"
     >
