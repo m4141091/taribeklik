@@ -1,29 +1,24 @@
 import Header from "@/components/Header";
 import homepageBackground from "@/assets/homepage-background.png";
+import { HomepageViewer } from "@/components/homepage/HomepageViewer";
 
 const Index = () => {
   return (
     <main 
-      className="bg-no-repeat w-full min-h-screen"
+      className="bg-no-repeat w-full min-h-screen relative"
       style={{ 
         backgroundImage: `url(${homepageBackground})`,
         backgroundSize: '100% auto',
         backgroundPosition: 'top center',
-        minHeight: '6000px', // Extended to show full background including bottom orange stripe
+        minHeight: '6000px',
       }}
       dir="rtl"
     >
       <Header />
       
-      {/* Full homepage - ready for elements */}
-      <div className="container mx-auto px-8 pt-32">
-        {/* 
-          כאן אפשר להוסיף אלמנטים לאורך כל הדף:
-          - כותרות
-          - טקסטים
-          - כפתורים
-          - תמונות
-        */}
+      {/* Dynamic homepage elements from database */}
+      <div className="relative" style={{ height: '6000px' }}>
+        <HomepageViewer />
       </div>
     </main>
   );

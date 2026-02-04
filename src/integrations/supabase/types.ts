@@ -35,6 +35,96 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_elements: {
+        Row: {
+          background_color: string | null
+          border_radius: number | null
+          color: string | null
+          content: string | null
+          created_at: string | null
+          created_by: string | null
+          display_order: number | null
+          element_type: string
+          font_family: string | null
+          font_size: number | null
+          height: string
+          id: string
+          is_visible: boolean | null
+          link_url: string | null
+          name: string | null
+          object_fit: string | null
+          object_position: string | null
+          opacity: number | null
+          position_x: number
+          position_y: number
+          text_align: string | null
+          typewriter_delay: number | null
+          typewriter_enabled: boolean | null
+          typewriter_speed: number | null
+          updated_at: string | null
+          width: string
+          z_index: number | null
+        }
+        Insert: {
+          background_color?: string | null
+          border_radius?: number | null
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          element_type: string
+          font_family?: string | null
+          font_size?: number | null
+          height?: string
+          id?: string
+          is_visible?: boolean | null
+          link_url?: string | null
+          name?: string | null
+          object_fit?: string | null
+          object_position?: string | null
+          opacity?: number | null
+          position_x?: number
+          position_y?: number
+          text_align?: string | null
+          typewriter_delay?: number | null
+          typewriter_enabled?: boolean | null
+          typewriter_speed?: number | null
+          updated_at?: string | null
+          width?: string
+          z_index?: number | null
+        }
+        Update: {
+          background_color?: string | null
+          border_radius?: number | null
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          element_type?: string
+          font_family?: string | null
+          font_size?: number | null
+          height?: string
+          id?: string
+          is_visible?: boolean | null
+          link_url?: string | null
+          name?: string | null
+          object_fit?: string | null
+          object_position?: string | null
+          opacity?: number | null
+          position_x?: number
+          position_y?: number
+          text_align?: string | null
+          typewriter_delay?: number | null
+          typewriter_enabled?: boolean | null
+          typewriter_speed?: number | null
+          updated_at?: string | null
+          width?: string
+          z_index?: number | null
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           category_id: string

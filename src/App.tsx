@@ -11,6 +11,7 @@ import Shop from "./pages/Shop";
 import CategoryPage from "./pages/CategoryPage";
 import SectionBuilder from "./pages/SectionBuilder";
 import SectionPage from "./pages/SectionPage";
+import HomepageEditor from "./pages/HomepageEditor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/shop" element={<Shop />} />
             <Route path="/category/:id" element={<CategoryPage />} />
             <Route path="/admin/builder/:id" element={<SectionBuilder />} />
+            <Route path="/admin/homepage-editor" element={<HomepageEditor />} />
             <Route path="/section/:id" element={<SectionPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
