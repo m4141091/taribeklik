@@ -17,7 +17,7 @@ export const HomepageViewer: React.FC = () => {
   console.log('Container rendering with', elements.length, 'elements');
 
   return (
-    <div className="relative h-full w-full mx-auto" style={{ maxWidth: '1200px' }}>
+    <div className="relative w-full mx-auto" style={{ maxWidth: '1200px', height: '6000px' }}>
       {elements.map((element) => {
         console.log('Rendering element:', element.id, element.element_type, 'at', element.position_x + '%', element.position_y + '%');
         return (
