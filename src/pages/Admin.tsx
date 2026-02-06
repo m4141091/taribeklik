@@ -6,11 +6,13 @@ import { useSections } from '@/hooks/useSections';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, LogOut, Eye, EyeOff, GripVertical } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Eye, EyeOff, GripVertical, Home, Layout } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProductsTab from '@/components/admin/ProductsTab';
 import CategoriesManager from '@/components/admin/CategoriesManager';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import ProductUpdateTab from '@/components/admin/ProductUpdateTab';
+
 const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
@@ -158,6 +160,27 @@ const AdminContent = () => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-6">
+        {/* Homepage Editor Card - Main CTA */}
+        <Card className="mb-6 border-primary/50 bg-gradient-to-l from-primary/5 to-transparent">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Layout className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">עורך דף הבית</CardTitle>
+                  <CardDescription>גרור ושחרר אלמנטים על רקע הדף שלך</CardDescription>
+                </div>
+              </div>
+              <Button onClick={() => navigate('/admin/homepage-editor')} size="lg">
+                <Home className="w-4 h-4 ml-2" />
+                פתח עורך
+              </Button>
+            </div>
+          </CardHeader>
+        </Card>
+
         <Tabs defaultValue="sections" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="sections">סקשנים</TabsTrigger>
