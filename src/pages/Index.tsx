@@ -5,11 +5,12 @@ import { HomepageViewer } from "@/components/homepage/HomepageViewer";
 const Index = () => {
   return (
     <main 
-      className="bg-no-repeat w-full min-h-screen relative"
+      className="w-full min-h-screen relative bg-background"
       style={{ 
         backgroundImage: `url(${homepageBackground})`,
         backgroundSize: '100% auto',
         backgroundPosition: 'top center',
+        backgroundRepeat: 'no-repeat',
         minHeight: '6000px',
       }}
       dir="rtl"
