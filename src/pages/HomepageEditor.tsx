@@ -161,67 +161,48 @@ const HomepageEditorContent = () => {
         {/* Canvas */}
         <div 
           ref={scrollContainerRef}
-          className="flex-1 overflow-auto bg-muted/50 relative"
+          className="flex-1 overflow-auto relative"
           onScroll={handleScroll}
         >
-          {/* Viewport guidelines */}
-          <div className="sticky top-0 left-0 right-0 h-0 z-50 pointer-events-none">
+          <div
+            ref={containerRef}
+            className="relative bg-no-repeat w-full"
+            style={{
+              minHeight: CANVAS_HEIGHT * zoom,
+              backgroundImage: `url(${homepageBackground})`,
+              backgroundSize: '100% auto',
+              backgroundPosition: 'top center',
+            }}
+            onClick={() => setSelectedElementId(null)}
+          >
+            {/* Viewport guidelines */}
             <div 
-              className="absolute border-2 border-dashed border-primary/50"
-              style={{
-                width: CANVAS_WIDTH * zoom,
-                height: 900 * zoom,
-                left: '50%',
-                transform: 'translateX(-50%)',
-              }}
+              className="absolute top-0 left-0 right-0 border-b-2 border-dashed border-primary/50 pointer-events-none"
+              style={{ height: 900 * zoom }}
             >
               <span className="absolute top-2 right-2 text-xs text-primary bg-primary/10 px-2 py-1 rounded">
                 אזור נראה (Viewport)
               </span>
             </div>
-          </div>
 
-          <div
-            className="relative mx-auto"
-            style={{
-              width: CANVAS_WIDTH * zoom,
-              minHeight: '100%',
-            }}
-          >
-            <div
-              ref={containerRef}
-              className="relative bg-no-repeat"
-              style={{
-                width: CANVAS_WIDTH * zoom,
-                height: CANVAS_HEIGHT * zoom,
-                backgroundImage: `url(${homepageBackground})`,
-                backgroundSize: '100% auto',
-                backgroundPosition: 'top center',
-                transform: `scale(1)`,
-                transformOrigin: 'top center',
-              }}
-              onClick={() => setSelectedElementId(null)}
-            >
-              {elements.map((element) => (
-                <DraggableElement
-                  key={element.id}
-                  element={{
-                    ...element,
-                    // Scale element dimensions for zoom
-                    width: `${parseFloat(element.width) * zoom}px`,
-                    height: `${parseFloat(element.height) * zoom}px`,
-                  }}
-                  isSelected={selectedElementId === element.id}
-                  onClick={() => setSelectedElementId(element.id)}
-                  onPositionChange={(x, y) => handlePositionChange(element.id, x, y)}
-                  onSizeChange={(w, h) => handleSizeChange(element.id, 
-                    `${parseFloat(w) / zoom}px`, 
-                    `${parseFloat(h) / zoom}px`
-                  )}
-                  containerRef={containerRef}
-                />
-              ))}
-            </div>
+            {elements.map((element) => (
+              <DraggableElement
+                key={element.id}
+                element={{
+                  ...element,
+                  width: `${parseFloat(element.width) * zoom}px`,
+                  height: `${parseFloat(element.height) * zoom}px`,
+                }}
+                isSelected={selectedElementId === element.id}
+                onClick={() => setSelectedElementId(element.id)}
+                onPositionChange={(x, y) => handlePositionChange(element.id, x, y)}
+                onSizeChange={(w, h) => handleSizeChange(element.id, 
+                  `${parseFloat(w) / zoom}px`, 
+                  `${parseFloat(h) / zoom}px`
+                )}
+                containerRef={containerRef}
+              />
+            ))}
           </div>
         </div>
 
