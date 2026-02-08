@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { HomepageElement } from '@/types/homepage';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Copy, Eye, EyeOff } from 'lucide-react';
+import { Trash2, Copy, Eye, EyeOff, Upload, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ElementPropertiesPanelProps {
   element: HomepageElement | null;
@@ -21,6 +23,46 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
   onDelete,
   onDuplicate,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !element) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('נא להעלות קובץ תמונה בלבד');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `homepage/${element.id}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('section-assets')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('section-assets')
+        .getPublicUrl(fileName);
+
+      onUpdate(element.id, { content: publicUrl });
+      toast.success('התמונה הועלתה בהצלחה');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('שגיאה בהעלאת התמונה');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   if (!element) {
     return (
       <div className="p-4 text-center text-muted-foreground">
@@ -83,15 +125,60 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
         </div>
       )}
 
-      {/* Image URL */}
+      {/* Image URL & Upload */}
       {(element.element_type === 'image' || element.element_type === 'separator') && (
-        <div className="space-y-2">
-          <Label>כתובת תמונה</Label>
-          <Input
-            value={element.content || ''}
-            onChange={(e) => onUpdate(element.id, { content: e.target.value })}
-            placeholder="https://..."
-          />
+        <div className="space-y-3">
+          <Label>תמונה</Label>
+          
+          {/* Upload Button */}
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  מעלה...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  העלאת תמונה
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Or URL Input */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">או הכנס כתובת URL</Label>
+            <Input
+              value={element.content || ''}
+              onChange={(e) => onUpdate(element.id, { content: e.target.value })}
+              placeholder="https://..."
+            />
+          </div>
+
+          {/* Preview */}
+          {element.content && (
+            <div className="mt-2 rounded-lg overflow-hidden border">
+              <img 
+                src={element.content} 
+                alt="תצוגה מקדימה" 
+                className="w-full h-24 object-contain bg-muted"
+              />
+            </div>
+          )}
         </div>
       )}
 
