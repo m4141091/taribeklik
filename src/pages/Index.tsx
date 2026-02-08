@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import homepageBackground from "@/assets/homepage-background.png";
+import heroVegetables from "@/assets/hero-vegetables.png";
 import { HomepageViewer } from "@/components/homepage/HomepageViewer";
 
 const Index = () => {
@@ -16,6 +17,23 @@ const Index = () => {
       dir="rtl"
     >
       <Header />
+      
+      {/* Hero vegetable image - left side, centered vertically in hero area */}
+      <img 
+        src={heroVegetables}
+        alt="ירקות טריים"
+        className="absolute pointer-events-none"
+        style={{
+          left: 0,
+          top: '50vh',
+          transform: 'translateY(-50%)',
+          width: 'auto',
+          height: '45vh',
+          maxWidth: '50%',
+          objectFit: 'contain',
+          zIndex: 10,
+        }}
+      />
       
       {/* Dynamic homepage elements from database */}
       <div className="relative" style={{ height: '6000px' }}>
