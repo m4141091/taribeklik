@@ -165,44 +165,48 @@ const HomepageEditorContent = () => {
           onScroll={handleScroll}
         >
           <div
-            ref={containerRef}
-            className="relative bg-no-repeat w-full"
             style={{
-              minHeight: CANVAS_HEIGHT * zoom,
-              backgroundImage: `url(${homepageBackground})`,
-              backgroundSize: '100% auto',
-              backgroundPosition: 'top center',
+              width: CANVAS_WIDTH * zoom,
+              height: CANVAS_HEIGHT * zoom,
+              margin: '0 auto',
             }}
-            onClick={() => setSelectedElementId(null)}
           >
-            {/* Viewport guidelines */}
-            <div 
-              className="absolute top-0 left-0 right-0 border-b-2 border-dashed border-primary/50 pointer-events-none"
-              style={{ height: 900 * zoom }}
+            <div
+              ref={containerRef}
+              className="relative bg-no-repeat origin-top-right"
+              style={{
+                width: CANVAS_WIDTH,
+                height: CANVAS_HEIGHT,
+                backgroundImage: `url(${homepageBackground})`,
+                backgroundSize: '100% auto',
+                backgroundPosition: 'top center',
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top right',
+              }}
+              onClick={() => setSelectedElementId(null)}
             >
-              <span className="absolute top-2 right-2 text-xs text-primary bg-primary/10 px-2 py-1 rounded">
-                אזור נראה (Viewport)
-              </span>
-            </div>
+              {/* Viewport guidelines */}
+              <div 
+                className="absolute top-0 left-0 right-0 border-b-2 border-dashed border-primary/50 pointer-events-none"
+                style={{ height: 900 }}
+              >
+                <span className="absolute top-2 right-2 text-xs text-primary bg-primary/10 px-2 py-1 rounded">
+                  אזור נראה (Viewport)
+                </span>
+              </div>
 
-            {elements.map((element) => (
-              <DraggableElement
-                key={element.id}
-                element={{
-                  ...element,
-                  width: `${parseFloat(element.width) * zoom}px`,
-                  height: `${parseFloat(element.height) * zoom}px`,
-                }}
-                isSelected={selectedElementId === element.id}
-                onClick={() => setSelectedElementId(element.id)}
-                onPositionChange={(x, y) => handlePositionChange(element.id, x, y)}
-                onSizeChange={(w, h) => handleSizeChange(element.id, 
-                  `${parseFloat(w) / zoom}px`, 
-                  `${parseFloat(h) / zoom}px`
-                )}
-                containerRef={containerRef}
-              />
-            ))}
+              {elements.map((element) => (
+                <DraggableElement
+                  key={element.id}
+                  element={element}
+                  isSelected={selectedElementId === element.id}
+                  onClick={() => setSelectedElementId(element.id)}
+                  onPositionChange={(x, y) => handlePositionChange(element.id, x, y)}
+                  onSizeChange={(w, h) => handleSizeChange(element.id, w, h)}
+                  containerRef={containerRef}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
