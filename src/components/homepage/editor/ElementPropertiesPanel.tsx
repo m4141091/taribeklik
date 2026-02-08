@@ -165,6 +165,22 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
         </div>
       )}
 
+      {/* Line Height */}
+      {['heading', 'text'].includes(element.element_type) && (
+        <div className="space-y-2">
+          <Label>גובה שורה</Label>
+          <Input
+            type="number"
+            step="0.1"
+            value={element.line_height || 1.2}
+            onChange={(e) => onUpdate(element.id, { line_height: Number(e.target.value) })}
+            min={0.5}
+            max={3}
+          />
+          <p className="text-xs text-muted-foreground">1.0 = צפוף, 1.5 = רגיל, 2.0 = מרווח</p>
+        </div>
+      )}
+
       {/* Font Family */}
       {['heading', 'text', 'button'].includes(element.element_type) && (
         <div className="space-y-2">

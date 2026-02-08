@@ -50,6 +50,7 @@ export type Database = {
           height: string
           id: string
           is_visible: boolean | null
+          line_height: number | null
           link_url: string | null
           name: string | null
           object_fit: string | null
@@ -79,6 +80,7 @@ export type Database = {
           height?: string
           id?: string
           is_visible?: boolean | null
+          line_height?: number | null
           link_url?: string | null
           name?: string | null
           object_fit?: string | null
@@ -108,6 +110,7 @@ export type Database = {
           height?: string
           id?: string
           is_visible?: boolean | null
+          line_height?: number | null
           link_url?: string | null
           name?: string | null
           object_fit?: string | null

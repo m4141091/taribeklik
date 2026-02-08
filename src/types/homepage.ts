@@ -17,6 +17,7 @@ export interface HomepageElement {
   object_fit: 'cover' | 'contain' | 'fill' | 'none';
   object_position: string;
   opacity: number;
+  line_height: number;
   typewriter_enabled: boolean;
   typewriter_speed: number;
   typewriter_delay: number;
