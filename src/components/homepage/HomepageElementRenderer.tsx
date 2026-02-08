@@ -35,10 +35,12 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
     height: '100%',
     fontFamily: getFontFamily(),
     fontSize: `${element.font_size}px`,
+    lineHeight: element.line_height || 1.2,
     color: element.color,
     textAlign: element.text_align,
     borderRadius: `${element.border_radius}px`,
     opacity: element.opacity / 100,
+    whiteSpace: 'pre-wrap',
   };
 
   switch (element.element_type) {
