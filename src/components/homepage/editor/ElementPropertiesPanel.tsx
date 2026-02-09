@@ -274,13 +274,14 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
           <Label>גופן</Label>
           <Select
             value={element.font_family}
-            onValueChange={(v) => onUpdate(element.id, { font_family: v as 'discovery' | 'cooperative' | 'script' })}
+            onValueChange={(v) => onUpdate(element.id, { font_family: v as 'discovery' | 'discovery-fs' | 'cooperative' | 'script' })}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="discovery">Discovery</SelectItem>
+              <SelectItem value="discovery-fs">Discovery Fs (כפתורים)</SelectItem>
               <SelectItem value="cooperative">Cooperative</SelectItem>
               <SelectItem value="script">Script</SelectItem>
             </SelectContent>
