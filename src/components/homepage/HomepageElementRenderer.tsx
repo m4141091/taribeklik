@@ -69,7 +69,7 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
             ...baseStyle,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            position: 'relative',
             backgroundColor: element.background_color || 'rgba(255,255,255,0.9)',
             backdropFilter: 'blur(8px)',
             textDecoration: 'none',
@@ -82,7 +82,7 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
           }}
           onClick={safeHref ? undefined : (e) => e.preventDefault()}
         >
-          <img src={arrowIcon} alt="" style={{ width: '40px', height: '40px', flexShrink: 0 }} />
+          <img src={arrowIcon} alt="" style={{ width: '40px', height: '40px', flexShrink: 0, position: 'absolute', left: '4px', top: '50%', transform: 'translateY(-50%)' }} />
           <span style={{ flex: 1, textAlign: 'center', paddingRight: '8px' }}>
             {element.content}
           </span>
