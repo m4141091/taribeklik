@@ -28,8 +28,8 @@ const Index = () => {
           top: '50vh',
           transform: 'translateY(-50%)',
           width: 'auto',
-          height: '45vh',
-          maxWidth: '50%',
+          height: '52vh',
+          maxWidth: '57%',
           objectFit: 'contain',
           zIndex: 10,
         }}
