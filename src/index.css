@@ -35,6 +35,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Discovery-Fs';
+  src: url('./assets/fonts/Discovery-Fs-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Design System - טרי בקליק */
 
 @layer base {
