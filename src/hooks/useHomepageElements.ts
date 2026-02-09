@@ -29,18 +29,19 @@ export function useHomepageElements() {
   const createElement = async (type: HomepageElementType, posX: number, posY: number) => {
     const { data: userData } = await supabase.auth.getUser();
     
+    const isButton = type === 'button';
     const defaults: Partial<HomepageElement> = {
       element_type: type,
       position_x: posX,
       position_y: posY,
-      width: type === 'heading' ? '400px' : type === 'button' ? '200px' : '300px',
-      height: type === 'heading' ? '60px' : type === 'button' ? '50px' : '100px',
-      content: type === 'heading' ? 'כותרת חדשה' : type === 'text' ? 'טקסט חדש' : type === 'button' ? 'לחץ כאן' : '',
-      font_size: type === 'heading' ? 48 : 16,
+      width: type === 'heading' ? '400px' : isButton ? '220px' : '300px',
+      height: type === 'heading' ? '60px' : isButton ? '55px' : '100px',
+      content: type === 'heading' ? 'כותרת חדשה' : type === 'text' ? 'טקסט חדש' : isButton ? 'למוצרים' : '',
+      font_size: type === 'heading' ? 48 : isButton ? 18 : 16,
       name: `${type} חדש`,
     };
 
-    const insertData = {
+    const insertData: Record<string, any> = {
       element_type: defaults.element_type!,
       position_x: posX,
       position_y: posY,
@@ -50,11 +51,19 @@ export function useHomepageElements() {
       font_size: defaults.font_size,
       name: defaults.name,
       created_by: userData.user?.id,
+      color: '#162E14',
     };
+
+    // Button-specific defaults for BrandButton style
+    if (isButton) {
+      insertData.font_family = 'discovery-fs';
+      insertData.background_color = 'rgba(255,255,255,0.9)';
+      insertData.border_radius = 30;
+    }
 
     const { data, error } = await supabase
       .from('homepage_elements')
-      .insert(insertData)
+      .insert(insertData as any)
       .select()
       .single();
 

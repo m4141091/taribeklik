@@ -3,6 +3,7 @@ import { HomepageElement } from '@/types/homepage';
 import { Search } from 'lucide-react';
 import TypewriterText from '@/components/TypewriterText';
 import { isSafeUrl } from '@/lib/urlValidation';
+import arrowIcon from '@/assets/button-arrow-icon.png';
 
 interface HomepageElementRendererProps {
   element: HomepageElement;
@@ -24,6 +25,7 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
 
   const getFontFamily = () => {
     switch (element.font_family) {
+      case 'discovery-fs': return "'Discovery-Fs', sans-serif";
       case 'cooperative': return "'Cooperative', sans-serif";
       case 'script': return "'Script', cursive";
       default: return "'Discovery', sans-serif";
@@ -67,14 +69,23 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
             ...baseStyle,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: element.background_color || 'transparent',
+            gap: '8px',
+            backgroundColor: element.background_color || 'rgba(255,255,255,0.9)',
+            backdropFilter: 'blur(8px)',
             textDecoration: 'none',
             cursor: safeHref ? 'pointer' : 'default',
+            paddingLeft: '12px',
+            paddingRight: '4px',
+            paddingTop: '4px',
+            paddingBottom: '4px',
+            border: '1px solid rgba(0,0,0,0.1)',
           }}
           onClick={safeHref ? undefined : (e) => e.preventDefault()}
         >
-          {element.content}
+          <img src={arrowIcon} alt="" style={{ width: '40px', height: '40px', flexShrink: 0 }} />
+          <span style={{ flex: 1, textAlign: 'center', paddingRight: '8px' }}>
+            {element.content}
+          </span>
         </a>
       );
     }

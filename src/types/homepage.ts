@@ -9,7 +9,7 @@ export interface HomepageElement {
   height: string;
   content: string | null;
   font_size: number;
-  font_family: 'discovery' | 'cooperative' | 'script';
+  font_family: 'discovery' | 'discovery-fs' | 'cooperative' | 'script';
   color: string;
   background_color: string | null;
   border_radius: number;
