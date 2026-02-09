@@ -15,6 +15,7 @@ export default {
     extend: {
       fontFamily: {
         discovery: ["Discovery", "sans-serif"],
+        "discovery-fs": ["Discovery-Fs", "sans-serif"],
         cooperative: ["Cooperative", "sans-serif"],
         script: ["Script", "cursive"],
       },
