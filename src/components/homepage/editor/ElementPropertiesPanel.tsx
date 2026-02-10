@@ -24,7 +24,38 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
   onDuplicate,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const iconInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingIcon, setIsUploadingIcon] = useState(false);
+
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !element) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('נא להעלות קובץ תמונה בלבד');
+      return;
+    }
+    setIsUploadingIcon(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `homepage/icon-${element.id}-${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('section-assets')
+        .upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage
+        .from('section-assets')
+        .getPublicUrl(fileName);
+      onUpdate(element.id, { icon_url: publicUrl } as any);
+      toast.success('האייקון הועלה בהצלחה');
+    } catch (error) {
+      console.error('Error uploading icon:', error);
+      toast.error('שגיאה בהעלאת האייקון');
+    } finally {
+      setIsUploadingIcon(false);
+      if (iconInputRef.current) iconInputRef.current.value = '';
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -191,6 +222,58 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
             onChange={(e) => onUpdate(element.id, { link_url: e.target.value })}
             placeholder="https://..."
           />
+        </div>
+      )}
+
+      {/* Button Icon */}
+      {element.element_type === 'button' && (
+        <div className="space-y-3">
+          <Label>אייקון כפתור</Label>
+          <div className="flex gap-2">
+            <input
+              ref={iconInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleIconUpload}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => iconInputRef.current?.click()}
+              disabled={isUploadingIcon}
+            >
+              {isUploadingIcon ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  מעלה...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  העלאת אייקון
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">או הכנס כתובת URL</Label>
+            <Input
+              value={(element as any).icon_url || ''}
+              onChange={(e) => onUpdate(element.id, { icon_url: e.target.value } as any)}
+              placeholder="https://..."
+            />
+          </div>
+          {(element as any).icon_url && (
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg overflow-hidden border p-2 bg-muted">
+                <img src={(element as any).icon_url} alt="אייקון" className="w-10 h-10 object-contain" />
+              </div>
+              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => onUpdate(element.id, { icon_url: null } as any)}>
+                הסר אייקון
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

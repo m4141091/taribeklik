@@ -3,7 +3,6 @@ import { HomepageElement } from '@/types/homepage';
 import { Search } from 'lucide-react';
 import TypewriterText from '@/components/TypewriterText';
 import { isSafeUrl } from '@/lib/urlValidation';
-import arrowIcon from '@/assets/button-arrow-icon.png';
 
 interface HomepageElementRendererProps {
   element: HomepageElement;
@@ -74,16 +73,18 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
             backdropFilter: 'blur(8px)',
             textDecoration: 'none',
             cursor: safeHref ? 'pointer' : 'default',
-            paddingLeft: '12px',
-            paddingRight: '4px',
+            paddingLeft: element.icon_url ? '48px' : '12px',
+            paddingRight: '12px',
             paddingTop: '4px',
             paddingBottom: '4px',
             border: '1px solid rgba(0,0,0,0.1)',
           }}
           onClick={safeHref ? undefined : (e) => e.preventDefault()}
         >
-          <img src={arrowIcon} alt="" style={{ width: '40px', height: '40px', flexShrink: 0, position: 'absolute', left: '4px', top: '50%', transform: 'translateY(-50%)' }} />
-          <span style={{ flex: 1, textAlign: 'center', paddingRight: '8px' }}>
+          {element.icon_url && (
+            <img src={element.icon_url} alt="" style={{ width: '40px', height: '40px', flexShrink: 0, position: 'absolute', left: '4px', top: '50%', transform: 'translateY(-50%)' }} />
+          )}
+          <span style={{ flex: 1, textAlign: 'center' }}>
             {element.content}
           </span>
         </a>

@@ -94,13 +94,13 @@ export function useHomepageElements() {
 
   const duplicateElement = async (id: string) => {
     const element = elements.find(e => e.id === id);
-    if (!element) return;
+    if (!element) return null;
 
     const { data: userData } = await supabase.auth.getUser();
     
     const { id: _, created_at, updated_at, ...rest } = element;
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('homepage_elements')
       .insert({
         ...rest,
@@ -108,10 +108,13 @@ export function useHomepageElements() {
         position_y: element.position_y + 2,
         name: `${element.name} (העתק)`,
         created_by: userData.user?.id,
-      });
+      } as any)
+      .select()
+      .single();
 
     if (error) throw error;
     await fetchElements();
+    return data;
   };
 
   return {

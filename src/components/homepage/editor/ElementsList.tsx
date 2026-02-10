@@ -1,7 +1,7 @@
 import React from 'react';
 import { HomepageElement } from '@/types/homepage';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Trash2, GripVertical } from 'lucide-react';
+import { Eye, EyeOff, Trash2, GripVertical, Copy } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ElementsListProps {
@@ -10,6 +10,7 @@ interface ElementsListProps {
   onSelect: (id: string) => void;
   onToggleVisibility: (id: string, visible: boolean) => void;
   onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
 const getElementIcon = (type: string) => {
@@ -31,6 +32,7 @@ export const ElementsList: React.FC<ElementsListProps> = ({
   onSelect,
   onToggleVisibility,
   onDelete,
+  onDuplicate,
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -77,6 +79,18 @@ export const ElementsList: React.FC<ElementsListProps> = ({
                   ) : (
                     <EyeOff className="w-3 h-3" />
                   )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDuplicate(element.id);
+                  }}
+                  title="שכפל"
+                >
+                  <Copy className="w-3 h-3" />
                 </Button>
                 <Button
                   variant="ghost"

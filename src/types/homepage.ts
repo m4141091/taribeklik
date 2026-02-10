@@ -22,6 +22,7 @@ export interface HomepageElement {
   typewriter_speed: number;
   typewriter_delay: number;
   link_url: string | null;
+  icon_url: string | null;
   z_index: number;
   is_visible: boolean;
   display_order: number;
