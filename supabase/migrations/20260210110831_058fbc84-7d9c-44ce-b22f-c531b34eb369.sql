@@ -1,0 +1,1 @@
+ALTER TABLE public.homepage_elements ADD COLUMN icon_url text DEFAULT NULL;

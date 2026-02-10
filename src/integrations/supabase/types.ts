@@ -48,6 +48,7 @@ export type Database = {
           font_family: string | null
           font_size: number | null
           height: string
+          icon_url: string | null
           id: string
           is_visible: boolean | null
           line_height: number | null
@@ -78,6 +79,7 @@ export type Database = {
           font_family?: string | null
           font_size?: number | null
           height?: string
+          icon_url?: string | null
           id?: string
           is_visible?: boolean | null
           line_height?: number | null
@@ -108,6 +110,7 @@ export type Database = {
           font_family?: string | null
           font_size?: number | null
           height?: string
+          icon_url?: string | null
           id?: string
           is_visible?: boolean | null
           line_height?: number | null

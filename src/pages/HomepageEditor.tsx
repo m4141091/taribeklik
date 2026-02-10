@@ -65,7 +65,10 @@ const HomepageEditorContent = () => {
 
   const handleDuplicate = async (id: string) => {
     try {
-      await duplicateElement(id);
+      const newElement = await duplicateElement(id);
+      if (newElement) {
+        setSelectedElementId(newElement.id);
+      }
       toast.success('אלמנט שוכפל');
     } catch (error) {
       console.error('Error duplicating element:', error);
@@ -147,6 +150,7 @@ const HomepageEditorContent = () => {
               onSelect={setSelectedElementId}
               onToggleVisibility={handleToggleVisibility}
               onDelete={handleDelete}
+              onDuplicate={handleDuplicate}
             />
           </div>
           <CanvasMinimap
