@@ -48,6 +48,9 @@ export type Database = {
           font_family: string | null
           font_size: number | null
           height: string
+          icon_offset_x: number | null
+          icon_offset_y: number | null
+          icon_size: number | null
           icon_url: string | null
           id: string
           is_visible: boolean | null
@@ -79,6 +82,9 @@ export type Database = {
           font_family?: string | null
           font_size?: number | null
           height?: string
+          icon_offset_x?: number | null
+          icon_offset_y?: number | null
+          icon_size?: number | null
           icon_url?: string | null
           id?: string
           is_visible?: boolean | null
@@ -110,6 +116,9 @@ export type Database = {
           font_family?: string | null
           font_size?: number | null
           height?: string
+          icon_offset_x?: number | null
+          icon_offset_y?: number | null
+          icon_size?: number | null
           icon_url?: string | null
           id?: string
           is_visible?: boolean | null

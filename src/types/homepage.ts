@@ -23,6 +23,9 @@ export interface HomepageElement {
   typewriter_delay: number;
   link_url: string | null;
   icon_url: string | null;
+  icon_size: number;
+  icon_offset_x: number;
+  icon_offset_y: number;
   z_index: number;
   is_visible: boolean;
   display_order: number;

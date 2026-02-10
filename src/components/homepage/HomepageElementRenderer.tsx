@@ -82,7 +82,15 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
           onClick={safeHref ? undefined : (e) => e.preventDefault()}
         >
           {element.icon_url && (
-            <img src={element.icon_url} alt="" style={{ width: '40px', height: '40px', flexShrink: 0, position: 'absolute', left: '4px', top: '50%', transform: 'translateY(-50%)' }} />
+            <img src={element.icon_url} alt="" style={{ 
+              width: `${element.icon_size || 40}px`, 
+              height: `${element.icon_size || 40}px`, 
+              flexShrink: 0, 
+              position: 'absolute', 
+              left: `${element.icon_offset_x ?? 4}px`, 
+              top: `${element.icon_offset_y ?? 50}%`, 
+              transform: 'translateY(-50%)' 
+            }} />
           )}
           <span style={{ flex: 1, textAlign: 'center' }}>
             {element.content}

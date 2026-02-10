@@ -265,14 +265,46 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
             />
           </div>
           {(element as any).icon_url && (
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg overflow-hidden border p-2 bg-muted">
-                <img src={(element as any).icon_url} alt="אייקון" className="w-10 h-10 object-contain" />
+            <>
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg overflow-hidden border p-2 bg-muted">
+                  <img src={(element as any).icon_url} alt="אייקון" className="w-10 h-10 object-contain" />
+                </div>
+                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => onUpdate(element.id, { icon_url: null } as any)}>
+                  הסר אייקון
+                </Button>
               </div>
-              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => onUpdate(element.id, { icon_url: null } as any)}>
-                הסר אייקון
-              </Button>
-            </div>
+              <div className="space-y-2">
+                <Label>גודל אייקון (px)</Label>
+                <Input
+                  type="number"
+                  value={(element as any).icon_size || 40}
+                  onChange={(e) => onUpdate(element.id, { icon_size: Number(e.target.value) } as any)}
+                  min={10}
+                  max={200}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label>מיקום X (px)</Label>
+                  <Input
+                    type="number"
+                    value={(element as any).icon_offset_x ?? 4}
+                    onChange={(e) => onUpdate(element.id, { icon_offset_x: Number(e.target.value) } as any)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>מיקום Y (%)</Label>
+                  <Input
+                    type="number"
+                    value={(element as any).icon_offset_y ?? 50}
+                    onChange={(e) => onUpdate(element.id, { icon_offset_y: Number(e.target.value) } as any)}
+                    min={0}
+                    max={100}
+                  />
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
