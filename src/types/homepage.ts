@@ -1,4 +1,4 @@
-export type HomepageElementType = 'heading' | 'text' | 'button' | 'image' | 'search' | 'separator' | 'card' | 'icon';
+export type HomepageElementType = 'heading' | 'text' | 'button' | 'image' | 'search' | 'separator' | 'card' | 'icon' | 'product_grid';
 
 export interface HomepageElement {
   id: string;
@@ -33,4 +33,5 @@ export interface HomepageElement {
   created_at: string;
   updated_at: string;
   created_by: string | null;
+  category_id: string | null;
 }

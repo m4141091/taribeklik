@@ -9,6 +9,7 @@ import { Trash2, Copy, Eye, EyeOff, Upload, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCategories } from '@/hooks/useCategories';
 
 interface ElementPropertiesPanelProps {
   element: HomepageElement | null;
@@ -27,6 +28,7 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
   const iconInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
+  const { categories } = useCategories();
 
   const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,7 +147,7 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
       </div>
 
       {/* Content */}
-      {element.element_type !== 'image' && element.element_type !== 'separator' && (
+      {element.element_type !== 'image' && element.element_type !== 'separator' && element.element_type !== 'product_grid' && (
         <div className="space-y-2">
           <Label>תוכן</Label>
           <Textarea
@@ -153,6 +155,27 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
             onChange={(e) => onUpdate(element.id, { content: e.target.value })}
             rows={3}
           />
+        </div>
+      )}
+
+      {/* Category Selection for Product Grid */}
+      {element.element_type === 'product_grid' && (
+        <div className="space-y-2">
+          <Label>קטגוריה</Label>
+          <Select
+            value={element.category_id || 'all'}
+            onValueChange={(v) => onUpdate(element.id, { category_id: v === 'all' ? null : v } as any)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="בחר קטגוריה" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל המוצרים</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 

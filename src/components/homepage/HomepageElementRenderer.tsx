@@ -3,6 +3,7 @@ import { HomepageElement } from '@/types/homepage';
 import { Search } from 'lucide-react';
 import TypewriterText from '@/components/TypewriterText';
 import { isSafeUrl } from '@/lib/urlValidation';
+import { ProductGridElement } from './ProductGridElement';
 
 interface HomepageElementRendererProps {
   element: HomepageElement;
@@ -157,6 +158,9 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
           {element.content}
         </div>
       );
+
+    case 'product_grid':
+      return <ProductGridElement element={element} />;
 
     default:
       return null;

@@ -39,6 +39,7 @@ export type Database = {
         Row: {
           background_color: string | null
           border_radius: number | null
+          category_id: string | null
           color: string | null
           content: string | null
           created_at: string | null
@@ -73,6 +74,7 @@ export type Database = {
         Insert: {
           background_color?: string | null
           border_radius?: number | null
+          category_id?: string | null
           color?: string | null
           content?: string | null
           created_at?: string | null
@@ -107,6 +109,7 @@ export type Database = {
         Update: {
           background_color?: string | null
           border_radius?: number | null
+          category_id?: string | null
           color?: string | null
           content?: string | null
           created_at?: string | null
@@ -138,7 +141,15 @@ export type Database = {
           width?: string
           z_index?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "homepage_elements_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_categories: {
         Row: {
