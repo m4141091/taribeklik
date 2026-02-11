@@ -1,0 +1,2 @@
+ALTER TABLE public.homepage_elements DROP CONSTRAINT homepage_elements_element_type_check;
+ALTER TABLE public.homepage_elements ADD CONSTRAINT homepage_elements_element_type_check CHECK (element_type IN ('heading', 'text', 'button', 'image', 'search', 'separator', 'card', 'icon', 'product_grid'));
