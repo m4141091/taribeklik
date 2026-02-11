@@ -1,0 +1,1 @@
+ALTER TABLE public.homepage_elements ADD COLUMN category_id uuid REFERENCES public.categories(id) ON DELETE SET NULL DEFAULT NULL;
