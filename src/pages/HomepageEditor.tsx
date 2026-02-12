@@ -23,7 +23,7 @@ const HomepageEditorContent = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { elements, loading, createElement, updateElement, deleteElement, duplicateElement } = useHomepageElements();
-  const CANVAS_HEIGHT = useBackgroundImageHeight(homepageBackground, CANVAS_WIDTH);
+  const CANVAS_HEIGHT = useBackgroundImageHeight(homepageBackground, CANVAS_WIDTH, 2000);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [zoom, setZoom] = useState(0.5);
