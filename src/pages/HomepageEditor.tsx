@@ -23,7 +23,8 @@ const HomepageEditorContent = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { elements, loading, createElement, updateElement, deleteElement, duplicateElement } = useHomepageElements();
-  const CANVAS_HEIGHT = useBackgroundImageHeight(homepageBackground, CANVAS_WIDTH, 2000);
+  const BG_HEIGHT = useBackgroundImageHeight(homepageBackground, CANVAS_WIDTH);
+  const CANVAS_HEIGHT = BG_HEIGHT + 2000; // Extra scroll space for editing comfort
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [zoom, setZoom] = useState(0.5);
@@ -181,7 +182,7 @@ const HomepageEditorContent = () => {
             className="relative bg-no-repeat"
             style={{
               width: CANVAS_WIDTH,
-              height: CANVAS_HEIGHT,
+              height: BG_HEIGHT,
               backgroundImage: `url(${homepageBackground})`,
               backgroundSize: '100% auto',
               backgroundPosition: 'top center',
