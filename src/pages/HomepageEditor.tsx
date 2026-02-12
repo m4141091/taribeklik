@@ -14,7 +14,7 @@ import { AdminGuard } from '@/components/auth/AdminGuard';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-const CANVAS_WIDTH = 1200;
+const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 6000;
 const VIEWPORT_HEIGHT = 900; // Approximate visible viewport
 
@@ -176,17 +176,17 @@ const HomepageEditorContent = () => {
             }}
           >
             <div
-              ref={containerRef}
-              className="relative bg-no-repeat origin-top-right"
-              style={{
-                width: CANVAS_WIDTH,
-                height: CANVAS_HEIGHT,
-                backgroundImage: `url(${homepageBackground})`,
-                backgroundSize: '100% auto',
-                backgroundPosition: 'top center',
-                transform: `scale(${zoom})`,
-                transformOrigin: 'top right',
-              }}
+            ref={containerRef}
+            className="relative bg-no-repeat"
+            style={{
+              width: CANVAS_WIDTH,
+              height: CANVAS_HEIGHT,
+              backgroundImage: `url(${homepageBackground})`,
+              backgroundSize: '100% auto',
+              backgroundPosition: 'top center',
+              transform: `scale(${zoom})`,
+              transformOrigin: 'top center',
+            }}
               onClick={() => setSelectedElementId(null)}
             >
               {/* Viewport guidelines */}
