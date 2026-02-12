@@ -2,8 +2,11 @@ import Header from "@/components/Header";
 import homepageBackground from "@/assets/homepage-background.png";
 import heroVegetables from "@/assets/hero-vegetables.png";
 import { HomepageViewer } from "@/components/homepage/HomepageViewer";
+import { useBackgroundImageHeight } from "@/hooks/useBackgroundImageHeight";
 
 const Index = () => {
+  const bgHeight = useBackgroundImageHeight(homepageBackground, window.innerWidth);
+
   return (
     <main 
       className="w-full min-h-screen relative bg-background"
@@ -12,7 +15,7 @@ const Index = () => {
         backgroundSize: '100% auto',
         backgroundPosition: 'top center',
         backgroundRepeat: 'no-repeat',
-        minHeight: '6000px',
+        minHeight: `${bgHeight}px`,
       }}
       dir="rtl"
     >
@@ -36,8 +39,8 @@ const Index = () => {
       />
       
       {/* Dynamic homepage elements from database */}
-      <div className="relative" style={{ height: '6000px' }}>
-        <HomepageViewer />
+      <div className="relative" style={{ height: `${bgHeight}px` }}>
+        <HomepageViewer bgHeight={bgHeight} />
       </div>
     </main>
   );

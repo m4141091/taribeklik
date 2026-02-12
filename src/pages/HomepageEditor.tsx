@@ -13,16 +13,17 @@ import homepageBackground from '@/assets/homepage-background.png';
 import { AdminGuard } from '@/components/auth/AdminGuard';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useBackgroundImageHeight } from '@/hooks/useBackgroundImageHeight';
 
 const CANVAS_WIDTH = 1920;
-const CANVAS_HEIGHT = 6000;
-const VIEWPORT_HEIGHT = 900; // Approximate visible viewport
+const VIEWPORT_HEIGHT = 900;
 
 const HomepageEditorContent = () => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { elements, loading, createElement, updateElement, deleteElement, duplicateElement } = useHomepageElements();
+  const CANVAS_HEIGHT = useBackgroundImageHeight(homepageBackground, CANVAS_WIDTH);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [zoom, setZoom] = useState(0.5);
