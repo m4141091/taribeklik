@@ -419,7 +419,7 @@ export const ElementPropertiesPanel: React.FC<ElementPropertiesPanelProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="discovery">Discovery</SelectItem>
-              <SelectItem value="discovery-fs">Discovery Fs (כפתורים)</SelectItem>
+              <SelectItem value="discovery-fs">Discovery Fs (כותרת משנית)</SelectItem>
               <SelectItem value="cooperative">Cooperative</SelectItem>
               <SelectItem value="script">Script</SelectItem>
             </SelectContent>
