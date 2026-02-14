@@ -1,0 +1,2 @@
+ALTER TABLE public.homepage_elements DROP CONSTRAINT homepage_elements_element_type_check;
+ALTER TABLE public.homepage_elements ADD CONSTRAINT homepage_elements_element_type_check CHECK (element_type = ANY (ARRAY['heading'::text, 'text'::text, 'button'::text, 'image'::text, 'search'::text, 'separator'::text, 'card'::text, 'icon'::text, 'product_grid'::text, 'why_us_cards'::text]));
