@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Type, Square, Image, MousePointer, Search, Minus, CreditCard, LayoutGrid } from 'lucide-react';
+import { Type, Square, Image, MousePointer, Search, Minus, CreditCard, LayoutGrid, Award } from 'lucide-react';
 import { HomepageElementType } from '@/types/homepage';
 
 interface ElementToolbarProps {
@@ -16,6 +16,7 @@ const elementTypes: { type: HomepageElementType; icon: React.ReactNode; label: s
   { type: 'separator', icon: <Minus className="w-4 h-4" />, label: 'מפריד' },
   { type: 'card', icon: <CreditCard className="w-4 h-4" />, label: 'כרטיס' },
   { type: 'product_grid', icon: <LayoutGrid className="w-4 h-4" />, label: 'מוצרים' },
+  { type: 'why_us_cards', icon: <Award className="w-4 h-4" />, label: 'למה אנחנו' },
 ];
 
 export const ElementToolbar: React.FC<ElementToolbarProps> = ({ onAddElement }) => {
