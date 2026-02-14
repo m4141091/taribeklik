@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import TypewriterText from '@/components/TypewriterText';
 import { isSafeUrl } from '@/lib/urlValidation';
 import { ProductGridElement } from './ProductGridElement';
+import { WhyUsCards } from './WhyUsCards';
 
 interface HomepageElementRendererProps {
   element: HomepageElement;
@@ -161,6 +162,9 @@ export const HomepageElementRenderer: React.FC<HomepageElementRendererProps> = (
 
     case 'product_grid':
       return <ProductGridElement element={element} />;
+
+    case 'why_us_cards':
+      return <WhyUsCards />;
 
     default:
       return null;

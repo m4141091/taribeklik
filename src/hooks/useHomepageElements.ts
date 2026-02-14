@@ -31,15 +31,16 @@ export function useHomepageElements() {
     
     const isButton = type === 'button';
     const isProductGrid = type === 'product_grid';
+    const isWhyUs = type === 'why_us_cards';
     const defaults: Partial<HomepageElement> = {
       element_type: type,
       position_x: posX,
       position_y: posY,
-      width: type === 'heading' ? '400px' : isButton ? '220px' : isProductGrid ? '900px' : '300px',
-      height: type === 'heading' ? '60px' : isButton ? '55px' : isProductGrid ? '300px' : '100px',
+      width: type === 'heading' ? '400px' : isButton ? '220px' : isProductGrid ? '900px' : isWhyUs ? '1100px' : '300px',
+      height: type === 'heading' ? '60px' : isButton ? '55px' : isProductGrid ? '300px' : isWhyUs ? '350px' : '100px',
       content: type === 'heading' ? 'כותרת חדשה' : type === 'text' ? 'טקסט חדש' : isButton ? 'למוצרים' : '',
       font_size: type === 'heading' ? 48 : isButton ? 18 : 16,
-      name: isProductGrid ? 'מוצרים חדש' : `${type} חדש`,
+      name: isProductGrid ? 'מוצרים חדש' : isWhyUs ? 'למה לבחור בנו' : `${type} חדש`,
     };
 
     const insertData: Record<string, any> = {

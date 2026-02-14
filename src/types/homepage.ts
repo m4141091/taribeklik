@@ -1,4 +1,4 @@
-export type HomepageElementType = 'heading' | 'text' | 'button' | 'image' | 'search' | 'separator' | 'card' | 'icon' | 'product_grid';
+export type HomepageElementType = 'heading' | 'text' | 'button' | 'image' | 'search' | 'separator' | 'card' | 'icon' | 'product_grid' | 'why_us_cards';
 
 export interface HomepageElement {
   id: string;
