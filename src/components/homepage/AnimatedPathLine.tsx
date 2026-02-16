@@ -1,74 +1,91 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
+import { HomepageElement } from '@/types/homepage';
 
 /**
- * Animated dashed SVG lines connecting 6 homepage elements.
- * Uses the exact SVG path from the Figma design, positioned as an overlay.
- * 
- * Element positions (from DB):
- * פירות: x=81.33%, y=31.5%
- * ירקות: x=51.32%, y=31.5%
- * עלים: x=21.40%, y=31.5%
- * איקון אתר: x=19.20%, y=36.97%
- * איקון אריזה: x=58.83%, y=38.04%
- * איקון בית: x=77.00%, y=45.27%
+ * Animated dashed SVG lines connecting 6 homepage elements dynamically.
+ * Reads positions from DB elements so the line follows when elements are moved.
+ *
+ * Connection order (matching Figma/Elementor script):
+ * 1: פירות (left) -> ירקות (right)
+ * 2: ירקות (bottom) -> עלים (top)
+ * 3: עלים (bottom) -> איקון אתר (left)
+ * 4: איקון אתר (right) -> איקון אריזה (left)
+ * 5: איקון אריזה (right) -> איקון בית (right)
  */
 
-// Build 5 path segments between the 6 points
-// Coordinates in pixel space (will be placed in an SVG that matches the container)
-function buildSegments(containerWidth: number, containerHeight: number) {
-  const points = [
-    { x: 0.8133 * containerWidth, y: 0.315 * containerHeight },   // פירות
-    { x: 0.5132 * containerWidth, y: 0.315 * containerHeight },   // ירקות
-    { x: 0.2140 * containerWidth, y: 0.315 * containerHeight },   // עלים
-    { x: 0.1920 * containerWidth, y: 0.3697 * containerHeight },  // איקון אתר
-    { x: 0.5883 * containerWidth, y: 0.3804 * containerHeight },  // איקון אריזה
-    { x: 0.7700 * containerWidth, y: 0.4527 * containerHeight },  // איקון בית
-  ];
+type Socket = 'left' | 'right' | 'top' | 'bottom';
 
-  const p = points;
-  const segments = [];
+interface SegmentDef {
+  fromName: string;
+  fromSocket: Socket;
+  toName: string;
+  toSocket: Socket;
+  duration: number;
+  delay: number;
+  gravity: number; // controls curve depth
+}
 
-  // Line 1: פירות -> ירקות (horizontal curve, going left in RTL)
-  const g1 = (p[0].x - p[1].x) * 0.4;
-  segments.push({
-    path: `M ${p[0].x} ${p[0].y} C ${p[0].x - g1} ${p[0].y + 40}, ${p[1].x + g1} ${p[1].y + 40}, ${p[1].x} ${p[1].y}`,
-    duration: 1500,
-    delay: 0,
-  });
+const SEGMENT_DEFS: SegmentDef[] = [
+  { fromName: 'פירות', fromSocket: 'left', toName: 'ירקות', toSocket: 'right', duration: 1500, delay: 0, gravity: 80 },
+  { fromName: 'ירקות', fromSocket: 'bottom', toName: 'עלים', toSocket: 'top', duration: 1000, delay: 1500, gravity: 60 },
+  { fromName: 'עלים', fromSocket: 'bottom', toName: 'איקון אתר', toSocket: 'left', duration: 1000, delay: 2500, gravity: 50 },
+  { fromName: 'איקון אתר', fromSocket: 'right', toName: 'איקון אריזה', toSocket: 'left', duration: 1000, delay: 3500, gravity: 70 },
+  { fromName: 'איקון אריזה', fromSocket: 'right', toName: 'איקון בית', toSocket: 'right', duration: 1000, delay: 4500, gravity: 60 },
+];
 
-  // Line 2: ירקות -> עלים (continue left)
-  const g2 = (p[1].x - p[2].x) * 0.4;
-  segments.push({
-    path: `M ${p[1].x} ${p[1].y} C ${p[1].x - g2} ${p[1].y + 35}, ${p[2].x + g2} ${p[2].y + 35}, ${p[2].x} ${p[2].y}`,
-    duration: 1000,
-    delay: 1500,
-  });
+const ELEMENT_NAMES = ['פירות', 'ירקות', 'עלים', 'איקון אתר', 'איקון אריזה', 'איקון בית'];
 
-  // Line 3: עלים -> איקון אתר (curve down-left)
-  segments.push({
-    path: `M ${p[2].x} ${p[2].y} C ${p[2].x - 20} ${p[2].y + (p[3].y - p[2].y) * 0.6}, ${p[3].x - 30} ${p[3].y - (p[3].y - p[2].y) * 0.3}, ${p[3].x} ${p[3].y}`,
-    duration: 1000,
-    delay: 2500,
-  });
+function parseSize(value: string, containerDimension: number): number {
+  if (value.endsWith('px')) return parseFloat(value);
+  if (value.endsWith('%')) return (parseFloat(value) / 100) * containerDimension;
+  return parseFloat(value) || 0;
+}
 
-  // Line 4: איקון אתר -> איקון אריזה (curve right)
-  const g4 = (p[4].x - p[3].x) * 0.35;
-  segments.push({
-    path: `M ${p[3].x} ${p[3].y} C ${p[3].x + g4} ${p[3].y + 50}, ${p[4].x - g4} ${p[4].y - 30}, ${p[4].x} ${p[4].y}`,
-    duration: 1000,
-    delay: 3500,
-  });
+function getSocketPoint(
+  el: HomepageElement,
+  socket: Socket,
+  containerWidth: number,
+  containerHeight: number,
+): { x: number; y: number } {
+  const cx = (el.position_x / 100) * containerWidth;
+  const cy = (el.position_y / 100) * containerHeight;
+  const halfW = parseSize(el.width, containerWidth) / 2;
+  const halfH = parseSize(el.height, containerHeight) / 2;
 
-  // Line 5: איקון אריזה -> איקון בית (curve right-down)
-  const g5x = (p[5].x - p[4].x) * 0.4;
-  const g5y = (p[5].y - p[4].y) * 0.4;
-  segments.push({
-    path: `M ${p[4].x} ${p[4].y} C ${p[4].x + g5x} ${p[4].y + g5y + 30}, ${p[5].x + 40} ${p[5].y - g5y}, ${p[5].x} ${p[5].y}`,
-    duration: 1000,
-    delay: 4500,
-  });
+  switch (socket) {
+    case 'left': return { x: cx - halfW, y: cy };
+    case 'right': return { x: cx + halfW, y: cy };
+    case 'top': return { x: cx, y: cy - halfH };
+    case 'bottom': return { x: cx, y: cy + halfH };
+  }
+}
 
-  return { segments, endPoint: p[5] };
+function buildCurvePath(
+  from: { x: number; y: number },
+  fromSocket: Socket,
+  to: { x: number; y: number },
+  toSocket: Socket,
+  gravity: number,
+): string {
+  // Control points extend from the socket direction
+  const cp1 = { ...from };
+  const cp2 = { ...to };
+
+  switch (fromSocket) {
+    case 'left': cp1.x -= gravity; break;
+    case 'right': cp1.x += gravity; break;
+    case 'top': cp1.y -= gravity; break;
+    case 'bottom': cp1.y += gravity; break;
+  }
+
+  switch (toSocket) {
+    case 'left': cp2.x -= gravity; break;
+    case 'right': cp2.x += gravity; break;
+    case 'top': cp2.y -= gravity; break;
+    case 'bottom': cp2.y += gravity; break;
+  }
+
+  return `M ${from.x} ${from.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${to.x} ${to.y}`;
 }
 
 const DASH = '12 8';
@@ -102,7 +119,7 @@ const AnimatedSegment: React.FC<{
 
   return (
     <>
-      {/* Draw animation path */}
+      {/* Draw animation: solid line that reveals via dashoffset */}
       <path
         ref={pathRef}
         d={pathD}
@@ -118,7 +135,7 @@ const AnimatedSegment: React.FC<{
             : 'none',
         }}
       />
-      {/* Flowing dash overlay */}
+      {/* Flowing dash overlay - appears after draw completes */}
       {animate && length > 0 && (
         <path
           d={pathD}
@@ -137,10 +154,27 @@ const AnimatedSegment: React.FC<{
   );
 };
 
-export const AnimatedPathLine: React.FC = () => {
+interface AnimatedPathLineProps {
+  elements: HomepageElement[];
+}
+
+export const AnimatedPathLine: React.FC<AnimatedPathLineProps> = ({ elements }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isTriggered, setIsTriggered] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  // Map element names to elements
+  const elementMap = useMemo(() => {
+    const map: Record<string, HomepageElement> = {};
+    for (const el of elements) {
+      if (el.name && ELEMENT_NAMES.includes(el.name)) {
+        map[el.name] = el;
+      }
+    }
+    return map;
+  }, [elements]);
+
+  const allFound = ELEMENT_NAMES.every((name) => elementMap[name]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -148,7 +182,6 @@ export const AnimatedPathLine: React.FC = () => {
     const parent = containerRef.current.parentElement;
     if (!parent) return;
 
-    // Use ResizeObserver for reliable dimension tracking
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
@@ -168,10 +201,10 @@ export const AnimatedPathLine: React.FC = () => {
           }
         });
       },
-      { root: null, rootMargin: '200px 0px 0px 0px', threshold: 0 }
+      { root: null, rootMargin: '200px 0px 0px 0px', threshold: 0 },
     );
-
     intersectionObserver.observe(containerRef.current);
+
     return () => {
       intersectionObserver.disconnect();
       resizeObserver.disconnect();
@@ -180,15 +213,38 @@ export const AnimatedPathLine: React.FC = () => {
 
   const { width, height } = dimensions;
   const hasSize = width > 0 && height > 0;
-  const { segments, endPoint } = hasSize
-    ? buildSegments(width, height)
-    : { segments: [], endPoint: { x: 0, y: 0 } };
+
+  // Build segments from dynamic element positions
+  const { segments, endPoint } = useMemo(() => {
+    if (!hasSize || !allFound) return { segments: [] as { path: string; duration: number; delay: number }[], endPoint: { x: 0, y: 0 } };
+
+    const segs = SEGMENT_DEFS.map((def) => {
+      const fromEl = elementMap[def.fromName];
+      const toEl = elementMap[def.toName];
+      const from = getSocketPoint(fromEl, def.fromSocket, width, height);
+      const to = getSocketPoint(toEl, def.toSocket, width, height);
+      const path = buildCurvePath(from, def.fromSocket, to, def.toSocket, def.gravity);
+      return { path, duration: def.duration, delay: def.delay };
+    });
+
+    // End point is the last segment's target
+    const lastDef = SEGMENT_DEFS[SEGMENT_DEFS.length - 1];
+    const lastEl = elementMap[lastDef.toName];
+    const ep = getSocketPoint(lastEl, lastDef.toSocket, width, height);
+
+    return { segments: segs, endPoint: ep };
+  }, [hasSize, allFound, elementMap, width, height]);
+
+  if (!allFound) return null;
 
   return (
     <>
       <style>{`
         @keyframes dashFlow {
           to { stroke-dashoffset: -20; }
+        }
+        @keyframes fadeIn {
+          to { opacity: 1; }
         }
       `}</style>
       <div
@@ -213,17 +269,17 @@ export const AnimatedPathLine: React.FC = () => {
                 isTriggered={isTriggered}
               />
             ))}
-            {/* End disc */}
+            {/* End disc at last point */}
             {isTriggered && (
               <circle
                 cx={endPoint.x}
                 cy={endPoint.y}
                 r="8"
                 fill="#000000"
-                opacity={isTriggered ? 1 : 0}
                 style={{
-                  transition: 'opacity 0.3s ease',
-                  transitionDelay: '5.5s',
+                  opacity: 0,
+                  animation: isTriggered ? 'fadeIn 0.3s ease forwards' : 'none',
+                  animationDelay: '5.5s',
                 }}
               />
             )}

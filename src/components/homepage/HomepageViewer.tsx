@@ -4,6 +4,7 @@ import { HomepageElementRenderer } from './HomepageElementRenderer';
 import { AnimatedPathLine } from './AnimatedPathLine';
 
 export const HomepageViewer: React.FC<{ bgHeight?: number }> = ({ bgHeight = 6000 }) => {
+  // elements are also passed to AnimatedPathLine for dynamic line positioning
   const { elements, loading } = usePublicHomepageElements();
 
   console.log('HomepageViewer - loading:', loading);
@@ -19,7 +20,7 @@ export const HomepageViewer: React.FC<{ bgHeight?: number }> = ({ bgHeight = 600
 
   return (
     <div className="relative w-full" style={{ height: `${bgHeight}px` }}>
-      <AnimatedPathLine />
+      <AnimatedPathLine elements={elements} />
       {elements.map((element) => {
         console.log('Rendering element:', element.id, element.element_type, 'at', element.position_x + '%', element.position_y + '%');
         return (
