@@ -26,10 +26,11 @@ const HomepageEditorContent = () => {
   const BG_HEIGHT = useBackgroundImageHeight(homepageBackground, CANVAS_WIDTH);
   const CANVAS_HEIGHT = BG_HEIGHT + 2000; // Extra scroll space for editing comfort
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [editingElementId, setEditingElementId] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [zoom, setZoom] = useState(0.5);
 
-  const selectedElement = elements.find(e => e.id === selectedElementId) || null;
+  const editingElement = elements.find(e => e.id === editingElementId) || null;
 
   const handleAddElement = async (type: HomepageElementType) => {
     try {
@@ -189,7 +190,7 @@ const HomepageEditorContent = () => {
               transform: `scale(${zoom})`,
               transformOrigin: 'top center',
             }}
-              onClick={() => setSelectedElementId(null)}
+              onClick={() => { setSelectedElementId(null); setEditingElementId(null); }}
             >
               {/* Viewport guidelines */}
               <div 
@@ -206,7 +207,7 @@ const HomepageEditorContent = () => {
                   key={element.id}
                   element={element}
                   isSelected={selectedElementId === element.id}
-                  onClick={() => setSelectedElementId(element.id)}
+                  onClick={() => { setSelectedElementId(element.id); setEditingElementId(element.id); }}
                   onPositionChange={(x, y) => handlePositionChange(element.id, x, y)}
                   onSizeChange={(w, h) => handleSizeChange(element.id, w, h)}
                   containerRef={containerRef}
@@ -219,13 +220,13 @@ const HomepageEditorContent = () => {
         {/* Right Sidebar - Properties Panel (slides in when element selected) */}
         <div
           className={`bg-background border-r flex-shrink-0 transition-all duration-300 overflow-hidden ${
-            selectedElement ? 'w-80' : 'w-0'
+            editingElement ? 'w-80' : 'w-0'
           }`}
         >
           <div className="w-80">
             <ScrollArea className="h-full">
               <ElementPropertiesPanel
-                element={selectedElement}
+                element={editingElement}
                 onUpdate={updateElement}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
