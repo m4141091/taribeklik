@@ -216,16 +216,22 @@ const HomepageEditorContent = () => {
           </div>
         </div>
 
-        {/* Right Sidebar - Properties Panel */}
-        <div className="w-80 bg-background border-r flex-shrink-0">
-          <ScrollArea className="h-full">
-            <ElementPropertiesPanel
-              element={selectedElement}
-              onUpdate={updateElement}
-              onDelete={handleDelete}
-              onDuplicate={handleDuplicate}
-            />
-          </ScrollArea>
+        {/* Right Sidebar - Properties Panel (slides in when element selected) */}
+        <div
+          className={`bg-background border-r flex-shrink-0 transition-all duration-300 overflow-hidden ${
+            selectedElement ? 'w-80' : 'w-0'
+          }`}
+        >
+          <div className="w-80">
+            <ScrollArea className="h-full">
+              <ElementPropertiesPanel
+                element={selectedElement}
+                onUpdate={updateElement}
+                onDelete={handleDelete}
+                onDuplicate={handleDuplicate}
+              />
+            </ScrollArea>
+          </div>
         </div>
       </div>
     </div>
