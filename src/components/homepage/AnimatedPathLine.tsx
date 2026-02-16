@@ -1,72 +1,74 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 /**
- * Animated dashed SVG lines connecting 6 homepage elements:
- * פירות -> ירקות -> עלים -> איקון אתר -> איקון אריזה -> איקון בית
- *
- * Mimics LeaderLine behavior: sequential draw animation with flowing dashes.
- * All coordinates are percentages matching element positions in the database.
+ * Animated dashed SVG lines connecting 6 homepage elements.
+ * Uses the exact SVG path from the Figma design, positioned as an overlay.
+ * 
+ * Element positions (from DB):
+ * פירות: x=81.33%, y=31.5%
+ * ירקות: x=51.32%, y=31.5%
+ * עלים: x=21.40%, y=31.5%
+ * איקון אתר: x=19.20%, y=36.97%
+ * איקון אריזה: x=58.83%, y=38.04%
+ * איקון בית: x=77.00%, y=45.27%
  */
 
-// Waypoints as percentage coordinates (x%, y%) based on DB positions
-const WAYPOINTS = [
-  { x: 81.33, y: 31.5, label: 'פירות' },
-  { x: 51.32, y: 31.5, label: 'ירקות' },
-  { x: 21.40, y: 31.5, label: 'עלים' },
-  { x: 19.20, y: 36.97, label: 'איקון אתר' },
-  { x: 58.83, y: 38.04, label: 'איקון אריזה' },
-  { x: 77.00, y: 45.27, label: 'איקון בית' },
-];
+// Build 5 path segments between the 6 points
+// Coordinates in pixel space (will be placed in an SVG that matches the container)
+function buildSegments(containerWidth: number, containerHeight: number) {
+  const points = [
+    { x: 0.8133 * containerWidth, y: 0.315 * containerHeight },   // פירות
+    { x: 0.5132 * containerWidth, y: 0.315 * containerHeight },   // ירקות
+    { x: 0.2140 * containerWidth, y: 0.315 * containerHeight },   // עלים
+    { x: 0.1920 * containerWidth, y: 0.3697 * containerHeight },  // איקון אתר
+    { x: 0.5883 * containerWidth, y: 0.3804 * containerHeight },  // איקון אריזה
+    { x: 0.7700 * containerWidth, y: 0.4527 * containerHeight },  // איקון בית
+  ];
 
-// Define the 5 line segments between 6 points
-interface LineSegment {
-  path: string;
-  duration: number;
-  delay: number;
-}
+  const p = points;
+  const segments = [];
 
-function buildSegments(): LineSegment[] {
-  const s = (pct: number) => (pct / 100) * 1000;
-  const segments: LineSegment[] = [];
-
-  const w = WAYPOINTS.map(p => ({ x: s(p.x), y: s(p.y) }));
-
-  // Line 1: פירות -> ירקות (left, horizontal curve - RTL direction)
+  // Line 1: פירות -> ירקות (horizontal curve, going left in RTL)
+  const g1 = (p[0].x - p[1].x) * 0.4;
   segments.push({
-    path: `M ${w[0].x} ${w[0].y} C ${w[0].x - 50} ${w[0].y + 40}, ${w[1].x + 50} ${w[1].y + 40}, ${w[1].x} ${w[1].y}`,
+    path: `M ${p[0].x} ${p[0].y} C ${p[0].x - g1} ${p[0].y + 40}, ${p[1].x + g1} ${p[1].y + 40}, ${p[1].x} ${p[1].y}`,
     duration: 1500,
     delay: 0,
   });
 
   // Line 2: ירקות -> עלים (continue left)
+  const g2 = (p[1].x - p[2].x) * 0.4;
   segments.push({
-    path: `M ${w[1].x} ${w[1].y} C ${w[1].x - 50} ${w[1].y + 35}, ${w[2].x + 50} ${w[2].y + 35}, ${w[2].x} ${w[2].y}`,
+    path: `M ${p[1].x} ${p[1].y} C ${p[1].x - g2} ${p[1].y + 35}, ${p[2].x + g2} ${p[2].y + 35}, ${p[2].x} ${p[2].y}`,
     duration: 1000,
     delay: 1500,
   });
 
-  // Line 3: עלים -> איקון אתר (curve down)
+  // Line 3: עלים -> איקון אתר (curve down-left)
   segments.push({
-    path: `M ${w[2].x} ${w[2].y} C ${w[2].x - 20} ${w[2].y + 25}, ${w[3].x - 20} ${w[3].y - 20}, ${w[3].x} ${w[3].y}`,
+    path: `M ${p[2].x} ${p[2].y} C ${p[2].x - 20} ${p[2].y + (p[3].y - p[2].y) * 0.6}, ${p[3].x - 30} ${p[3].y - (p[3].y - p[2].y) * 0.3}, ${p[3].x} ${p[3].y}`,
     duration: 1000,
     delay: 2500,
   });
 
-  // Line 4: איקון אתר -> איקון אריזה (curve right, slightly down)
+  // Line 4: איקון אתר -> איקון אריזה (curve right)
+  const g4 = (p[4].x - p[3].x) * 0.35;
   segments.push({
-    path: `M ${w[3].x} ${w[3].y} C ${w[3].x + 80} ${w[3].y + 30}, ${w[4].x - 80} ${w[4].y - 20}, ${w[4].x} ${w[4].y}`,
+    path: `M ${p[3].x} ${p[3].y} C ${p[3].x + g4} ${p[3].y + 50}, ${p[4].x - g4} ${p[4].y - 30}, ${p[4].x} ${p[4].y}`,
     duration: 1000,
     delay: 3500,
   });
 
-  // Line 5: איקון אריזה -> איקון בית (curve right and down)
+  // Line 5: איקון אריזה -> איקון בית (curve right-down)
+  const g5x = (p[5].x - p[4].x) * 0.4;
+  const g5y = (p[5].y - p[4].y) * 0.4;
   segments.push({
-    path: `M ${w[4].x} ${w[4].y} C ${w[4].x + 50} ${w[4].y + 40}, ${w[5].x + 30} ${w[5].y - 30}, ${w[5].x} ${w[5].y}`,
+    path: `M ${p[4].x} ${p[4].y} C ${p[4].x + g5x} ${p[4].y + g5y + 30}, ${p[5].x + 40} ${p[5].y - g5y}, ${p[5].x} ${p[5].y}`,
     duration: 1000,
     delay: 4500,
   });
 
-  return segments;
+  return { segments, endPoint: p[5] };
 }
 
 const DASH = '12 8';
@@ -76,8 +78,7 @@ const AnimatedSegment: React.FC<{
   duration: number;
   delay: number;
   isTriggered: boolean;
-  isLast?: boolean;
-}> = ({ pathD, duration, delay, isTriggered, isLast }) => {
+}> = ({ pathD, duration, delay, isTriggered }) => {
   const pathRef = useRef<SVGPathElement>(null);
   const [length, setLength] = useState(0);
   const [animate, setAnimate] = useState(false);
@@ -86,7 +87,7 @@ const AnimatedSegment: React.FC<{
     if (pathRef.current) {
       setLength(pathRef.current.getTotalLength());
     }
-  }, []);
+  }, [pathD]);
 
   useEffect(() => {
     if (!isTriggered) {
@@ -97,16 +98,19 @@ const AnimatedSegment: React.FC<{
     return () => clearTimeout(timer);
   }, [isTriggered, delay]);
 
+  if (!pathD || pathD.includes('NaN')) return null;
+
   return (
     <>
+      {/* Draw animation path */}
       <path
         ref={pathRef}
         d={pathD}
         fill="none"
-        stroke="#251F20"
+        stroke="#000000"
         strokeWidth="3"
         strokeLinecap="round"
-        strokeDasharray={length > 0 ? `${length}` : 'none'}
+        strokeDasharray={length > 0 ? `${length}` : '0'}
         strokeDashoffset={animate ? 0 : length}
         style={{
           transition: animate
@@ -114,33 +118,18 @@ const AnimatedSegment: React.FC<{
             : 'none',
         }}
       />
-      {/* Flowing dash overlay - only visible after draw is complete */}
+      {/* Flowing dash overlay */}
       {animate && length > 0 && (
         <path
           d={pathD}
           fill="none"
-          stroke="#251F20"
+          stroke="#000000"
           strokeWidth="3"
           strokeLinecap="round"
           strokeDasharray={DASH}
-          opacity={animate ? 1 : 0}
           style={{
             animation: 'dashFlow 1s linear infinite',
-            transition: `opacity ${duration}ms ease ${duration}ms`,
-          }}
-        />
-      )}
-      {/* Disc at the end of the last segment */}
-      {isLast && animate && (
-        <circle
-          cx={pathD.split(' ').slice(-2, -1)[0]}
-          cy={pathD.split(' ').slice(-1)[0]}
-          r="6"
-          fill="#251F20"
-          opacity={animate ? 1 : 0}
-          style={{
-            transition: `opacity 0.3s ease`,
-            transitionDelay: `${duration}ms`,
+            opacity: 1,
           }}
         />
       )}
@@ -149,36 +138,51 @@ const AnimatedSegment: React.FC<{
 };
 
 export const AnimatedPathLine: React.FC = () => {
-  const containerRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isTriggered, setIsTriggered] = useState(false);
-  const segments = buildSegments();
-
-  // End point for the disc
-  const lastWp = WAYPOINTS[WAYPOINTS.length - 1];
-  const endX = (lastWp.x / 100) * 1000;
-  const endY = (lastWp.y / 100) * 1000;
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    console.log('AnimatedPathLine mounted, containerRef:', !!containerRef.current);
     if (!containerRef.current) return;
 
-    const observer = new IntersectionObserver(
+    const parent = containerRef.current.parentElement;
+    if (!parent) return;
+
+    // Use ResizeObserver for reliable dimension tracking
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setDimensions({ width, height });
+        }
+      }
+    });
+    resizeObserver.observe(parent);
+
+    const intersectionObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          console.log('AnimatedPathLine intersection:', entry.isIntersecting, 'boundingRect top:', entry.boundingClientRect.top);
           if (entry.isIntersecting) {
-            console.log('AnimatedPathLine TRIGGERED - starting animation');
             setIsTriggered(true);
-            observer.disconnect();
+            intersectionObserver.disconnect();
           }
         });
       },
-      { root: null, rootMargin: '0px 0px -20% 0px', threshold: 0.1 }
+      { root: null, rootMargin: '200px 0px 0px 0px', threshold: 0 }
     );
 
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    intersectionObserver.observe(containerRef.current);
+    return () => {
+      intersectionObserver.disconnect();
+      resizeObserver.disconnect();
+    };
   }, []);
+
+  const { width, height } = dimensions;
+  const hasSize = width > 0 && height > 0;
+  const { segments, endPoint } = hasSize
+    ? buildSegments(width, height)
+    : { segments: [], endPoint: { x: 0, y: 0 } };
 
   return (
     <>
@@ -187,36 +191,45 @@ export const AnimatedPathLine: React.FC = () => {
           to { stroke-dashoffset: -20; }
         }
       `}</style>
-      <svg
+      <div
         ref={containerRef}
         className="absolute inset-0 w-full h-full pointer-events-none"
-        viewBox="0 0 1000 1000"
-        preserveAspectRatio="none"
         style={{ zIndex: 5 }}
       >
-        {segments.map((seg, i) => (
-          <AnimatedSegment
-            key={i}
-            pathD={seg.path}
-            duration={seg.duration}
-            delay={seg.delay}
-            isTriggered={isTriggered}
-            isLast={i === segments.length - 1}
-          />
-        ))}
-        {/* End disc */}
-        <circle
-          cx={endX}
-          cy={endY}
-          r="6"
-          fill="#251F20"
-          opacity={isTriggered ? 1 : 0}
-          style={{
-            transition: 'opacity 0.3s ease',
-            transitionDelay: '5.5s',
-          }}
-        />
-      </svg>
+        {hasSize && (
+          <svg
+            className="absolute inset-0"
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            style={{ overflow: 'visible' }}
+          >
+            {segments.map((seg, i) => (
+              <AnimatedSegment
+                key={i}
+                pathD={seg.path}
+                duration={seg.duration}
+                delay={seg.delay}
+                isTriggered={isTriggered}
+              />
+            ))}
+            {/* End disc */}
+            {isTriggered && (
+              <circle
+                cx={endPoint.x}
+                cy={endPoint.y}
+                r="8"
+                fill="#000000"
+                opacity={isTriggered ? 1 : 0}
+                style={{
+                  transition: 'opacity 0.3s ease',
+                  transitionDelay: '5.5s',
+                }}
+              />
+            )}
+          </svg>
+        )}
+      </div>
     </>
   );
 };
