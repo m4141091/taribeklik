@@ -223,7 +223,7 @@ const HomepageEditorContent = () => {
             editingElement ? 'w-80' : 'w-0'
           }`}
         >
-          <div className="w-80">
+          <div className="w-80 h-full">
             <ScrollArea className="h-full">
               <ElementPropertiesPanel
                 element={editingElement}
