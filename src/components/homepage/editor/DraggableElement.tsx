@@ -146,7 +146,9 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
       }}
       onMouseDown={handleMouseDown}
     >
-      <HomepageElementRenderer element={element} />
+      <div className="pointer-events-none w-full h-full">
+        <HomepageElementRenderer element={element} />
+      </div>
       
       {/* Resize handles - shown when selected */}
       {isSelected && (

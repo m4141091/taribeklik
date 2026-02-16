@@ -190,7 +190,7 @@ const HomepageEditorContent = () => {
               transform: `scale(${zoom})`,
               transformOrigin: 'top center',
             }}
-              onClick={() => { setSelectedElementId(null); setEditingElementId(null); }}
+              onMouseDown={(e) => { if (e.target === e.currentTarget) { setSelectedElementId(null); setEditingElementId(null); } }}
             >
               {/* Viewport guidelines */}
               <div 
