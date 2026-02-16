@@ -1,135 +1,222 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 
 /**
- * Animated dashed SVG line connecting 6 homepage elements:
+ * Animated dashed SVG lines connecting 6 homepage elements:
  * פירות -> ירקות -> עלים -> איקון אתר -> איקון אריזה -> איקון בית
- * 
- * All coordinates are percentages of the container dimensions,
- * matching the element positions from the database.
+ *
+ * Mimics LeaderLine behavior: sequential draw animation with flowing dashes.
+ * All coordinates are percentages matching element positions in the database.
  */
 
 // Waypoints as percentage coordinates (x%, y%) based on DB positions
-// The line starts below each image/button and connects to the icon centers
-const WAYPOINTS = {
-  fruits:    { x: 81.33, y: 31.5 },   // below פירות
-  vegs:      { x: 51.32, y: 31.5 },   // below ירקות
-  leaves:    { x: 21.40, y: 31.5 },   // below עלים
-  iconSite:  { x: 19.20, y: 36.97 },  // איקון אתר
-  iconPack:  { x: 58.83, y: 38.04 },  // איקון אריזה
-  iconHome:  { x: 77.00, y: 45.27 },  // איקון בית
-};
+const WAYPOINTS = [
+  { x: 81.33, y: 31.5, label: 'פירות' },
+  { x: 51.32, y: 31.5, label: 'ירקות' },
+  { x: 21.40, y: 31.5, label: 'עלים' },
+  { x: 19.20, y: 36.97, label: 'איקון אתר' },
+  { x: 58.83, y: 38.04, label: 'איקון אריזה' },
+  { x: 77.00, y: 45.27, label: 'איקון בית' },
+];
 
-function buildPath(): string {
-  const w = WAYPOINTS;
-  
-  // All values are percentages — we'll use a 1000x1000 viewBox 
-  // and scale percentages to that coordinate space
-  const s = (pct: number) => (pct / 100) * 1000;
-
-  const fx = s(w.fruits.x), fy = s(w.fruits.y);
-  const vx = s(w.vegs.x), vy = s(w.vegs.y);
-  const lx = s(w.leaves.x), ly = s(w.leaves.y);
-  const sx = s(w.iconSite.x), sy = s(w.iconSite.y);
-  const px = s(w.iconPack.x), py = s(w.iconPack.y);
-  const hx = s(w.iconHome.x), hy = s(w.iconHome.y);
-
-  // Build a smooth cubic bezier path through all waypoints
-  // Right-to-left: fruits -> vegs -> leaves, then down to icons
-  return [
-    `M ${fx} ${fy}`,
-    // Fruits -> Vegs (horizontal curve going left)
-    `C ${fx - 40} ${fy + 30}, ${vx + 40} ${vy + 30}, ${vx} ${vy}`,
-    // Vegs -> Leaves (continue left)
-    `C ${vx - 40} ${vy + 25}, ${lx + 40} ${ly + 25}, ${lx} ${ly}`,
-    // Leaves -> Icon Site (curve down)
-    `C ${lx - 15} ${ly + 20}, ${sx - 15} ${sy - 20}, ${sx} ${sy}`,
-    // Icon Site -> Icon Pack (curve right and slightly down)
-    `C ${sx + 60} ${sy + 25}, ${px - 60} ${py - 20}, ${px} ${py}`,
-    // Icon Pack -> Icon Home (curve right and down)
-    `C ${px + 40} ${py + 30}, ${hx - 30} ${hy - 30}, ${hx} ${hy}`,
-  ].join(' ');
+// Define the 5 line segments between 6 points
+interface LineSegment {
+  path: string;
+  duration: number;
+  delay: number;
 }
 
-const DASH_LENGTH = 12;
-const GAP_LENGTH = 8;
+function buildSegments(): LineSegment[] {
+  const s = (pct: number) => (pct / 100) * 1000;
+  const segments: LineSegment[] = [];
 
-export const AnimatedPathLine: React.FC = () => {
+  const w = WAYPOINTS.map(p => ({ x: s(p.x), y: s(p.y) }));
+
+  // Line 1: פירות -> ירקות (left, horizontal curve - RTL direction)
+  segments.push({
+    path: `M ${w[0].x} ${w[0].y} C ${w[0].x - 50} ${w[0].y + 40}, ${w[1].x + 50} ${w[1].y + 40}, ${w[1].x} ${w[1].y}`,
+    duration: 1500,
+    delay: 0,
+  });
+
+  // Line 2: ירקות -> עלים (continue left)
+  segments.push({
+    path: `M ${w[1].x} ${w[1].y} C ${w[1].x - 50} ${w[1].y + 35}, ${w[2].x + 50} ${w[2].y + 35}, ${w[2].x} ${w[2].y}`,
+    duration: 1000,
+    delay: 1500,
+  });
+
+  // Line 3: עלים -> איקון אתר (curve down)
+  segments.push({
+    path: `M ${w[2].x} ${w[2].y} C ${w[2].x - 20} ${w[2].y + 25}, ${w[3].x - 20} ${w[3].y - 20}, ${w[3].x} ${w[3].y}`,
+    duration: 1000,
+    delay: 2500,
+  });
+
+  // Line 4: איקון אתר -> איקון אריזה (curve right, slightly down)
+  segments.push({
+    path: `M ${w[3].x} ${w[3].y} C ${w[3].x + 80} ${w[3].y + 30}, ${w[4].x - 80} ${w[4].y - 20}, ${w[4].x} ${w[4].y}`,
+    duration: 1000,
+    delay: 3500,
+  });
+
+  // Line 5: איקון אריזה -> איקון בית (curve right and down)
+  segments.push({
+    path: `M ${w[4].x} ${w[4].y} C ${w[4].x + 50} ${w[4].y + 40}, ${w[5].x + 30} ${w[5].y - 30}, ${w[5].x} ${w[5].y}`,
+    duration: 1000,
+    delay: 4500,
+  });
+
+  return segments;
+}
+
+const DASH = '12 8';
+
+const AnimatedSegment: React.FC<{
+  pathD: string;
+  duration: number;
+  delay: number;
+  isTriggered: boolean;
+  isLast?: boolean;
+}> = ({ pathD, duration, delay, isTriggered, isLast }) => {
   const pathRef = useRef<SVGPathElement>(null);
-  const containerRef = useRef<SVGSVGElement>(null);
-  const [totalLength, setTotalLength] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-
-  const pathD = buildPath();
+  const [length, setLength] = useState(0);
+  const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
     if (pathRef.current) {
-      setTotalLength(pathRef.current.getTotalLength());
+      setLength(pathRef.current.getTotalLength());
     }
   }, []);
 
-  // IntersectionObserver to trigger draw animation
   useEffect(() => {
-    if (!containerRef.current) return;
-    
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-          } else if (entry.boundingClientRect.top > 0) {
-            setIsVisible(false);
-          }
-        });
-      },
-      { root: null, rootMargin: '0px 0px -30% 0px', threshold: 0 }
-    );
-
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // Disc radius at the end point
-  const endPoint = WAYPOINTS.iconHome;
-  const endX = (endPoint.x / 100) * 1000;
-  const endY = (endPoint.y / 100) * 1000;
+    if (!isTriggered) {
+      setAnimate(false);
+      return;
+    }
+    const timer = setTimeout(() => setAnimate(true), delay);
+    return () => clearTimeout(timer);
+  }, [isTriggered, delay]);
 
   return (
-    <svg
-      ref={containerRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      viewBox="0 0 1000 1000"
-      preserveAspectRatio="none"
-      style={{ zIndex: 5 }}
-    >
-      {/* Main animated dashed path */}
+    <>
       <path
         ref={pathRef}
         d={pathD}
         fill="none"
         stroke="#251F20"
         strokeWidth="3"
-        strokeDasharray={totalLength > 0 ? `${DASH_LENGTH} ${GAP_LENGTH}` : 'none'}
-        strokeDashoffset={isVisible ? 0 : totalLength}
         strokeLinecap="round"
+        strokeDasharray={length > 0 ? `${length}` : 'none'}
+        strokeDashoffset={animate ? 0 : length}
         style={{
-          transition: isVisible 
-            ? 'stroke-dashoffset 2s cubic-bezier(0.58, 0, 0.41, 1)' 
-            : 'stroke-dashoffset 0.8s cubic-bezier(0.58, 0, 0.41, 1)',
+          transition: animate
+            ? `stroke-dashoffset ${duration}ms cubic-bezier(0.58, 0, 0.41, 1)`
+            : 'none',
         }}
       />
+      {/* Flowing dash overlay - only visible after draw is complete */}
+      {animate && length > 0 && (
+        <path
+          d={pathD}
+          fill="none"
+          stroke="#251F20"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={DASH}
+          opacity={animate ? 1 : 0}
+          style={{
+            animation: 'dashFlow 1s linear infinite',
+            transition: `opacity ${duration}ms ease ${duration}ms`,
+          }}
+        />
+      )}
+      {/* Disc at the end of the last segment */}
+      {isLast && animate && (
+        <circle
+          cx={pathD.split(' ').slice(-2, -1)[0]}
+          cy={pathD.split(' ').slice(-1)[0]}
+          r="6"
+          fill="#251F20"
+          opacity={animate ? 1 : 0}
+          style={{
+            transition: `opacity 0.3s ease`,
+            transitionDelay: `${duration}ms`,
+          }}
+        />
+      )}
+    </>
+  );
+};
 
-      {/* Disc at the end */}
-      <circle
-        cx={endX}
-        cy={endY}
-        r="5"
-        fill="#251F20"
-        opacity={isVisible ? 1 : 0}
-        style={{
-          transition: 'opacity 0.3s ease',
-          transitionDelay: isVisible ? '1.8s' : '0s',
-        }}
-      />
-    </svg>
+export const AnimatedPathLine: React.FC = () => {
+  const containerRef = useRef<SVGSVGElement>(null);
+  const [isTriggered, setIsTriggered] = useState(false);
+  const segments = buildSegments();
+
+  // End point for the disc
+  const lastWp = WAYPOINTS[WAYPOINTS.length - 1];
+  const endX = (lastWp.x / 100) * 1000;
+  const endY = (lastWp.y / 100) * 1000;
+
+  useEffect(() => {
+    console.log('AnimatedPathLine mounted, containerRef:', !!containerRef.current);
+    if (!containerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          console.log('AnimatedPathLine intersection:', entry.isIntersecting, 'boundingRect top:', entry.boundingClientRect.top);
+          if (entry.isIntersecting) {
+            console.log('AnimatedPathLine TRIGGERED - starting animation');
+            setIsTriggered(true);
+            observer.disconnect();
+          }
+        });
+      },
+      { root: null, rootMargin: '0px 0px -20% 0px', threshold: 0.1 }
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        @keyframes dashFlow {
+          to { stroke-dashoffset: -20; }
+        }
+      `}</style>
+      <svg
+        ref={containerRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        viewBox="0 0 1000 1000"
+        preserveAspectRatio="none"
+        style={{ zIndex: 5 }}
+      >
+        {segments.map((seg, i) => (
+          <AnimatedSegment
+            key={i}
+            pathD={seg.path}
+            duration={seg.duration}
+            delay={seg.delay}
+            isTriggered={isTriggered}
+            isLast={i === segments.length - 1}
+          />
+        ))}
+        {/* End disc */}
+        <circle
+          cx={endX}
+          cy={endY}
+          r="6"
+          fill="#251F20"
+          opacity={isTriggered ? 1 : 0}
+          style={{
+            transition: 'opacity 0.3s ease',
+            transitionDelay: '5.5s',
+          }}
+        />
+      </svg>
+    </>
   );
 };
