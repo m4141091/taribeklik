@@ -88,8 +88,6 @@ function buildCurvePath(
   return `M ${from.x} ${from.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${to.x} ${to.y}`;
 }
 
-const DASH = '12 8';
-
 const AnimatedSegment: React.FC<{
   pathD: string;
   duration: number;
@@ -118,39 +116,21 @@ const AnimatedSegment: React.FC<{
   if (!pathD || pathD.includes('NaN')) return null;
 
   return (
-    <>
-      {/* Draw animation: solid line that reveals via dashoffset */}
-      <path
-        ref={pathRef}
-        d={pathD}
-        fill="none"
-        stroke="#000000"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeDasharray={length > 0 ? `${length}` : '0'}
-        strokeDashoffset={animate ? 0 : length}
-        style={{
-          transition: animate
-            ? `stroke-dashoffset ${duration}ms cubic-bezier(0.58, 0, 0.41, 1)`
-            : 'none',
-        }}
-      />
-      {/* Flowing dash overlay - appears after draw completes */}
-      {animate && length > 0 && (
-        <path
-          d={pathD}
-          fill="none"
-          stroke="#000000"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeDasharray={DASH}
-          style={{
-            animation: 'dashFlow 1s linear infinite',
-            opacity: 1,
-          }}
-        />
-      )}
-    </>
+    <path
+      ref={pathRef}
+      d={pathD}
+      fill="none"
+      stroke="#000000"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeDasharray={length > 0 ? `${length}` : '0'}
+      strokeDashoffset={animate ? 0 : length}
+      style={{
+        transition: animate
+          ? `stroke-dashoffset ${duration}ms cubic-bezier(0.58, 0, 0.41, 1)`
+          : 'none',
+      }}
+    />
   );
 };
 
@@ -240,9 +220,6 @@ export const AnimatedPathLine: React.FC<AnimatedPathLineProps> = ({ elements }) 
   return (
     <>
       <style>{`
-        @keyframes dashFlow {
-          to { stroke-dashoffset: -20; }
-        }
         @keyframes fadeIn {
           to { opacity: 1; }
         }
