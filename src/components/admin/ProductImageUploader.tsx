@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { generateProductImage, editProductImage, uploadBase64Image } from '@/lib/productImageAI';
-import { useProducts } from '@/hooks/useProducts';
 import {
   Dialog,
   DialogContent,
@@ -18,19 +17,21 @@ interface ProductImageUploaderProps {
   imageUrl?: string;
   productName: string;
   onImageChange: (url: string) => void;
+  uploadImage: (file: File) => Promise<string>;
 }
 
 const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
   imageUrl,
   productName,
   onImageChange,
+  uploadImage,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editInstruction, setEditInstruction] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const { uploadImage } = useProducts();
+  
   const { toast } = useToast();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {

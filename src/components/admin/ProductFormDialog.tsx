@@ -34,6 +34,7 @@ import ProductImageUploader from './ProductImageUploader';
 import CategoryMultiSelect from './CategoryMultiSelect';
 import { Product, ProductFormData, getDefaultWeight } from '@/types/product';
 import { Category } from '@/types/category';
+import { useProducts } from '@/hooks/useProducts';
 
 const formSchema = z.object({
   name: z.string().min(1, 'שם המוצר הוא שדה חובה'),
@@ -65,6 +66,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const { uploadImage } = useProducts();
   const { toast } = useToast();
 
   const handleCopyUrl = () => {
@@ -281,7 +283,8 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
             <ProductImageUploader
               imageUrl={form.watch('image_url')}
               productName={productName}
-              onImageChange={(url) => form.setValue('image_url', url)}
+              onImageChange={(url) => form.setValue('image_url', url, { shouldDirty: true, shouldValidate: true })}
+              uploadImage={uploadImage}
             />
 
             {form.watch('image_url') && (
