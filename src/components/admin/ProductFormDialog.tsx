@@ -281,7 +281,8 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
             <ProductImageUploader
               imageUrl={form.watch('image_url')}
               productName={productName}
-              onImageChange={(url) => form.setValue('image_url', url)}
+              onImageChange={(url) => form.setValue('image_url', url, { shouldDirty: true, shouldValidate: true })}
+              uploadImage={uploadImage}
             />
 
             {form.watch('image_url') && (
