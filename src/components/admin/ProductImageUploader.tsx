@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, Wand2, ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, Wand2, ImageIcon, Loader2, Eraser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
