@@ -111,8 +111,9 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     }
   }, [productName, pricingType, averageWeight, form]);
 
-  // Reset form when product changes
+  // Reset form when dialog opens or product changes
   useEffect(() => {
+    if (!open) return;
     if (product) {
       form.reset({
         name: product.name,
@@ -138,7 +139,8 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       });
       setSelectedCategoryIds([]);
     }
-  }, [product, form, open, getProductCategoryIds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product, open]);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
