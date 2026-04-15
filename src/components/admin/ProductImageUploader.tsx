@@ -144,6 +144,26 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
     }
   };
 
+  const handleRemoveBackground = async () => {
+    if (!imageUrl) return;
+
+    setIsRemovingBg(true);
+    try {
+      const base64Image = await editProductImage(imageUrl, 'Remove the background completely, make it fully transparent. Keep only the product itself with no background.');
+      const storageUrl = await uploadBase64Image(base64Image);
+      onImageChange(storageUrl);
+      toast({ title: 'הרקע הוסר בהצלחה!' });
+    } catch (error) {
+      toast({
+        title: 'שגיאה',
+        description: 'שגיאה בהסרת הרקע',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRemovingBg(false);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium">תמונת המוצר</label>
