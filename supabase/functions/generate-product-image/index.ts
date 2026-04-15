@@ -151,8 +151,8 @@ CRITICAL Requirements:
       );
     }
 
-    // Try up to 3 times to generate an image
-    const maxRetries = 3;
+    // Fewer retries for edit (simpler task), more for generate
+    const maxRetries = action === 'edit' ? 1 : 3;
     let lastError = '';
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -165,7 +165,7 @@ CRITICAL Requirements:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-image-preview',
+          model: 'google/gemini-2.5-flash-image',
           messages,
           modalities: ['image', 'text'],
         }),
