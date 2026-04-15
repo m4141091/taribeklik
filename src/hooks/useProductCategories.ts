@@ -50,11 +50,11 @@ export const useProductCategories = () => {
     await fetchProductCategories();
   };
 
-  const getProductCategoryIds = (productId: string): string[] => {
+  const getProductCategoryIds = useCallback((productId: string): string[] => {
     return productCategories
       .filter(pc => pc.product_id === productId)
       .map(pc => pc.category_id);
-  };
+  }, [productCategories]);
 
   const getProductsByCategory = (categoryId: string): string[] => {
     return productCategories
