@@ -219,16 +219,33 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
         </Button>
         
         {imageUrl && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowEditDialog(true)}
-            className="flex-1"
-          >
-            <ImageIcon className="w-4 h-4 me-2" />
-            ערוך ב-AI
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRemoveBackground}
+              disabled={isRemovingBg}
+              className="flex-1"
+            >
+              {isRemovingBg ? (
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              ) : (
+                <Eraser className="w-4 h-4 me-2" />
+              )}
+              הסר רקע
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEditDialog(true)}
+              className="flex-1"
+            >
+              <ImageIcon className="w-4 h-4 me-2" />
+              ערוך ב-AI
+            </Button>
+          </>
         )}
       </div>
 
