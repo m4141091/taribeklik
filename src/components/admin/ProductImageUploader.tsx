@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, Wand2, ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, Wand2, ImageIcon, Loader2, Eraser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +28,7 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editInstruction, setEditInstruction] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -143,6 +144,26 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
     }
   };
 
+  const handleRemoveBackground = async () => {
+    if (!imageUrl) return;
+
+    setIsRemovingBg(true);
+    try {
+      const base64Image = await editProductImage(imageUrl, 'Remove the background completely, make it fully transparent. Keep only the product itself with no background.');
+      const storageUrl = await uploadBase64Image(base64Image);
+      onImageChange(storageUrl);
+      toast({ title: 'הרקע הוסר בהצלחה!' });
+    } catch (error) {
+      toast({
+        title: 'שגיאה',
+        description: 'שגיאה בהסרת הרקע',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRemovingBg(false);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium">תמונת המוצר</label>
@@ -198,16 +219,33 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
         </Button>
         
         {imageUrl && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowEditDialog(true)}
-            className="flex-1"
-          >
-            <ImageIcon className="w-4 h-4 me-2" />
-            ערוך ב-AI
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRemoveBackground}
+              disabled={isRemovingBg}
+              className="flex-1"
+            >
+              {isRemovingBg ? (
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              ) : (
+                <Eraser className="w-4 h-4 me-2" />
+              )}
+              הסר רקע
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEditDialog(true)}
+              className="flex-1"
+            >
+              <ImageIcon className="w-4 h-4 me-2" />
+              ערוך ב-AI
+            </Button>
+          </>
         )}
       </div>
 
