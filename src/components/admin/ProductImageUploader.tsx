@@ -28,6 +28,7 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editInstruction, setEditInstruction] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
