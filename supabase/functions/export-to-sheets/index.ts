@@ -249,7 +249,7 @@ async function clearSheetFormatting(accessToken: string, spreadsheetId: string, 
   console.log('Cleared sheet formatting (set white background)');
 }
 
-// Add dropdown validation to columns E, J, K
+// Add dropdown validation to columns E (סטטוס), J (סוג), K (ניתן להורדה)
 async function addDropdownValidation(accessToken: string, spreadsheetId: string, sheetId: number): Promise<void> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
   
@@ -264,63 +264,34 @@ async function addDropdownValidation(accessToken: string, spreadsheetId: string,
         // Column E (index 4) - סטטוס: פרסם / טיוטה
         {
           setDataValidation: {
-            range: {
-              sheetId: sheetId,
-              startRowIndex: 1,
-              endRowIndex: 10000,
-              startColumnIndex: 4,
-              endColumnIndex: 5
-            },
+            range: { sheetId, startRowIndex: 1, endRowIndex: 10000, startColumnIndex: 4, endColumnIndex: 5 },
             rule: {
-              condition: {
-                type: 'ONE_OF_LIST',
-                values: [{ userEnteredValue: 'פרסם' }, { userEnteredValue: 'טיוטה' }]
-              },
-              showCustomUi: true,
-              strict: false
+              condition: { type: 'ONE_OF_LIST', values: [{ userEnteredValue: 'פרסם' }, { userEnteredValue: 'טיוטה' }] },
+              showCustomUi: true, strict: false
             }
           }
         },
-        // Column J (index 9) - סוג: מוצר עם וריאציות / וריאציה
+        // Column J (index 9) - סוג
         {
           setDataValidation: {
-            range: {
-              sheetId: sheetId,
-              startRowIndex: 1,
-              endRowIndex: 10000,
-              startColumnIndex: 9,
-              endColumnIndex: 10
-            },
+            range: { sheetId, startRowIndex: 1, endRowIndex: 10000, startColumnIndex: 9, endColumnIndex: 10 },
             rule: {
-              condition: {
-                type: 'ONE_OF_LIST',
-                values: [
-                  { userEnteredValue: 'מוצר עם וריאציות' },
-                  { userEnteredValue: 'וריאציה' }
-                ]
-              },
-              showCustomUi: true,
-              strict: false
+              condition: { type: 'ONE_OF_LIST', values: [
+                { userEnteredValue: 'מוצר עם וריאציות' },
+                { userEnteredValue: 'וריאציה' },
+                { userEnteredValue: 'מוצר פשוט' }
+              ] },
+              showCustomUi: true, strict: false
             }
           }
         },
         // Column K (index 10) - ניתן להורדה: לא / כן
         {
           setDataValidation: {
-            range: {
-              sheetId: sheetId,
-              startRowIndex: 1,
-              endRowIndex: 10000,
-              startColumnIndex: 10,
-              endColumnIndex: 11
-            },
+            range: { sheetId, startRowIndex: 1, endRowIndex: 10000, startColumnIndex: 10, endColumnIndex: 11 },
             rule: {
-              condition: {
-                type: 'ONE_OF_LIST',
-                values: [{ userEnteredValue: 'לא' }, { userEnteredValue: 'כן' }]
-              },
-              showCustomUi: true,
-              strict: false
+              condition: { type: 'ONE_OF_LIST', values: [{ userEnteredValue: 'לא' }, { userEnteredValue: 'כן' }] },
+              showCustomUi: true, strict: false
             }
           }
         }
