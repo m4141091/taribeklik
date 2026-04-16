@@ -158,6 +158,31 @@ async function readSheet(accessToken: string, spreadsheetId: string): Promise<st
   return data.values || [];
 }
 
+// Template header matching the user's Google Sheets format
+const TEMPLATE_HEADER = [
+  'מזהה',         // A
+  'שם מוצר',      // B
+  'מחיר',         // C
+  'מחיר מבצע',    // D
+  'סטטוס',        // E
+  'תמונה 1',      // F
+  'מק"ט',         // G
+  'תיאור מפורט',  // H
+  'תיאור קצר',    // I
+  'סוג',          // J
+  'ניתן להורדה',  // K
+  'קישור הורדה',  // L
+  'קטגוריות',     // M
+  'תת קטגוריה',   // N
+  'מותגים',       // O
+  'תגיות',        // P
+  'מלאי',         // Q
+  'צבע (a)',      // R
+  'תמונה 2',      // S
+  'תמונה 3',      // T
+  'תמונה 4',      // U
+];
+
 // Clear all data except header row
 async function clearSheetData(accessToken: string, spreadsheetId: string, sheetName: string): Promise<void> {
   // Use values:clear API to clear content from row 2 onwards (keep header)
