@@ -558,103 +558,136 @@ serve(async (req) => {
     console.log('Clearing existing formatting...');
     await clearSheetFormatting(accessToken, spreadsheetId, sheetId);
 
-    // Prepare all product rows
+    // Write header row first
+    console.log('Writing header row...');
+    const headerUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${sheetName}'!A1:U1?valueInputOption=USER_ENTERED`;
+    await fetch(headerUrl, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: [TEMPLATE_HEADER] }),
+    });
+
+    // Prepare all product rows in the template format
     const productRows: string[][] = [];
+    let idCounter = 17401; // Starting ID matching template style
     
     for (const product of products || []) {
-      // Get categories for this product
       const productCats = productCategoriesMap.get(product.id) || [];
       const categoriesStr = productCats.join(', ');
-
-      // Calculate base price and sale price (if kg pricing with unit variation)
-      let regularPrice = '';
-      let salePrice = '';
-      
-      if (product.pricing_type === 'kg' && product.price_per_kg) {
-        regularPrice = product.price_per_kg.toString();
-        if (product.has_unit_variation && product.average_weight_kg && product.price_per_unit) {
-          salePrice = product.price_per_unit.toString();
-        }
-      } else if (product.pricing_type === 'unit' && product.price_per_unit) {
-        regularPrice = product.price_per_unit.toString();
-      }
-
-      // Format image URL for WooCommerce
-      const imageUrl = product.wordpress_image_url || product.image_url || '';
-
-      // Determine product type and variation info
+      const imageUrl = product.image_url || '';
       const hasVariation = product.pricing_type === 'kg' && product.has_unit_variation;
       
       if (hasVariation) {
-        // Parent product row (variable product)
-        const parentRow = [
-          product.id,                           // A: מזהה
-          'מוצר עם וריאציות',                  // B: סוג
-          product.name,                         // C: שם
-          'פרסם',                               // D: סטטוס
-          categoriesStr,                        // E: קטגוריות
-          imageUrl,                             // F: תמונה
-          '',                                   // G: מחיר רגיל (parent has no price)
-          '',                                   // H: מחיר מבצע
-          'weight',                             // I: שם תכונה 1
-          'יחידה | קילו',                       // J: ערכים תכונה 1
-          '1',                                  // K: גלוי בעמוד מוצר תכונה 1
-          '1',                                  // L: גלובלי תכונה 1
-        ];
-        productRows.push(parentRow);
+        const parentId = String(idCounter++);
+        // Parent product row
+        productRows.push([
+          parentId,                              // A: מזהה
+          product.name,                          // B: שם מוצר
+          '',                                    // C: מחיר (parent has no direct price)
+          '',                                    // D: מחיר מבצע
+          'פרסם',                                // E: סטטוס
+          imageUrl,                              // F: תמונה 1
+          '',                                    // G: מק"ט
+          '',                                    // H: תיאור מפורט
+          '',                                    // I: תיאור קצר
+          'מוצר עם וריאציות',                    // J: סוג
+          'לא',                                  // K: ניתן להורדה
+          '',                                    // L: קישור הורדה
+          categoriesStr,                         // M: קטגוריות
+          '',                                    // N: תת קטגוריה
+          '',                                    // O: מותגים
+          '',                                    // P: תגיות
+          '',                                    // Q: מלאי
+          '',                                    // R: צבע (a)
+          '',                                    // S: תמונה 2
+          '',                                    // T: תמונה 3
+          '',                                    // U: תמונה 4
+        ]);
 
-        // Unit variation row
-        const unitRow = [
-          `${product.id}-unit`,                 // A: מזהה
-          'וריאציה',                            // B: סוג
-          `${product.name} - יחידה`,           // C: שם
-          'פרסם',                               // D: סטטוס
-          '',                                   // E: קטגוריות (empty for variation)
-          '',                                   // F: תמונה (empty for variation)
-          product.price_per_unit?.toString() || '', // G: מחיר רגיל
-          '',                                   // H: מחיר מבצע
-          'weight',                             // I: שם תכונה 1
-          'יחידה',                              // J: ערך תכונה 1
-          '',                                   // K: גלוי בעמוד מוצר (empty for variation)
-          '',                                   // L: גלובלי (empty for variation)
-          product.id,                           // M: Parent ID
-        ];
-        productRows.push(unitRow);
+        // Unit variation
+        const unitId = String(idCounter++);
+        productRows.push([
+          unitId,                                // A: מזהה
+          `${product.name} - יחידה`,            // B: שם מוצר
+          product.price_per_unit?.toString() || '', // C: מחיר
+          '',                                    // D: מחיר מבצע
+          'פרסם',                                // E: סטטוס
+          '',                                    // F: תמונה 1
+          '',                                    // G: מק"ט
+          '',                                    // H: תיאור מפורט
+          '',                                    // I: תיאור קצר
+          'וריאציה',                             // J: סוג
+          'לא',                                  // K: ניתן להורדה
+          '',                                    // L: קישור הורדה
+          '',                                    // M: קטגוריות
+          '',                                    // N: תת קטגוריה
+          '',                                    // O: מותגים
+          '',                                    // P: תגיות
+          '',                                    // Q: מלאי
+          'יחידה',                               // R: צבע (a) - used for variation attribute
+          '',                                    // S: תמונה 2
+          '',                                    // T: תמונה 3
+          '',                                    // U: תמונה 4
+        ]);
 
-        // Kg variation row
-        const kgRow = [
-          `${product.id}-kg`,                   // A: מזהה
-          'וריאציה',                            // B: סוג
-          `${product.name} - קילו`,            // C: שם
-          'פרסם',                               // D: סטטוס
-          '',                                   // E: קטגוריות (empty for variation)
-          '',                                   // F: תמונה (empty for variation)
-          product.price_per_kg?.toString() || '', // G: מחיר רגיל
-          '',                                   // H: מחיר מבצע
-          'weight',                             // I: שם תכונה 1
-          'קילו',                               // J: ערך תכונה 1
-          '',                                   // K: גלוי בעמוד מוצר (empty for variation)
-          '',                                   // L: גלובלי (empty for variation)
-          product.id,                           // M: Parent ID
-        ];
-        productRows.push(kgRow);
+        // Kg variation
+        const kgId = String(idCounter++);
+        productRows.push([
+          kgId,                                  // A: מזהה
+          `${product.name} - קילו`,             // B: שם מוצר
+          product.price_per_kg?.toString() || '', // C: מחיר
+          '',                                    // D: מחיר מבצע
+          'פרסם',                                // E: סטטוס
+          '',                                    // F: תמונה 1
+          '',                                    // G: מק"ט
+          '',                                    // H: תיאור מפורט
+          '',                                    // I: תיאור קצר
+          'וריאציה',                             // J: סוג
+          'לא',                                  // K: ניתן להורדה
+          '',                                    // L: קישור הורדה
+          '',                                    // M: קטגוריות
+          '',                                    // N: תת קטגוריה
+          '',                                    // O: מותגים
+          '',                                    // P: תגיות
+          '',                                    // Q: מלאי
+          'קילו',                                // R: צבע (a) - used for variation attribute
+          '',                                    // S: תמונה 2
+          '',                                    // T: תמונה 3
+          '',                                    // U: תמונה 4
+        ]);
       } else {
-        // Simple product row
-        const row = [
-          product.id,                           // A: מזהה
-          'מוצר פשוט',                          // B: סוג
-          product.name,                         // C: שם
-          'פרסם',                               // D: סטטוס
-          categoriesStr,                        // E: קטגוריות
-          imageUrl,                             // F: תמונה
-          regularPrice,                         // G: מחיר רגיל
-          salePrice,                            // H: מחיר מבצע
-          '',                                   // I: שם תכונה 1
-          '',                                   // J: ערכים תכונה 1
-          '',                                   // K: גלוי בעמוד מוצר תכונה 1
-          '',                                   // L: גלובלי תכונה 1
-        ];
-        productRows.push(row);
+        // Simple product
+        const simpleId = String(idCounter++);
+        let price = '';
+        if (product.pricing_type === 'kg' && product.price_per_kg) {
+          price = product.price_per_kg.toString();
+        } else if (product.price_per_unit) {
+          price = product.price_per_unit.toString();
+        }
+
+        productRows.push([
+          simpleId,                              // A: מזהה
+          product.name,                          // B: שם מוצר
+          price,                                 // C: מחיר
+          '',                                    // D: מחיר מבצע
+          'פרסם',                                // E: סטטוס
+          imageUrl,                              // F: תמונה 1
+          '',                                    // G: מק"ט
+          '',                                    // H: תיאור מפורט
+          '',                                    // I: תיאור קצר
+          'מוצר פשוט',                           // J: סוג
+          'לא',                                  // K: ניתן להורדה
+          '',                                    // L: קישור הורדה
+          categoriesStr,                         // M: קטגוריות
+          '',                                    // N: תת קטגוריה
+          '',                                    // O: מותגים
+          '',                                    // P: תגיות
+          '',                                    // Q: מלאי
+          '',                                    // R: צבע (a)
+          '',                                    // S: תמונה 2
+          '',                                    // T: תמונה 3
+          '',                                    // U: תמונה 4
+        ]);
       }
     }
 
