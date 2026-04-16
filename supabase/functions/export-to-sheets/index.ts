@@ -472,6 +472,7 @@ serve(async (req) => {
     // Parse request body to get spreadsheetId
     const body = await req.json().catch(() => ({}));
     const spreadsheetId = body.spreadsheetId;
+    const categoryId = body.categoryId || null;
     
     if (!spreadsheetId) {
       throw new Error('spreadsheetId is required');
@@ -493,12 +494,31 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch all active products
-    const { data: products, error: productsError } = await supabase
+    // Fetch all active products (optionally filtered by category)
+    let productsQuery = supabase
       .from('products')
       .select('*')
       .eq('is_active', true)
       .order('name');
+
+    // If category filter, get product IDs first
+    let filteredProductIds: string[] | null = null;
+    if (categoryId) {
+      const { data: pcData } = await supabase
+        .from('product_categories')
+        .select('product_id')
+        .eq('category_id', categoryId);
+      filteredProductIds = pcData?.map(pc => pc.product_id) || [];
+      if (filteredProductIds.length === 0) {
+        return new Response(
+          JSON.stringify({ success: true, totalProducts: 0, totalRows: 0, spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}` }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      productsQuery = productsQuery.in('id', filteredProductIds);
+    }
+
+    const { data: products, error: productsError } = await productsQuery;
 
     if (productsError) {
       console.error('Products fetch error:', productsError);

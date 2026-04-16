@@ -74,6 +74,7 @@ const ProductsTab: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSheetsDialog, setShowSheetsDialog] = useState(false);
   const [sheetsUrl, setSheetsUrl] = useState('');
+  const [sheetsExportCategoryId, setSheetsExportCategoryId] = useState<string | null>(null);
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
@@ -334,7 +335,7 @@ const ProductsTab: React.FC = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('export-to-sheets', {
-        body: { spreadsheetId }
+        body: { spreadsheetId, categoryId: sheetsExportCategoryId }
       });
       
       if (error) {
@@ -666,13 +667,26 @@ const ProductsTab: React.FC = () => {
               </span>
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4 space-y-3">
             <Input
               placeholder="https://docs.google.com/spreadsheets/d/..."
               value={sheetsUrl}
               onChange={(e) => setSheetsUrl(e.target.value)}
               dir="ltr"
             />
+            <div>
+              <label className="text-sm font-medium mb-1 block">קטגוריה (אופציונלי)</label>
+              <select
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={sheetsExportCategoryId || ''}
+                onChange={(e) => setSheetsExportCategoryId(e.target.value || null)}
+              >
+                <option value="">כל המוצרים</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowSheetsDialog(false)}>
