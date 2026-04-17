@@ -75,6 +75,8 @@ const ProductsTab: React.FC = () => {
   const [showSheetsDialog, setShowSheetsDialog] = useState(false);
   const [sheetsUrl, setSheetsUrl] = useState('');
   const [sheetsExportCategoryId, setSheetsExportCategoryId] = useState<string | null>(null);
+  const [showDownloadImagesDialog, setShowDownloadImagesDialog] = useState(false);
+  const [downloadImagesCategoryId, setDownloadImagesCategoryId] = useState<string | null>(null);
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
@@ -263,8 +265,13 @@ const ProductsTab: React.FC = () => {
   };
 
   const handleDownloadImages = async () => {
-    const productsToDownload = selectedCategoryId === null ? products : filteredProducts;
-    
+    let productsToDownload = products;
+    if (downloadImagesCategoryId) {
+      productsToDownload = products.filter(p =>
+        getProductCategoryIds(p.id).includes(downloadImagesCategoryId)
+      );
+    }
+
     if (productsToDownload.length === 0) {
       toast({
         title: 'אין מוצרים להורדה',
@@ -282,11 +289,10 @@ const ProductsTab: React.FC = () => {
       return;
     }
 
+    setShowDownloadImagesDialog(false);
     setIsDownloadingImages(true);
     try {
-      await downloadProductImages(productsToDownload, (current, total) => {
-        // Could add progress UI here in the future
-      });
+      await downloadProductImages(productsToDownload, () => {});
       toast({ title: `הורדו ${productsWithImages.length} תמונות בהצלחה!` });
     } catch (error) {
       toast({
@@ -295,7 +301,7 @@ const ProductsTab: React.FC = () => {
         variant: 'destructive',
       });
     } finally {
-    setIsDownloadingImages(false);
+      setIsDownloadingImages(false);
     }
   };
 
@@ -438,7 +444,7 @@ const ProductsTab: React.FC = () => {
 
         <Button 
           variant="outline" 
-          onClick={handleDownloadImages}
+          onClick={() => setShowDownloadImagesDialog(true)}
           disabled={isDownloadingImages}
         >
           <Images className="w-4 h-4 ml-2" />
@@ -694,6 +700,38 @@ const ProductsTab: React.FC = () => {
             </Button>
             <Button onClick={handleExportToGoogleSheets} disabled={!sheetsUrl.trim()}>
               ייצוא
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDownloadImagesDialog} onOpenChange={setShowDownloadImagesDialog}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>הורדת תמונות מוצרים</DialogTitle>
+            <DialogDescription>
+              ניתן להוריד את כל התמונות או לבחור קטגוריה מסוימת בלבד.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-1 block">קטגוריה</label>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={downloadImagesCategoryId || ''}
+              onChange={(e) => setDownloadImagesCategoryId(e.target.value || null)}
+            >
+              <option value="">כל המוצרים</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowDownloadImagesDialog(false)}>
+              ביטול
+            </Button>
+            <Button onClick={handleDownloadImages} disabled={isDownloadingImages}>
+              {isDownloadingImages ? 'מוריד...' : 'הורד'}
             </Button>
           </DialogFooter>
         </DialogContent>
