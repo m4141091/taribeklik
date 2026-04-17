@@ -444,7 +444,7 @@ const ProductsTab: React.FC = () => {
 
         <Button 
           variant="outline" 
-          onClick={handleDownloadImages}
+          onClick={() => setShowDownloadImagesDialog(true)}
           disabled={isDownloadingImages}
         >
           <Images className="w-4 h-4 ml-2" />
