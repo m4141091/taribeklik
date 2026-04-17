@@ -704,6 +704,38 @@ const ProductsTab: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showDownloadImagesDialog} onOpenChange={setShowDownloadImagesDialog}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>הורדת תמונות מוצרים</DialogTitle>
+            <DialogDescription>
+              ניתן להוריד את כל התמונות או לבחור קטגוריה מסוימת בלבד.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-1 block">קטגוריה</label>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={downloadImagesCategoryId || ''}
+              onChange={(e) => setDownloadImagesCategoryId(e.target.value || null)}
+            >
+              <option value="">כל המוצרים</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowDownloadImagesDialog(false)}>
+              ביטול
+            </Button>
+            <Button onClick={handleDownloadImages} disabled={isDownloadingImages}>
+              {isDownloadingImages ? 'מוריד...' : 'הורד'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
