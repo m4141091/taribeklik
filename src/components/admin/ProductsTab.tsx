@@ -75,6 +75,8 @@ const ProductsTab: React.FC = () => {
   const [showSheetsDialog, setShowSheetsDialog] = useState(false);
   const [sheetsUrl, setSheetsUrl] = useState('');
   const [sheetsExportCategoryId, setSheetsExportCategoryId] = useState<string | null>(null);
+  const [showDownloadImagesDialog, setShowDownloadImagesDialog] = useState(false);
+  const [downloadImagesCategoryId, setDownloadImagesCategoryId] = useState<string | null>(null);
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
