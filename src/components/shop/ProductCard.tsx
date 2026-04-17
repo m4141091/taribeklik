@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types/product';
+import productCardBg from '@/assets/product-card-bg.png';
 
 interface ProductCardProps {
   product: Product;
