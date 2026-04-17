@@ -265,8 +265,13 @@ const ProductsTab: React.FC = () => {
   };
 
   const handleDownloadImages = async () => {
-    const productsToDownload = selectedCategoryId === null ? products : filteredProducts;
-    
+    let productsToDownload = products;
+    if (downloadImagesCategoryId) {
+      productsToDownload = products.filter(p =>
+        getProductCategoryIds(p.id).includes(downloadImagesCategoryId)
+      );
+    }
+
     if (productsToDownload.length === 0) {
       toast({
         title: 'אין מוצרים להורדה',
@@ -284,11 +289,10 @@ const ProductsTab: React.FC = () => {
       return;
     }
 
+    setShowDownloadImagesDialog(false);
     setIsDownloadingImages(true);
     try {
-      await downloadProductImages(productsToDownload, (current, total) => {
-        // Could add progress UI here in the future
-      });
+      await downloadProductImages(productsToDownload, () => {});
       toast({ title: `הורדו ${productsWithImages.length} תמונות בהצלחה!` });
     } catch (error) {
       toast({
@@ -297,7 +301,7 @@ const ProductsTab: React.FC = () => {
         variant: 'destructive',
       });
     } finally {
-    setIsDownloadingImages(false);
+      setIsDownloadingImages(false);
     }
   };
 
