@@ -1,6 +1,7 @@
 import { Product } from '@/types/product';
 import JSZip from 'jszip';
 import { toast } from '@/hooks/use-toast';
+import { composeImageWithBackground } from '@/lib/composeImageWithBackground';
 
 // Sanitize filename to be safe for file systems
 const sanitizeFilename = (name: string): string => {
@@ -50,13 +51,9 @@ export const downloadProductImages = async (
     onProgress?.(i + 1, total);
 
     try {
-      const response = await fetch(product.image_url!);
-      if (!response.ok) continue;
-      
-      const blob = await response.blob();
-      const ext = getFileExtension(product.image_url!);
-      const filename = `${sanitizeFilename(product.name)}.${ext}`;
-      
+      const blob = await composeImageWithBackground(product.image_url!);
+      const filename = `${sanitizeFilename(product.name)}.png`;
+
       folder.file(filename, blob);
       successCount++;
     } catch (error) {
@@ -87,15 +84,9 @@ export const downloadSingleImage = async (
   productName: string
 ): Promise<void> => {
   try {
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error('Failed to fetch image');
-    }
-    
-    const blob = await response.blob();
-    const ext = getFileExtension(imageUrl);
-    const filename = `${sanitizeFilename(productName)}.${ext}`;
-    
+    const blob = await composeImageWithBackground(imageUrl);
+    const filename = `${sanitizeFilename(productName)}.png`;
+
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
