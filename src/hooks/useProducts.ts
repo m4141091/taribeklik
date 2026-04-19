@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductFormData } from '@/types/product';
+import { composeImageWithBackground } from '@/lib/composeImageWithBackground';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -99,13 +100,14 @@ export const useProducts = () => {
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    // Compose the uploaded image on top of the dotted background so it's baked in
+    const composedBlob = await composeImageWithBackground(file);
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
     const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('product-images')
-      .upload(filePath, file);
+      .upload(filePath, composedBlob, { contentType: 'image/png' });
 
     if (uploadError) throw uploadError;
 

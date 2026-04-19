@@ -22,13 +22,20 @@ const getBackgroundImage = async (): Promise<HTMLImageElement> => {
  * The product image is drawn with object-contain semantics (preserving aspect ratio).
  */
 export const composeImageWithBackground = async (
-  productImageUrl: string,
+  productImage: string | Blob,
   size = 800
 ): Promise<Blob> => {
+  const productSrc =
+    typeof productImage === 'string' ? productImage : URL.createObjectURL(productImage);
+
   const [bgImg, productImg] = await Promise.all([
     getBackgroundImage(),
-    loadImage(productImageUrl),
+    loadImage(productSrc),
   ]);
+
+  if (typeof productImage !== 'string') {
+    URL.revokeObjectURL(productSrc);
+  }
 
   const canvas = document.createElement('canvas');
   canvas.width = size;

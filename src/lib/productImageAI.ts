@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import productBackground from '@/assets/product-background.png';
+import { composeImageWithBackground } from '@/lib/composeImageWithBackground';
 
 /**
  * Convert an image URL to base64
@@ -132,12 +133,14 @@ export const base64ToBlob = (base64: string): Blob => {
 };
 
 export const uploadBase64Image = async (base64: string): Promise<string> => {
-  const blob = base64ToBlob(base64);
+  const rawBlob = base64ToBlob(base64);
+  // Bake the dotted background into the image before uploading
+  const composedBlob = await composeImageWithBackground(rawBlob);
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
-  
+
   const { error: uploadError } = await supabase.storage
     .from('product-images')
-    .upload(fileName, blob);
+    .upload(fileName, composedBlob, { contentType: 'image/png' });
 
   if (uploadError) throw uploadError;
 
