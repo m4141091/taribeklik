@@ -800,6 +800,38 @@ const ProductsTab: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showBakeDialog} onOpenChange={setShowBakeDialog}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>אפיית רקע נקודות לתמונות קיימות</DialogTitle>
+            <DialogDescription>
+              בחרי קטגוריה כדי לעדכן רק תמונות בקטגוריה זו, או "כל המוצרים" לעדכן הכול.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-1 block">קטגוריה</label>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={bakeCategoryId || ''}
+              onChange={(e) => setBakeCategoryId(e.target.value || null)}
+            >
+              <option value="">כל המוצרים</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowBakeDialog(false)}>
+              ביטול
+            </Button>
+            <Button onClick={handleBakeBackgrounds} disabled={isBakingBackgrounds}>
+              {isBakingBackgrounds ? 'אופה...' : 'התחל'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
