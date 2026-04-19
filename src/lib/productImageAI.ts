@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import productBackground from '@/assets/product-background.png';
+import { composeImageWithBackground } from '@/lib/composeImageWithBackground';
 
 /**
  * Convert an image URL to base64
