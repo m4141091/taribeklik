@@ -355,6 +355,7 @@ const ProductsTab: React.FC = () => {
     });
   };
 
+  const extractSpreadsheetId = (url: string): string | null => {
     // Supports: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit...
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
     return match ? match[1] : null;
