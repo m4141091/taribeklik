@@ -80,6 +80,8 @@ const ProductsTab: React.FC = () => {
   const [downloadImagesCategoryId, setDownloadImagesCategoryId] = useState<string | null>(null);
   const [isBakingBackgrounds, setIsBakingBackgrounds] = useState(false);
   const [bakeProgress, setBakeProgress] = useState({ done: 0, total: 0 });
+  const [showBakeDialog, setShowBakeDialog] = useState(false);
+  const [bakeCategoryId, setBakeCategoryId] = useState<string | null>(null);
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
@@ -309,8 +311,8 @@ const ProductsTab: React.FC = () => {
   };
 
   const handleBakeBackgrounds = async () => {
-    const targetProducts = selectedCategoryId && selectedCategoryId !== 'uncategorized'
-      ? products.filter(p => getProductCategoryIds(p.id).includes(selectedCategoryId))
+    const targetProducts = bakeCategoryId
+      ? products.filter(p => getProductCategoryIds(p.id).includes(bakeCategoryId))
       : products;
 
     const withImages = targetProducts.filter(p => p.image_url && p.image_url.includes('/storage/v1/object/public/product-images/'));
@@ -320,6 +322,7 @@ const ProductsTab: React.FC = () => {
       return;
     }
 
+    setShowBakeDialog(false);
     if (!confirm(`לאפות רקע נקודות ל-${withImages.length} תמונות? הפעולה תיקח זמן.`)) return;
 
     setIsBakingBackgrounds(true);
