@@ -73,7 +73,7 @@ const ProductsTab: React.FC = () => {
   const [isExportingToSheets, setIsExportingToSheets] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSheetsDialog, setShowSheetsDialog] = useState(false);
-  const [sheetsUrl, setSheetsUrl] = useState('');
+  const [sheetsUrl, setSheetsUrl] = useState('https://docs.google.com/spreadsheets/d/1RQn7643GslymPVDBxoctmx3YlHFU4ikPCbAn3_fK34g/edit?gid=0#gid=0');
   const [sheetsExportCategoryId, setSheetsExportCategoryId] = useState<string | null>(null);
   const [showDownloadImagesDialog, setShowDownloadImagesDialog] = useState(false);
   const [downloadImagesCategoryId, setDownloadImagesCategoryId] = useState<string | null>(null);
