@@ -45,6 +45,7 @@ const formSchema = z.object({
   image_url: z.string().optional(),
   is_active: z.boolean(),
   in_stock_this_week: z.boolean(),
+  has_unit_variation: z.boolean(),
 });
 
 interface ProductFormDialogProps {
@@ -88,10 +89,12 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       image_url: '',
       is_active: true,
       in_stock_this_week: true,
+      has_unit_variation: true,
     },
   });
 
   const pricingType = form.watch('pricing_type');
+  const hasUnitVariation = form.watch('has_unit_variation');
   const pricePerKg = form.watch('price_per_kg');
   const averageWeight = form.watch('average_weight_kg');
   const productName = form.watch('name');
@@ -124,6 +127,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         image_url: product.image_url || '',
         is_active: product.is_active,
         in_stock_this_week: product.in_stock_this_week,
+        has_unit_variation: product.has_unit_variation ?? true,
       });
       setSelectedCategoryIds(getProductCategoryIds(product.id));
     } else {
@@ -136,6 +140,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         image_url: '',
         is_active: true,
         in_stock_this_week: true,
+        has_unit_variation: true,
       });
       setSelectedCategoryIds([]);
     }
@@ -185,27 +190,50 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="pricing_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>תמחור לפי</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="kg">ק"ג</SelectItem>
-                      <SelectItem value="unit">יחידה</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <Label htmlFor="has_unit_variation" className="text-sm font-medium">
+                  מוצר עם וריאציות (ק"ג + יחידה)
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  כבי כדי להגדיר כמוצר פשוט הנמכר ביחידות בלבד
+                </p>
+              </div>
+              <Switch
+                id="has_unit_variation"
+                checked={hasUnitVariation}
+                onCheckedChange={(checked) => {
+                  form.setValue('has_unit_variation', checked);
+                  if (!checked) {
+                    form.setValue('pricing_type', 'unit');
+                  }
+                }}
+              />
+            </div>
+
+            {hasUnitVariation && (
+              <FormField
+                control={form.control}
+                name="pricing_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>תמחור לפי</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="kg">ק"ג</SelectItem>
+                        <SelectItem value="unit">יחידה</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {pricingType === 'kg' ? (
               <>

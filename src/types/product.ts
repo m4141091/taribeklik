@@ -9,6 +9,7 @@ export interface Product {
   image_url?: string | null;
   is_active: boolean;
   in_stock_this_week: boolean;
+  has_unit_variation?: boolean | null;
   created_at: string;
   updated_at: string;
   created_by?: string | null;
@@ -24,6 +25,7 @@ export interface ProductFormData {
   image_url?: string;
   is_active: boolean;
   in_stock_this_week: boolean;
+  has_unit_variation?: boolean;
 }
 
 export interface ParsedProduct {
