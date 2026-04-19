@@ -515,7 +515,7 @@ const ProductsTab: React.FC = () => {
 
         <Button
           variant="outline"
-          onClick={handleBakeBackgrounds}
+          onClick={() => setShowBakeDialog(true)}
           disabled={isBakingBackgrounds}
         >
           <Images className="w-4 h-4 ml-2" />
