@@ -308,7 +308,53 @@ const ProductsTab: React.FC = () => {
     }
   };
 
-  const extractSpreadsheetId = (url: string): string | null => {
+  const handleBakeBackgrounds = async () => {
+    const targetProducts = selectedCategoryId && selectedCategoryId !== 'uncategorized'
+      ? products.filter(p => getProductCategoryIds(p.id).includes(selectedCategoryId))
+      : products;
+
+    const withImages = targetProducts.filter(p => p.image_url && p.image_url.includes('/storage/v1/object/public/product-images/'));
+
+    if (withImages.length === 0) {
+      toast({ title: 'אין תמונות לעדכון', variant: 'destructive' });
+      return;
+    }
+
+    if (!confirm(`לאפות רקע נקודות ל-${withImages.length} תמונות? הפעולה תיקח זמן.`)) return;
+
+    setIsBakingBackgrounds(true);
+    setBakeProgress({ done: 0, total: withImages.length });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < withImages.length; i++) {
+      const product = withImages[i];
+      try {
+        // Add cache-buster to force fresh fetch
+        const composed = await composeImageWithBackground(`${product.image_url}?cb=${Date.now()}`);
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, composed, { contentType: 'image/png' });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+        await updateProduct(product.id, { image_url: data.publicUrl });
+        successCount++;
+      } catch (err) {
+        console.error('Bake failed for', product.name, err);
+        failCount++;
+      }
+      setBakeProgress({ done: i + 1, total: withImages.length });
+    }
+
+    setIsBakingBackgrounds(false);
+    toast({
+      title: 'סיום אפיית רקעים',
+      description: `הצליחו: ${successCount}${failCount ? `, נכשלו: ${failCount}` : ''}`,
+    });
+  };
+
     // Supports: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit...
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
     return match ? match[1] : null;
