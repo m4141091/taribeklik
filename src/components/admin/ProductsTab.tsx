@@ -80,6 +80,8 @@ const ProductsTab: React.FC = () => {
   const [downloadImagesCategoryId, setDownloadImagesCategoryId] = useState<string | null>(null);
   const [isBakingBackgrounds, setIsBakingBackgrounds] = useState(false);
   const [bakeProgress, setBakeProgress] = useState({ done: 0, total: 0 });
+  const [showBakeDialog, setShowBakeDialog] = useState(false);
+  const [bakeCategoryId, setBakeCategoryId] = useState<string | null>(null);
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
@@ -309,8 +311,8 @@ const ProductsTab: React.FC = () => {
   };
 
   const handleBakeBackgrounds = async () => {
-    const targetProducts = selectedCategoryId && selectedCategoryId !== 'uncategorized'
-      ? products.filter(p => getProductCategoryIds(p.id).includes(selectedCategoryId))
+    const targetProducts = bakeCategoryId
+      ? products.filter(p => getProductCategoryIds(p.id).includes(bakeCategoryId))
       : products;
 
     const withImages = targetProducts.filter(p => p.image_url && p.image_url.includes('/storage/v1/object/public/product-images/'));
@@ -320,6 +322,7 @@ const ProductsTab: React.FC = () => {
       return;
     }
 
+    setShowBakeDialog(false);
     if (!confirm(`לאפות רקע נקודות ל-${withImages.length} תמונות? הפעולה תיקח זמן.`)) return;
 
     setIsBakingBackgrounds(true);
@@ -512,7 +515,7 @@ const ProductsTab: React.FC = () => {
 
         <Button
           variant="outline"
-          onClick={handleBakeBackgrounds}
+          onClick={() => setShowBakeDialog(true)}
           disabled={isBakingBackgrounds}
         >
           <Images className="w-4 h-4 ml-2" />
@@ -793,6 +796,38 @@ const ProductsTab: React.FC = () => {
             </Button>
             <Button onClick={handleDownloadImages} disabled={isDownloadingImages}>
               {isDownloadingImages ? 'מוריד...' : 'הורד'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showBakeDialog} onOpenChange={setShowBakeDialog}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>אפיית רקע נקודות לתמונות קיימות</DialogTitle>
+            <DialogDescription>
+              בחרי קטגוריה כדי לעדכן רק תמונות בקטגוריה זו, או "כל המוצרים" לעדכן הכול.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-1 block">קטגוריה</label>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={bakeCategoryId || ''}
+              onChange={(e) => setBakeCategoryId(e.target.value || null)}
+            >
+              <option value="">כל המוצרים</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowBakeDialog(false)}>
+              ביטול
+            </Button>
+            <Button onClick={handleBakeBackgrounds} disabled={isBakingBackgrounds}>
+              {isBakingBackgrounds ? 'אופה...' : 'התחל'}
             </Button>
           </DialogFooter>
         </DialogContent>
