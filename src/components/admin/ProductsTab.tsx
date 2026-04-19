@@ -12,6 +12,7 @@ import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
 import { exportProductsToWooCommerce } from '@/lib/exportToWooCommerce';
 import { downloadProductImages, downloadSingleImage } from '@/lib/downloadProductImages';
+import { composeImageWithBackground } from '@/lib/composeImageWithBackground';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
 import ProductListInputDialog from './ProductListInputDialog';
@@ -77,6 +78,8 @@ const ProductsTab: React.FC = () => {
   const [sheetsExportCategoryId, setSheetsExportCategoryId] = useState<string | null>(null);
   const [showDownloadImagesDialog, setShowDownloadImagesDialog] = useState(false);
   const [downloadImagesCategoryId, setDownloadImagesCategoryId] = useState<string | null>(null);
+  const [isBakingBackgrounds, setIsBakingBackgrounds] = useState(false);
+  const [bakeProgress, setBakeProgress] = useState({ done: 0, total: 0 });
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
@@ -305,6 +308,53 @@ const ProductsTab: React.FC = () => {
     }
   };
 
+  const handleBakeBackgrounds = async () => {
+    const targetProducts = selectedCategoryId && selectedCategoryId !== 'uncategorized'
+      ? products.filter(p => getProductCategoryIds(p.id).includes(selectedCategoryId))
+      : products;
+
+    const withImages = targetProducts.filter(p => p.image_url && p.image_url.includes('/storage/v1/object/public/product-images/'));
+
+    if (withImages.length === 0) {
+      toast({ title: 'אין תמונות לעדכון', variant: 'destructive' });
+      return;
+    }
+
+    if (!confirm(`לאפות רקע נקודות ל-${withImages.length} תמונות? הפעולה תיקח זמן.`)) return;
+
+    setIsBakingBackgrounds(true);
+    setBakeProgress({ done: 0, total: withImages.length });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < withImages.length; i++) {
+      const product = withImages[i];
+      try {
+        // Add cache-buster to force fresh fetch
+        const composed = await composeImageWithBackground(`${product.image_url}?cb=${Date.now()}`);
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, composed, { contentType: 'image/png' });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+        await updateProduct(product.id, { image_url: data.publicUrl });
+        successCount++;
+      } catch (err) {
+        console.error('Bake failed for', product.name, err);
+        failCount++;
+      }
+      setBakeProgress({ done: i + 1, total: withImages.length });
+    }
+
+    setIsBakingBackgrounds(false);
+    toast({
+      title: 'סיום אפיית רקעים',
+      description: `הצליחו: ${successCount}${failCount ? `, נכשלו: ${failCount}` : ''}`,
+    });
+  };
+
   const extractSpreadsheetId = (url: string): string | null => {
     // Supports: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit...
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -458,6 +508,17 @@ const ProductsTab: React.FC = () => {
         >
           <FileSpreadsheet className="w-4 h-4 ml-2" />
           {isExportingToSheets ? 'מייצא...' : 'מלא Google Sheets'}
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={handleBakeBackgrounds}
+          disabled={isBakingBackgrounds}
+        >
+          <Images className="w-4 h-4 ml-2" />
+          {isBakingBackgrounds
+            ? `אופה רקעים... ${bakeProgress.done}/${bakeProgress.total}`
+            : 'אפה רקע נקודות לתמונות קיימות'}
         </Button>
       </div>
 
