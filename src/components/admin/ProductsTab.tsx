@@ -509,6 +509,17 @@ const ProductsTab: React.FC = () => {
           <FileSpreadsheet className="w-4 h-4 ml-2" />
           {isExportingToSheets ? 'מייצא...' : 'מלא Google Sheets'}
         </Button>
+
+        <Button
+          variant="outline"
+          onClick={handleBakeBackgrounds}
+          disabled={isBakingBackgrounds}
+        >
+          <Images className="w-4 h-4 ml-2" />
+          {isBakingBackgrounds
+            ? `אופה רקעים... ${bakeProgress.done}/${bakeProgress.total}`
+            : 'אפה רקע נקודות לתמונות קיימות'}
+        </Button>
       </div>
 
       {/* Search */}
