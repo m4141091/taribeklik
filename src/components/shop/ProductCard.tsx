@@ -17,8 +17,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const price = selectedPricing === 'kg' ? product.price_per_kg : product.price_per_unit;
   const priceLabel = selectedPricing === 'kg' ? 'ק"ג' : 'יח\'';
   
-  const hasUnitOption = product.price_per_unit !== null;
-  const hasKgOption = product.price_per_kg !== null;
+  const hasVariation = product.has_unit_variation ?? true;
+  const hasUnitOption = product.price_per_unit !== null && hasVariation;
+  const hasKgOption = product.price_per_kg !== null && hasVariation;
 
   const handleIncrement = () => {
     setQuantity(prev => prev + 1);
