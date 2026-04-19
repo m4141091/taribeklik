@@ -19,7 +19,41 @@ export const exportProductsToWooCommerce = (
   productsWithCategories.forEach(({ product, categoryNames }) => {
     const categoryString = categoryNames.join(', ');
     const slug = createSlug(product.name);
-    
+    const hasVariation = product.pricing_type === 'kg' && (product.has_unit_variation ?? true);
+
+    if (!hasVariation) {
+      // Simple product (single row, sold by unit)
+      const price = product.price_per_unit ?? product.price_per_kg ?? '';
+      rows.push({
+        'מזהה': '',
+        'שם מוצר': product.name,
+        'מחיר': price,
+        'מחיר מבצע': '',
+        'סטטוס': 'פרסם',
+        'תמונה 1': product.image_url || '',
+        'מק"ט': '',
+        'תיאור מפורט': '',
+        'תיאור קצר': '',
+        'סוג': 'מוצר פשוט',
+        'ניתן להורדה': 'לא',
+        'קישור להורדה': '',
+        'ברקוד': '',
+        'מזהה כתובת (slug)': slug,
+        'קטגוריות': categoryString,
+        'תת קטגוריה': '',
+        'מותגים': '',
+        'תגיות': '',
+        'מלאי': '',
+        'אורך': '',
+        'רוחב': '',
+        'גובה': '',
+        'משקל': '',
+        'סוג משלוח': '',
+        'כמות': '',
+      });
+      return;
+    }
+
     // Row 1: Main product (מוצר עם וריאציות)
     rows.push({
       'מזהה': '',
