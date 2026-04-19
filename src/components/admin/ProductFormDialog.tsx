@@ -45,6 +45,7 @@ const formSchema = z.object({
   image_url: z.string().optional(),
   is_active: z.boolean(),
   in_stock_this_week: z.boolean(),
+  has_unit_variation: z.boolean(),
 });
 
 interface ProductFormDialogProps {
@@ -88,10 +89,12 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       image_url: '',
       is_active: true,
       in_stock_this_week: true,
+      has_unit_variation: true,
     },
   });
 
   const pricingType = form.watch('pricing_type');
+  const hasUnitVariation = form.watch('has_unit_variation');
   const pricePerKg = form.watch('price_per_kg');
   const averageWeight = form.watch('average_weight_kg');
   const productName = form.watch('name');
@@ -124,6 +127,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         image_url: product.image_url || '',
         is_active: product.is_active,
         in_stock_this_week: product.in_stock_this_week,
+        has_unit_variation: product.has_unit_variation ?? true,
       });
       setSelectedCategoryIds(getProductCategoryIds(product.id));
     } else {
@@ -136,6 +140,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         image_url: '',
         is_active: true,
         in_stock_this_week: true,
+        has_unit_variation: true,
       });
       setSelectedCategoryIds([]);
     }
