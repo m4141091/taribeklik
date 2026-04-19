@@ -12,6 +12,7 @@ import { Product, ProductFormData } from '@/types/product';
 import { exportProductsToExcel } from '@/lib/exportToExcel';
 import { exportProductsToWooCommerce } from '@/lib/exportToWooCommerce';
 import { downloadProductImages, downloadSingleImage } from '@/lib/downloadProductImages';
+import { composeImageWithBackground } from '@/lib/composeImageWithBackground';
 import ProductFormDialog from './ProductFormDialog';
 import ProductUploadDialog from './ProductUploadDialog';
 import ProductListInputDialog from './ProductListInputDialog';
@@ -77,6 +78,8 @@ const ProductsTab: React.FC = () => {
   const [sheetsExportCategoryId, setSheetsExportCategoryId] = useState<string | null>(null);
   const [showDownloadImagesDialog, setShowDownloadImagesDialog] = useState(false);
   const [downloadImagesCategoryId, setDownloadImagesCategoryId] = useState<string | null>(null);
+  const [isBakingBackgrounds, setIsBakingBackgrounds] = useState(false);
+  const [bakeProgress, setBakeProgress] = useState({ done: 0, total: 0 });
 
   const loading = productsLoading || categoriesLoading || productCategoriesLoading;
 
