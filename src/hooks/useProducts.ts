@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductFormData } from '@/types/product';
+import { composeImageWithBackground } from '@/lib/composeImageWithBackground';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
