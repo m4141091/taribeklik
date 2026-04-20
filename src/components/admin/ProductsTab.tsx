@@ -439,13 +439,16 @@ const ProductsTab: React.FC = () => {
     }
   };
 
+  const isValidCategoryId = (id?: string) =>
+    !!id && id !== 'uncategorized' && id !== '__none__';
+
   const handleOpenListInput = (categoryId?: string) => {
-    setDefaultCategoryId(categoryId || null);
+    setDefaultCategoryId(isValidCategoryId(categoryId) ? categoryId! : null);
     setShowListInputDialog(true);
   };
 
   const handleOpenUpload = (categoryId?: string) => {
-    setDefaultCategoryId(categoryId || null);
+    setDefaultCategoryId(isValidCategoryId(categoryId) ? categoryId! : null);
     setShowUploadDialog(true);
   };
 
