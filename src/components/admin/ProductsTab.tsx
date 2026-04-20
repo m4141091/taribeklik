@@ -313,9 +313,11 @@ const ProductsTab: React.FC = () => {
   };
 
   const handleBakeBackgrounds = async () => {
-    const targetProducts = bakeCategoryId
-      ? products.filter(p => getProductCategoryIds(p.id).includes(bakeCategoryId))
-      : products;
+    const targetProducts = bakeCategoryId === 'uncategorized'
+      ? products.filter(p => getProductCategoryIds(p.id).length === 0)
+      : bakeCategoryId
+        ? products.filter(p => getProductCategoryIds(p.id).includes(bakeCategoryId))
+        : products;
 
     const withImages = targetProducts.filter(p => p.image_url && p.image_url.includes('/storage/v1/object/public/product-images/'));
 
