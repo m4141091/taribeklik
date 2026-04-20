@@ -204,9 +204,6 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 checked={hasUnitVariation}
                 onCheckedChange={(checked) => {
                   form.setValue('has_unit_variation', checked);
-                  if (!checked) {
-                    form.setValue('pricing_type', 'unit');
-                  }
                 }}
               />
             </div>
