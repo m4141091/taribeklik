@@ -271,7 +271,9 @@ const ProductsTab: React.FC = () => {
 
   const handleDownloadImages = async () => {
     let productsToDownload = products;
-    if (downloadImagesCategoryId) {
+    if (downloadImagesCategoryId === 'uncategorized') {
+      productsToDownload = products.filter(p => getProductCategoryIds(p.id).length === 0);
+    } else if (downloadImagesCategoryId) {
       productsToDownload = products.filter(p =>
         getProductCategoryIds(p.id).includes(downloadImagesCategoryId)
       );
@@ -311,9 +313,11 @@ const ProductsTab: React.FC = () => {
   };
 
   const handleBakeBackgrounds = async () => {
-    const targetProducts = bakeCategoryId
-      ? products.filter(p => getProductCategoryIds(p.id).includes(bakeCategoryId))
-      : products;
+    const targetProducts = bakeCategoryId === 'uncategorized'
+      ? products.filter(p => getProductCategoryIds(p.id).length === 0)
+      : bakeCategoryId
+        ? products.filter(p => getProductCategoryIds(p.id).includes(bakeCategoryId))
+        : products;
 
     const withImages = targetProducts.filter(p => p.image_url && p.image_url.includes('/storage/v1/object/public/product-images/'));
 
@@ -755,6 +759,7 @@ const ProductsTab: React.FC = () => {
                 onChange={(e) => setSheetsExportCategoryId(e.target.value || null)}
               >
                 <option value="">כל המוצרים</option>
+                <option value="uncategorized">ללא קטגוריה</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
@@ -788,6 +793,7 @@ const ProductsTab: React.FC = () => {
               onChange={(e) => setDownloadImagesCategoryId(e.target.value || null)}
             >
               <option value="">כל המוצרים</option>
+              <option value="uncategorized">ללא קטגוריה</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
@@ -820,6 +826,7 @@ const ProductsTab: React.FC = () => {
               onChange={(e) => setBakeCategoryId(e.target.value || null)}
             >
               <option value="">כל המוצרים</option>
+              <option value="uncategorized">ללא קטגוריה</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}

@@ -503,7 +503,16 @@ serve(async (req) => {
 
     // If category filter, get product IDs first
     let filteredProductIds: string[] | null = null;
-    if (categoryId) {
+    if (categoryId === 'uncategorized') {
+      // Get IDs of all products that DO have at least one category, then exclude them
+      const { data: pcData } = await supabase
+        .from('product_categories')
+        .select('product_id');
+      const categorizedIds = Array.from(new Set((pcData || []).map(pc => pc.product_id)));
+      if (categorizedIds.length > 0) {
+        productsQuery = productsQuery.not('id', 'in', `(${categorizedIds.join(',')})`);
+      }
+    } else if (categoryId) {
       const { data: pcData } = await supabase
         .from('product_categories')
         .select('product_id')
@@ -593,7 +602,7 @@ serve(async (req) => {
     
     for (const product of products || []) {
       const productCats = productCategoriesMap.get(product.id) || [];
-      const categoriesStr = productCats.join(', ');
+      const categoriesStr = productCats.length > 0 ? productCats.join(', ') : 'ללא קטגוריה';
       const imageUrl = product.image_url || '';
       const hasVariation = product.pricing_type === 'kg' && product.has_unit_variation;
       
