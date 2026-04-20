@@ -602,7 +602,7 @@ serve(async (req) => {
     
     for (const product of products || []) {
       const productCats = productCategoriesMap.get(product.id) || [];
-      const categoriesStr = productCats.join(', ');
+      const categoriesStr = productCats.length > 0 ? productCats.join(', ') : 'ללא קטגוריה';
       const imageUrl = product.image_url || '';
       const hasVariation = product.pricing_type === 'kg' && product.has_unit_variation;
       
