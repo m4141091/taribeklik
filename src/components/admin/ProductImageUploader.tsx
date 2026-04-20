@@ -92,14 +92,11 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
 
     setIsGenerating(true);
     try {
-      const base64Image = await generateProductImage(productName);
-      setPreviewUrl(base64Image);
-      
-      // Upload to storage
-      const storageUrl = await uploadBase64Image(base64Image);
+      // generateProductImage already uploads to storage and returns the final URL
+      const storageUrl = await generateProductImage(productName);
       onImageChange(storageUrl);
       setPreviewUrl(null);
-      
+
       toast({ title: 'התמונה נוצרה בהצלחה!' });
     } catch (error) {
       toast({
