@@ -271,7 +271,9 @@ const ProductsTab: React.FC = () => {
 
   const handleDownloadImages = async () => {
     let productsToDownload = products;
-    if (downloadImagesCategoryId) {
+    if (downloadImagesCategoryId === 'uncategorized') {
+      productsToDownload = products.filter(p => getProductCategoryIds(p.id).length === 0);
+    } else if (downloadImagesCategoryId) {
       productsToDownload = products.filter(p =>
         getProductCategoryIds(p.id).includes(downloadImagesCategoryId)
       );
