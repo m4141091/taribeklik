@@ -759,6 +759,7 @@ const ProductsTab: React.FC = () => {
                 onChange={(e) => setSheetsExportCategoryId(e.target.value || null)}
               >
                 <option value="">כל המוצרים</option>
+                <option value="uncategorized">ללא קטגוריה</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
