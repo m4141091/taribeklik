@@ -92,6 +92,31 @@ export const editProductImage = async (imageUrl: string, instruction: string): P
   return data.imageUrl;
 };
 
+const isRateLimitError = (error: unknown): boolean => {
+  const msg = error instanceof Error ? error.message : String(error);
+  return /rate.?limit|429/i.test(msg);
+};
+
+const generateWithRetry = async (
+  name: string,
+  maxAttempts = 4
+): Promise<string> => {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await generateProductImage(name);
+    } catch (error) {
+      lastError = error;
+      if (!isRateLimitError(error) || attempt === maxAttempts) throw error;
+      // Exponential backoff: 5s, 10s, 20s
+      const waitMs = 5000 * Math.pow(2, attempt - 1);
+      console.warn(`Rate limited for "${name}", retry ${attempt}/${maxAttempts - 1} in ${waitMs}ms`);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    }
+  }
+  throw lastError;
+};
+
 export const generateBatchImages = async (
   productNames: string[],
   onProgress: (current: number, total: number, productName: string) => void
@@ -103,16 +128,16 @@ export const generateBatchImages = async (
     onProgress(i + 1, productNames.length, name);
     
     try {
-      const imageUrl = await generateProductImage(name);
+      const imageUrl = await generateWithRetry(name);
       results.set(name, imageUrl);
     } catch (error) {
       console.error(`Failed to generate image for ${name}:`, error);
       // Continue with other products
     }
     
-    // Small delay between requests to avoid rate limiting
+    // Throttle requests to avoid AI Gateway rate limits (~12 req/min)
     if (i < productNames.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
   
