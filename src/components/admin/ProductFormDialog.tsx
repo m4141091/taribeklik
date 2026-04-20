@@ -204,36 +204,31 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 checked={hasUnitVariation}
                 onCheckedChange={(checked) => {
                   form.setValue('has_unit_variation', checked);
-                  if (!checked) {
-                    form.setValue('pricing_type', 'unit');
-                  }
                 }}
               />
             </div>
 
-            {hasUnitVariation && (
-              <FormField
-                control={form.control}
-                name="pricing_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>תמחור לפי</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="kg">ק"ג</SelectItem>
-                        <SelectItem value="unit">יחידה</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="pricing_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>תמחור לפי</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="kg">ק"ג</SelectItem>
+                      <SelectItem value="unit">יחידה</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {pricingType === 'kg' ? (
               <>
