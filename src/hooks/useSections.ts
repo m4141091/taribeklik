@@ -123,10 +123,9 @@ export function useActiveSection(slug: string) {
     const fetchSection = async () => {
       try {
         const { data, error } = await supabase
-          .from('sections')
+          .from('sections_public')
           .select('*')
           .eq('slug', slug)
-          .eq('is_active', true)
           .maybeSingle();
 
         if (error) throw error;
@@ -158,9 +157,8 @@ export function useActiveSections() {
     const fetchSections = async () => {
       try {
         const { data, error } = await supabase
-          .from('sections')
+          .from('sections_public')
           .select('*')
-          .eq('is_active', true)
           .order('display_order', { ascending: true });
 
         if (error) throw error;

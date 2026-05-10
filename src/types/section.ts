@@ -46,5 +46,5 @@ export interface Section {
   display_order: number;
   created_at: string;
   updated_at: string;
-  created_by: string | null;
+  created_by?: string | null;
 }

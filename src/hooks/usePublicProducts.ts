@@ -11,9 +11,8 @@ export const usePublicProducts = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('products')
+        .from('products_public')
         .select('*')
-        .eq('is_active', true)
         .order('name', { ascending: true });
 
       if (error) throw error;
