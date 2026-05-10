@@ -7,6 +7,10 @@ interface AdminGuardProps {
   children: React.ReactNode;
 }
 
+// NOTE: This component provides UX-level protection only.
+// Actual security enforcement is via server-side RLS policies on all
+// sensitive tables and verifyAdminAccess() in edge functions.
+// Bypassing this guard does NOT grant access to admin-only data or operations.
 export function AdminGuard({ children }: AdminGuardProps) {
   const { user, loading: authLoading } = useAuthContext();
   const { isAdmin, loading: adminLoading } = useIsAdmin(user?.id);
