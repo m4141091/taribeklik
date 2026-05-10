@@ -185,6 +185,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_categories_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -333,6 +340,54 @@ export type Database = {
       }
     }
     Views: {
+      products_public: {
+        Row: {
+          average_weight_kg: number | null
+          category: string | null
+          created_at: string | null
+          has_unit_variation: boolean | null
+          id: string | null
+          image_url: string | null
+          in_stock_this_week: boolean | null
+          is_active: boolean | null
+          name: string | null
+          price_per_kg: number | null
+          price_per_unit: number | null
+          pricing_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_weight_kg?: number | null
+          category?: string | null
+          created_at?: string | null
+          has_unit_variation?: boolean | null
+          id?: string | null
+          image_url?: string | null
+          in_stock_this_week?: boolean | null
+          is_active?: boolean | null
+          name?: string | null
+          price_per_kg?: number | null
+          price_per_unit?: number | null
+          pricing_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_weight_kg?: number | null
+          category?: string | null
+          created_at?: string | null
+          has_unit_variation?: boolean | null
+          id?: string | null
+          image_url?: string | null
+          in_stock_this_week?: boolean | null
+          is_active?: boolean | null
+          name?: string | null
+          price_per_kg?: number | null
+          price_per_unit?: number | null
+          pricing_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sections_public: {
         Row: {
           background_color: string | null
